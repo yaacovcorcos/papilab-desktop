@@ -178,15 +178,24 @@ function runtimeStatusForEvent(event: ProviderRuntimeEvent): "running" | "stoppe
         default:
           return "running";
       }
+    case "thread.state.changed":
+      switch (event.payload.state) {
+        case "error":
+          return "error";
+        case "archived":
+        case "closed":
+          return "stopped";
+        case "compacted":
+          return event.turnId === undefined ? "stopped" : "running";
+        default:
+          return "running";
+      }
     case "session.exited":
     case "turn.completed":
     case "turn.aborted":
-    case "thread.state.changed":
       // A completed turn can still carry a resume cursor, but it must not keep
       // the desktop app treating the provider process as active after restart.
-      return event.type === "thread.state.changed" && event.payload.state !== "compacted"
-        ? "running"
-        : "stopped";
+      return "stopped";
     case "runtime.error":
       return "error";
     default:
@@ -197,7 +206,9 @@ function runtimeStatusForEvent(event: ProviderRuntimeEvent): "running" | "stoppe
 function shouldRefreshResumeCursorForEvent(event: ProviderRuntimeEvent): boolean {
   return (
     event.type === "thread.started" ||
-    (event.type === "thread.state.changed" && event.payload.state === "compacted") ||
+    (event.type === "thread.state.changed" &&
+      event.payload.state === "compacted" &&
+      event.turnId === undefined) ||
     event.type === "turn.completed" ||
     event.type === "turn.aborted"
   );
@@ -209,10 +220,11 @@ function runtimeLastErrorForEvent(event: ProviderRuntimeEvent): string | null | 
       return event.payload.message;
     case "session.state.changed":
       return event.payload.state === "error" ? (event.payload.reason ?? "Session error") : null;
+    case "thread.state.changed":
+      return event.payload.state === "error" ? "Thread error" : null;
     case "turn.started":
     case "turn.completed":
     case "turn.aborted":
-    case "thread.state.changed":
     case "session.exited":
       return null;
     default:
@@ -461,9 +473,14 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
         const activeTurnId =
           event.type === "turn.started"
             ? (event.turnId ?? null)
+            : event.type === "thread.state.changed" && event.payload.state === "compacted"
+              ? (event.turnId ?? null)
             : event.type === "turn.completed" ||
                 event.type === "turn.aborted" ||
-                (event.type === "thread.state.changed" && event.payload.state === "compacted") ||
+                (event.type === "thread.state.changed" &&
+                  (event.payload.state === "archived" ||
+                    event.payload.state === "closed" ||
+                    event.payload.state === "error")) ||
                 event.type === "session.exited" ||
                 event.type === "runtime.error" ||
                 (event.type === "session.state.changed" &&
@@ -505,8 +522,8 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
       registry.getByProvider(provider),
     );
     const processRuntimeEvent = (event: ProviderRuntimeEvent): Effect.Effect<void> =>
-      Effect.sync(() => reconcileRuntimeIdleTimer(event)).pipe(
-        Effect.andThen(updateSessionBindingFromRuntimeEvent(event)),
+      updateSessionBindingFromRuntimeEvent(event).pipe(
+        Effect.andThen(Effect.sync(() => reconcileRuntimeIdleTimer(event))),
         Effect.andThen(publishRuntimeEvent(event)),
       );
 
@@ -1147,6 +1164,7 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
           schema: ProviderStopSessionInput,
           payload: rawInput,
         });
+        yield* waitForRuntimeIdleStop(input.threadId);
         clearRuntimeIdleTimer(input.threadId);
         const bindingOption = yield* directory.getBinding(input.threadId);
         const binding = Option.getOrUndefined(bindingOption);
@@ -1158,6 +1176,7 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
         if (hasActiveSession) {
           yield* adapter.stopSession(input.threadId);
         }
+        yield* waitForRuntimeIdleStop(input.threadId);
         yield* directory.upsert({
           threadId: input.threadId,
           provider: binding.provider,

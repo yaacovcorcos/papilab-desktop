@@ -1070,6 +1070,86 @@ routing.layer("ProviderServiceLive routing", (it) => {
     }),
   );
 
+  it.effect("marks terminal thread state changes stopped or errored", () =>
+    Effect.gen(function* () {
+      const provider = yield* ProviderService;
+      const runtimeRepository = yield* ProviderSessionRuntimeRepository;
+
+      const session = yield* provider.startSession(asThreadId("thread-runtime-state-error"), {
+        provider: "codex",
+        threadId: asThreadId("thread-runtime-state-error"),
+        runtimeMode: "full-access",
+      });
+
+      routing.codex.emit({
+        type: "thread.state.changed",
+        eventId: asEventId("runtime-thread-state-error"),
+        provider: "codex",
+        createdAt: "2026-02-27T00:05:00.000Z",
+        threadId: session.threadId,
+        payload: { state: "error" },
+      });
+      yield* sleep(50);
+
+      const runtime = yield* runtimeRepository.getByThreadId({
+        threadId: session.threadId,
+      });
+      assert.equal(Option.isSome(runtime), true);
+      if (Option.isSome(runtime)) {
+        assert.equal(runtime.value.status, "error");
+        const payload = runtime.value.runtimePayload;
+        assert.equal(payload !== null && typeof payload === "object", true);
+        if (payload !== null && typeof payload === "object" && !Array.isArray(payload)) {
+          assert.equal((payload as Record<string, unknown>).activeTurnId, null);
+          assert.equal((payload as Record<string, unknown>).lastRuntimeEvent, "thread.state.changed");
+        }
+      }
+    }),
+  );
+
+  it.effect("preserves active turns across compacted thread state boundaries", () =>
+    Effect.gen(function* () {
+      const provider = yield* ProviderService;
+      const runtimeRepository = yield* ProviderSessionRuntimeRepository;
+
+      const session = yield* provider.startSession(asThreadId("thread-runtime-compact-boundary"), {
+        provider: "codex",
+        threadId: asThreadId("thread-runtime-compact-boundary"),
+        runtimeMode: "full-access",
+      });
+      const turn = yield* provider.sendTurn({
+        threadId: session.threadId,
+        input: "hello",
+        attachments: [],
+      });
+
+      routing.codex.emit({
+        type: "thread.state.changed",
+        eventId: asEventId("runtime-thread-compact-boundary"),
+        provider: "codex",
+        createdAt: "2026-02-27T00:05:00.000Z",
+        threadId: session.threadId,
+        turnId: turn.turnId,
+        payload: { state: "compacted" },
+      });
+      yield* sleep(50);
+
+      const runtime = yield* runtimeRepository.getByThreadId({
+        threadId: session.threadId,
+      });
+      assert.equal(Option.isSome(runtime), true);
+      if (Option.isSome(runtime)) {
+        assert.equal(runtime.value.status, "running");
+        const payload = runtime.value.runtimePayload;
+        assert.equal(payload !== null && typeof payload === "object", true);
+        if (payload !== null && typeof payload === "object" && !Array.isArray(payload)) {
+          assert.equal((payload as Record<string, unknown>).activeTurnId, turn.turnId);
+          assert.equal((payload as Record<string, unknown>).lastRuntimeEvent, "thread.state.changed");
+        }
+      }
+    }),
+  );
+
   it.effect("reuses persisted resume cursor when startSession is called after a restart", () =>
     Effect.gen(function* () {
       const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "t3-provider-service-start-"));
