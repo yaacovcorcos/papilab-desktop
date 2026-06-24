@@ -654,11 +654,11 @@ function stripAutomationScaffold(value: string): string {
   let cleaned = normalizeInlineText(value);
   cleaned = cleaned
     .replace(
-      /^(?:please\s+)?(?:make|create|set up|setup|add|start|build)\s+(?:an?\s+)?automation\s*(?:where|that|to|which)?\s*/i,
+      /^(?:please\s+)?(?:make|create|set up|setup|add|start|build)\s+(?:an?\s+)?automation\s*(?:for\s+(?:me|us|myself)\s*)?(?:where|that|to|which)?\s*/i,
       "",
     )
     .replace(
-      /^(?:please\s+)?(?:crea|creare|aggiungi|imposta|fai)\s+(?:un[' ]?)?(?:automazione|task|controllo|monitoraggio)\s*(?:che|per|dove)?\s*/i,
+      /^(?:please\s+)?(?:crea|creare|aggiungi|imposta|fai)\s+(?:un[' ]?)?(?:automazione|task|controllo|monitoraggio)\s*(?:per\s+(?:me|noi)\s*)?(?:che|per|dove)?\s*/i,
       "",
     )
     .replace(
