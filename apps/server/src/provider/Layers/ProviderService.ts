@@ -268,6 +268,7 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
     const scheduleRuntimeIdleStop = (threadId: ThreadId) => {
       clearRuntimeIdleTimer(threadId);
       if (runtimeIdleStopMs <= 0) {
+        retireRuntimeIdleGeneration(threadId);
         return;
       }
 
