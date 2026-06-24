@@ -286,6 +286,7 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
     const runIdleSensitiveProviderWork = <A, E, R>(
       threadId: ThreadId,
       effect: Effect.Effect<A, E, R>,
+      options?: { readonly scheduleIdleStopOnSuccess?: boolean },
     ): Effect.Effect<A, E, R> =>
       Effect.suspend(() => {
         const existingIdleStop = runtimeIdleStopsInFlight.get(threadId);
@@ -299,7 +300,9 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
           Effect.flatMap(() => effect),
           Effect.onExit((exit) =>
             Exit.isSuccess(exit)
-              ? Effect.void
+              ? options?.scheduleIdleStopOnSuccess === true
+                ? Effect.sync(() => scheduleRuntimeIdleStop(threadId))
+                : Effect.void
               : Effect.sync(() => scheduleRuntimeIdleStop(threadId)),
           ),
         );
@@ -1216,6 +1219,7 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
               turns: input.numTurns,
             });
           }),
+          { scheduleIdleStopOnSuccess: true },
         );
       });
 
@@ -1245,6 +1249,7 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
               provider: routed.adapter.provider,
             });
           }),
+          { scheduleIdleStopOnSuccess: true },
         );
       });
 
