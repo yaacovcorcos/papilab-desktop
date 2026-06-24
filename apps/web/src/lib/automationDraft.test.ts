@@ -199,6 +199,7 @@ describe("automationApprovalGaps", () => {
     mode: "standalone" as const,
     runtimeMode: "approval-required" as const,
     worktreeMode: "worktree" as const,
+    maxIterations: null,
     prompt: "Check the build.",
   };
 
@@ -276,15 +277,26 @@ describe("automationApprovalGaps", () => {
     expect(new Set(gaps.acknowledgedRisks)).toEqual(new Set(["full-access", "fast-interval"]));
   });
 
-  it("caps enabled legacy fast intervals when approving", () => {
+  it("caps legacy fast intervals when approving", () => {
     const gaps = automationApprovalGaps({
       ...base,
       schedule: { type: "interval", everySeconds: 15 },
       runtimeMode: "full-access",
       acknowledgedRisks: [],
-      enabled: true,
       maxIterations: null,
     });
+    expect(gaps.maxIterations).toBe(10);
+  });
+
+  it("keeps fast interval approval visible when only the safety cap is missing", () => {
+    const gaps = automationApprovalGaps({
+      ...base,
+      schedule: { type: "interval", everySeconds: 15 },
+      acknowledgedRisks: ["fast-interval"],
+      maxIterations: null,
+    });
+    expect(gaps.warnings.map((warning) => warning.id)).toEqual(["fast-recurring-interval"]);
+    expect(gaps.acknowledgedRisks).toEqual(["fast-interval"]);
     expect(gaps.maxIterations).toBe(10);
   });
 
@@ -294,7 +306,6 @@ describe("automationApprovalGaps", () => {
       schedule: { type: "interval", everySeconds: 15 },
       runtimeMode: "full-access",
       acknowledgedRisks: [],
-      enabled: true,
       maxIterations: 3,
     });
     expect(gaps.maxIterations).toBeUndefined();

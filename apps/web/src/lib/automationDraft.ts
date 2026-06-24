@@ -162,10 +162,9 @@ function warningIdsRequiringAcknowledgement(
 }
 
 // Computes the approval an existing automation still needs before it can run.
-// `warnings` are the visible risks that the approval will persist, and `acknowledgedRisks`
-// is the full risk set to save: every risk the config requires, merged with existing
-// acknowledgements. Sub-minute schedules may also need a capped maxIterations patch so the
-// acknowledgement-only update passes the server's active-schedule validation.
+// `warnings` are the visible risks that approval will persist or repair, and
+// `acknowledgedRisks` is the full risk set to save. Sub-minute schedules may also need
+// a capped maxIterations patch so the acknowledgement-only update passes server policy.
 export function automationApprovalGaps(input: {
   readonly schedule: AutomationSchedule;
   readonly mode: AutomationMode;
@@ -173,8 +172,7 @@ export function automationApprovalGaps(input: {
   readonly worktreeMode: AutomationWorktreeMode;
   readonly prompt: string;
   readonly acknowledgedRisks: readonly AutomationAcknowledgedRiskId[];
-  readonly enabled?: boolean;
-  readonly maxIterations?: number | null;
+  readonly maxIterations: number | null;
 }): {
   readonly warnings: readonly AutomationDraftWarning[];
   readonly acknowledgedRisks: readonly AutomationAcknowledgedRiskId[];
@@ -190,13 +188,21 @@ export function automationApprovalGaps(input: {
     generatedNeedsConfirmation: false,
     prompt: input.prompt,
   });
+  const maxIterationsPatch =
+    input.schedule.type === "interval" &&
+    input.schedule.everySeconds < 60 &&
+    (input.maxIterations === null ||
+      input.maxIterations > DEFAULT_AUTOMATION_FAST_INTERVAL_MAX_ITERATIONS)
+      ? DEFAULT_AUTOMATION_FAST_INTERVAL_MAX_ITERATIONS
+      : undefined;
   const requiredWarningIds = warningIdsRequiringAcknowledgement(allWarnings);
   const acknowledgedWarningIds = warningIdsForAcknowledgedRisks(input.acknowledgedRisks);
   const warnings = allWarnings.filter(
     (warning) =>
       warning.requiresAcknowledgement &&
       requiredWarningIds.has(warning.id) &&
-      !acknowledgedWarningIds.has(warning.id),
+      (!acknowledgedWarningIds.has(warning.id) ||
+        (warning.id === "fast-recurring-interval" && maxIterationsPatch !== undefined)),
   );
   const acknowledgedRisks = Array.from(
     new Set([
@@ -204,16 +210,7 @@ export function automationApprovalGaps(input: {
       ...acknowledgedRiskIdsForDraft(allWarnings, requiredWarningIds),
     ]),
   );
-  const maxIterations =
-    input.enabled === true &&
-    input.schedule.type === "interval" &&
-    input.schedule.everySeconds < 60 &&
-    (input.maxIterations === null ||
-      (input.maxIterations ?? DEFAULT_AUTOMATION_FAST_INTERVAL_MAX_ITERATIONS) >
-        DEFAULT_AUTOMATION_FAST_INTERVAL_MAX_ITERATIONS)
-      ? DEFAULT_AUTOMATION_FAST_INTERVAL_MAX_ITERATIONS
-      : undefined;
-  return { warnings, acknowledgedRisks, maxIterations };
+  return { warnings, acknowledgedRisks, maxIterations: maxIterationsPatch };
 }
 
 export function acknowledgedRiskIdsForDraft(

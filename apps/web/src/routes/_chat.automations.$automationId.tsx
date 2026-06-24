@@ -267,7 +267,6 @@ function AutomationDetailView() {
     worktreeMode: definition.worktreeMode,
     prompt: definition.prompt,
     acknowledgedRisks: definition.acknowledgedRisks,
-    enabled: definition.enabled,
     maxIterations: definition.maxIterations,
   });
   const approveAutomationRisks = () =>
