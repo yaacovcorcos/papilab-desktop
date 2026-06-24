@@ -6,6 +6,7 @@ import {
   isGeminiOAuthBrowserPrompt,
   normalizeGeminiCapabilityProbeResult,
   parseGeminiAcpProbeError,
+  parseGeminiAcpProbeLogFailure,
 } from "./geminiAcpProbe";
 
 describe("buildGeminiProbeEnv", () => {
@@ -95,6 +96,31 @@ describe("parseGeminiAcpProbeError", () => {
     expect(parsed.auth.status).toBe("unauthenticated");
     expect(parsed.message).toContain("API key is missing");
     expect(parsed.message).toContain("~/.gemini/.env");
+  });
+});
+
+describe("parseGeminiAcpProbeLogFailure", () => {
+  it("maps captured loadCodeAssist premature-close output to auth guidance", () => {
+    const parsed = parseGeminiAcpProbeLogFailure(
+      "Invalid response body while trying to fetch https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist: Premature close",
+    );
+
+    expect(parsed?.status).toBe("error");
+    expect(parsed?.auth.status).toBe("unauthenticated");
+    expect(parsed?.message).toContain("Antigravity");
+    expect(parsed?.message).toContain("GEMINI_API_KEY");
+  });
+
+  it("maps captured generic Gemini auth output to setup guidance", () => {
+    const parsed = parseGeminiAcpProbeLogFailure("API key is missing");
+
+    expect(parsed?.status).toBe("error");
+    expect(parsed?.auth.status).toBe("unauthenticated");
+    expect(parsed?.message).toContain("~/.gemini/.env");
+  });
+
+  it("ignores captured non-auth process output", () => {
+    expect(parseGeminiAcpProbeLogFailure("Gemini ACP exited with code 1")).toBeUndefined();
   });
 });
 

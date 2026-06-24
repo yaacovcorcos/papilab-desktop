@@ -86,6 +86,30 @@ function formatGeminiModelDiscoveryFallbackMessage(): string {
   return "Gemini CLI is installed and authenticated, but it did not report any available models. Synara will use its built-in Gemini model list.";
 }
 
+function isGeminiUnauthenticatedFailure(message: string, code?: number): boolean {
+  const lowerMessage = message.toLowerCase();
+  return (
+    code === GEMINI_ACP_AUTH_REQUIRED_CODE ||
+    isGeminiCodeAssistMigrationAuthFailure(message) ||
+    lowerMessage.includes("authentication required") ||
+    lowerMessage.includes("api key is missing") ||
+    lowerMessage.includes("auth method") ||
+    lowerMessage.includes("not configured")
+  );
+}
+
+function buildGeminiUnauthenticatedResult(
+  message: string,
+): Omit<GeminiCapabilityProbeResult, "models"> {
+  return {
+    status: "error",
+    auth: { status: "unauthenticated" },
+    message: isGeminiCodeAssistMigrationAuthFailure(message)
+      ? formatGeminiCodeAssistMigrationAuthMessage()
+      : formatGeminiAuthMessage(message),
+  };
+}
+
 function detailFromProbeLogs(
   stdoutLines: ReadonlyArray<string>,
   stderrLines: ReadonlyArray<string>,
@@ -99,24 +123,9 @@ export function parseGeminiAcpProbeError(
   const record = asRecord(error);
   const code = asNumber(record?.code);
   const message = trimToUndefined(record?.message) ?? "Gemini ACP request failed.";
-  const lowerMessage = message.toLowerCase();
-  const codeAssistMigrationAuthFailure = isGeminiCodeAssistMigrationAuthFailure(message);
-  const unauthenticated =
-    code === GEMINI_ACP_AUTH_REQUIRED_CODE ||
-    codeAssistMigrationAuthFailure ||
-    lowerMessage.includes("authentication required") ||
-    lowerMessage.includes("api key is missing") ||
-    lowerMessage.includes("auth method") ||
-    lowerMessage.includes("not configured");
 
-  if (unauthenticated) {
-    return {
-      status: "error",
-      auth: { status: "unauthenticated" },
-      message: codeAssistMigrationAuthFailure
-        ? formatGeminiCodeAssistMigrationAuthMessage()
-        : formatGeminiAuthMessage(message),
-    };
+  if (isGeminiUnauthenticatedFailure(message, code)) {
+    return buildGeminiUnauthenticatedResult(message);
   }
 
   return {
@@ -124,6 +133,14 @@ export function parseGeminiAcpProbeError(
     auth: { status: "unknown" },
     message: formatGeminiDiscoveryWarning(message),
   };
+}
+
+export function parseGeminiAcpProbeLogFailure(
+  detail: string,
+): Omit<GeminiCapabilityProbeResult, "models"> | undefined {
+  return isGeminiUnauthenticatedFailure(detail)
+    ? buildGeminiUnauthenticatedResult(detail)
+    : undefined;
 }
 
 // Runs Gemini probes as status checks only; they must never launch an OAuth browser.
@@ -327,6 +344,15 @@ export const probeGeminiCapabilities = (input: {
 
         timeout = setTimeout(() => {
           const detail = detailFromProbeLogs(stdoutLines, stderrLines);
+          const authFailure = detail ? parseGeminiAcpProbeLogFailure(detail) : undefined;
+          if (authFailure) {
+            finalize({
+              ...authFailure,
+              models: [],
+            });
+            return;
+          }
+
           finalize({
             status: "warning",
             auth: { status: "unknown" },
@@ -442,6 +468,15 @@ export const probeGeminiCapabilities = (input: {
           }
 
           const detail = detailFromProbeLogs(stdoutLines, stderrLines);
+          const authFailure = detail ? parseGeminiAcpProbeLogFailure(detail) : undefined;
+          if (authFailure) {
+            finalize({
+              ...authFailure,
+              models: [],
+            });
+            return;
+          }
+
           const exitMessage =
             detail ??
             `Gemini ACP exited before responding (code ${code ?? "null"}${signal ? `, signal ${signal}` : ""}).`;
