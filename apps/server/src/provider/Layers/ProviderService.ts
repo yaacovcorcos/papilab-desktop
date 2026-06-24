@@ -181,9 +181,12 @@ function runtimeStatusForEvent(event: ProviderRuntimeEvent): "running" | "stoppe
     case "session.exited":
     case "turn.completed":
     case "turn.aborted":
+    case "thread.state.changed":
       // A completed turn can still carry a resume cursor, but it must not keep
       // the desktop app treating the provider process as active after restart.
-      return "stopped";
+      return event.type === "thread.state.changed" && event.payload.state !== "compacted"
+        ? "running"
+        : "stopped";
     case "runtime.error":
       return "error";
     default:
@@ -194,6 +197,7 @@ function runtimeStatusForEvent(event: ProviderRuntimeEvent): "running" | "stoppe
 function shouldRefreshResumeCursorForEvent(event: ProviderRuntimeEvent): boolean {
   return (
     event.type === "thread.started" ||
+    (event.type === "thread.state.changed" && event.payload.state === "compacted") ||
     event.type === "turn.completed" ||
     event.type === "turn.aborted"
   );
@@ -208,6 +212,7 @@ function runtimeLastErrorForEvent(event: ProviderRuntimeEvent): string | null | 
     case "turn.started":
     case "turn.completed":
     case "turn.aborted":
+    case "thread.state.changed":
     case "session.exited":
       return null;
     default:
@@ -324,6 +329,11 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
         case "turn.aborted":
           scheduleRuntimeIdleStop(event.threadId);
           return;
+        case "thread.state.changed":
+          if (event.payload.state === "compacted") {
+            scheduleRuntimeIdleStop(event.threadId);
+          }
+          return;
         case "session.exited":
           clearRuntimeIdleTimer(event.threadId);
           retireRuntimeIdleGeneration(event.threadId);
@@ -431,6 +441,7 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
         case "session.started":
         case "session.state.changed":
         case "thread.started":
+        case "thread.state.changed":
         case "turn.started":
         case "turn.completed":
         case "turn.aborted":
@@ -452,6 +463,7 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
             ? (event.turnId ?? null)
             : event.type === "turn.completed" ||
                 event.type === "turn.aborted" ||
+                (event.type === "thread.state.changed" && event.payload.state === "compacted") ||
                 event.type === "session.exited" ||
                 event.type === "runtime.error" ||
                 (event.type === "session.state.changed" &&
@@ -1093,13 +1105,16 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
           session?.status === "ready" ||
           (session?.status === "running" &&
             session.activeTurnId === undefined &&
-            bindingRuntimePayload.lastRuntimeEvent === "provider.compactThread");
+            binding.status === "stopped" &&
+            bindingRuntimePayload.lastRuntimeEvent === "thread.state.changed");
         if (!session || !isIdleReadySession || session.activeTurnId !== undefined) {
+          retireRuntimeIdleGeneration(threadId, generation);
           return;
         }
         // Live adapter snapshots can temporarily omit cursors even though the
         // directory already persisted one from an earlier runtime event.
         if (!hasResumeCursor(session.resumeCursor) && !hasResumeCursor(binding.resumeCursor)) {
+          retireRuntimeIdleGeneration(threadId, generation);
           return;
         }
         if (!isRuntimeIdleGenerationCurrent(threadId, generation)) {
@@ -1258,21 +1273,10 @@ const makeProviderService = (options?: ProviderServiceLiveOptions) =>
               );
             }
             yield* routed.adapter.compactThread(routed.threadId);
-            yield* directory.upsert({
-              threadId: input.threadId,
-              provider: routed.adapter.provider,
-              status: "stopped",
-              runtimePayload: {
-                activeTurnId: null,
-                lastRuntimeEvent: "provider.compactThread",
-                lastRuntimeEventAt: new Date().toISOString(),
-              },
-            });
             yield* analytics.record("provider.thread.compacted", {
               provider: routed.adapter.provider,
             });
           }),
-          { scheduleIdleStopOnSuccess: true },
         );
       });
 

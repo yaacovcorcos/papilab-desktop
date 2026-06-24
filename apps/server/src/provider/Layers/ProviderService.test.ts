@@ -1771,7 +1771,19 @@ idleCleanup.layer("ProviderServiceLive idle cleanup", (it) => {
           }));
         }),
       );
+      yield* idleCleanup.codex.waitForRuntimeSubscribers();
       yield* provider.compactThread({ threadId });
+      yield* sleep(150);
+      assert.equal(idleCleanup.codex.stopSession.mock.calls.length, 0);
+
+      idleCleanup.codex.emit({
+        type: "thread.state.changed",
+        eventId: asEventId("runtime-idle-compact-completed"),
+        provider: "codex",
+        createdAt: "2026-02-27T00:04:00.000Z",
+        threadId,
+        payload: { state: "compacted" },
+      });
 
       yield* waitUntil(
         () => idleCleanup.codex.stopSession.mock.calls.length > 0,
