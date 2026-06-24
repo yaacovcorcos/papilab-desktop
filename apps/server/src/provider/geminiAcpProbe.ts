@@ -153,6 +153,13 @@ export function parseGeminiAcpProbeLogFailure(
     : undefined;
 }
 
+export function captureGeminiAcpProbeLogFailure(
+  captured: Omit<GeminiCapabilityProbeResult, "models"> | undefined,
+  line: string,
+): Omit<GeminiCapabilityProbeResult, "models"> | undefined {
+  return captured ?? parseGeminiAcpProbeLogFailure(line);
+}
+
 // Runs Gemini probes as status checks only; they must never launch an OAuth browser.
 export function buildGeminiProbeEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   return {
@@ -178,8 +185,7 @@ export function isGeminiCodeAssistMigrationAuthFailure(message: string): boolean
       lowerMessage.includes("client is no longer supported") ||
       lowerMessage.includes("migrate"));
   const loadCodeAssistClosed =
-    (lowerMessage.includes("cloudcode-pa.googleapis.com") ||
-      lowerMessage.includes("loadcodeassist")) &&
+    lowerMessage.includes("loadcodeassist") &&
     lowerMessage.includes("premature close");
 
   return explicitMigration || loadCodeAssistClosed;
@@ -263,6 +269,7 @@ export const probeGeminiCapabilities = (input: {
 
         let settled = false;
         let sessionNewRequested = false;
+        let capturedAuthFailure: Omit<GeminiCapabilityProbeResult, "models"> | undefined;
         let timeout: ReturnType<typeof setTimeout> | undefined;
 
         const cleanup = () => {
@@ -352,9 +359,19 @@ export const probeGeminiCapabilities = (input: {
           });
         };
 
+        const capturePlainAuthLogLine = (line: string) => {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith("{")) {
+            return;
+          }
+
+          capturedAuthFailure = captureGeminiAcpProbeLogFailure(capturedAuthFailure, trimmed);
+        };
+
         timeout = setTimeout(() => {
           const detail = detailFromProbeLogs(stdoutLines, stderrLines);
-          const authFailure = detail ? parseGeminiAcpProbeLogFailure(detail) : undefined;
+          const authFailure =
+            capturedAuthFailure ?? (detail ? parseGeminiAcpProbeLogFailure(detail) : undefined);
           if (authFailure) {
             finalize({
               ...authFailure,
@@ -384,6 +401,7 @@ export const probeGeminiCapabilities = (input: {
 
           const trimmed = line.trim();
           if (!trimmed.startsWith("{")) {
+            capturePlainAuthLogLine(line);
             return;
           }
 
@@ -458,7 +476,10 @@ export const probeGeminiCapabilities = (input: {
           pushLogLine(stderrLines, line);
           if (isGeminiOAuthBrowserPrompt(line)) {
             finalizeOAuthBrowserPrompt();
+            return;
           }
+
+          capturePlainAuthLogLine(line);
         });
 
         child.once("error", (error) => {
@@ -478,7 +499,8 @@ export const probeGeminiCapabilities = (input: {
           }
 
           const detail = detailFromProbeLogs(stdoutLines, stderrLines);
-          const authFailure = detail ? parseGeminiAcpProbeLogFailure(detail) : undefined;
+          const authFailure =
+            capturedAuthFailure ?? (detail ? parseGeminiAcpProbeLogFailure(detail) : undefined);
           if (authFailure) {
             finalize({
               ...authFailure,

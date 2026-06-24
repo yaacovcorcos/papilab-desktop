@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildGeminiProbeEnv,
+  captureGeminiAcpProbeLogFailure,
   isGeminiCodeAssistMigrationAuthFailure,
   isGeminiOAuthBrowserPrompt,
   normalizeGeminiCapabilityProbeResult,
@@ -57,6 +58,14 @@ describe("isGeminiCodeAssistMigrationAuthFailure", () => {
     expect(isGeminiCodeAssistMigrationAuthFailure("Network request failed: Premature close")).toBe(
       false,
     );
+  });
+
+  it("ignores non-loadCodeAssist cloudcode premature-close failures", () => {
+    expect(
+      isGeminiCodeAssistMigrationAuthFailure(
+        "Invalid response body while trying to fetch https://cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse: Premature close",
+      ),
+    ).toBe(false);
   });
 });
 
@@ -125,6 +134,32 @@ describe("parseGeminiAcpProbeLogFailure", () => {
 
   it("ignores generic configured wording in captured process output", () => {
     expect(parseGeminiAcpProbeLogFailure("forkpty: Device not configured")).toBeUndefined();
+  });
+
+  it("ignores non-loadCodeAssist cloudcode premature-close process output", () => {
+    expect(
+      parseGeminiAcpProbeLogFailure(
+        "Invalid response body while trying to fetch https://cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse: Premature close",
+      ),
+    ).toBeUndefined();
+  });
+});
+
+describe("captureGeminiAcpProbeLogFailure", () => {
+  it("retains the first auth line when later stack frames are captured", () => {
+    const authFailure = captureGeminiAcpProbeLogFailure(
+      undefined,
+      "Invalid response body while trying to fetch https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist: Premature close",
+    );
+    const afterStackFrame = captureGeminiAcpProbeLogFailure(
+      authFailure,
+      "    at async loadCodeAssist (/path/to/gemini.js:10:3)",
+    );
+
+    expect(afterStackFrame).toBe(authFailure);
+    expect(afterStackFrame?.status).toBe("error");
+    expect(afterStackFrame?.auth.status).toBe("unauthenticated");
+    expect(afterStackFrame?.message).toContain("Antigravity");
   });
 });
 
