@@ -1462,19 +1462,36 @@ export default function ChatView({
       false,
     [],
   );
-  // A composer-local automation setup belongs to the thread it began in; restore its
-  // carried request before dropping ephemeral bubbles on navigation.
-  useEffect(() => {
-    const conversation = pendingAutomationConversationRef.current;
-    if (conversation && conversation.threadId !== threadId) {
+  const restorePendingAutomationConversationDraft = useCallback(
+    (conversation: NonNullable<typeof pendingAutomationConversation>) => {
       const draft = promptRef.current.trim();
       const restored = draft
         ? `${conversation.accumulatedMessage}\n${draft}`
         : conversation.accumulatedMessage;
       setComposerDraftPrompt(conversation.threadId, restored);
+    },
+    [setComposerDraftPrompt],
+  );
+  // A composer-local automation setup belongs to the thread it began in; restore its
+  // carried request before dropping ephemeral bubbles on navigation or unmount.
+  useEffect(() => {
+    const conversation = pendingAutomationConversationRef.current;
+    if (conversation && conversation.threadId !== threadId) {
+      restorePendingAutomationConversationDraft(conversation);
+      pendingAutomationConversationRef.current = null;
     }
-    setPendingAutomationConversation(null);
-  }, [setComposerDraftPrompt, threadId]);
+    if (pendingAutomationConversationRef.current === null) {
+      setPendingAutomationConversation(null);
+    }
+    return () => {
+      const pendingConversation = pendingAutomationConversationRef.current;
+      if (!pendingConversation) {
+        return;
+      }
+      restorePendingAutomationConversationDraft(pendingConversation);
+      pendingAutomationConversationRef.current = null;
+    };
+  }, [restorePendingAutomationConversationDraft, threadId]);
   const projectInstructions = useProjectInstructionsStore((state) =>
     activeProjectId ? (state.instructionsByProjectId[activeProjectId] ?? "") : "",
   );
@@ -5961,6 +5978,7 @@ export default function ChatView({
       }
       setComposerDraftPrompt(pendingAutomationConversation.threadId, restored);
     }
+    pendingAutomationConversationRef.current = null;
     setPendingAutomationConversation(null);
   }, [pendingAutomationConversation, setComposerDraftPrompt, threadId]);
 
@@ -6608,6 +6626,7 @@ export default function ChatView({
       if (handledSlashCommand) {
         // A slash command (e.g. /clear) consumes the composer, so abandon any in-progress
         // automation setup rather than leaving a stale banner/request behind.
+        pendingAutomationConversationRef.current = null;
         setPendingAutomationConversation(null);
         return true;
       }
@@ -6702,6 +6721,7 @@ export default function ChatView({
           return true;
         }
 
+        pendingAutomationConversationRef.current = null;
         setPendingAutomationConversation(null);
         const automationIntent = automationRequest.resolution.intent;
         const automationTargetThreadId =
@@ -6725,8 +6745,15 @@ export default function ChatView({
             // Keep the full multi-turn request in the composer so dismissing the review
             // dialog doesn't lose it (the single-turn path likewise leaves its text).
             // Restore only the text; any attachments/mentions on the final reply stay.
-            promptRef.current = messageForAutomation;
-            setComposerDraftPrompt(activeThread.id, messageForAutomation);
+            const liveDraft = promptRef.current.trimStart();
+            const leftover = liveDraft.startsWith(trimmedPromptForSend)
+              ? liveDraft.slice(trimmedPromptForSend.length).trimStart()
+              : liveDraft;
+            const restoredPrompt = leftover
+              ? `${messageForAutomation}\n${leftover}`
+              : messageForAutomation;
+            promptRef.current = restoredPrompt;
+            setComposerDraftPrompt(activeThread.id, restoredPrompt);
           }
           setAutomationEditingDefinition(null);
           setAutomationDraftWarningContext(automationDraft.warningContext);
@@ -6754,6 +6781,7 @@ export default function ChatView({
       if (conversation) {
         // The combined text no longer reads as an automation; abandon setup and let
         // this message send as a normal chat turn instead of looping on the question.
+        pendingAutomationConversationRef.current = null;
         setPendingAutomationConversation(null);
       }
     }
@@ -10085,6 +10113,7 @@ export default function ChatView({
                     listRef={legendListRef}
                     timelineControllerRef={timelineControllerRef}
                     pinnedMessageIds={pinnedMessageIds}
+                    canPinMessage={(messageId) => !isPendingSetupBubbleId(messageId)}
                     onTogglePinMessage={handleTogglePinMessageGuarded}
                     threadMarkers={threadMarkers}
                     timelineEntries={timelineEntries}
