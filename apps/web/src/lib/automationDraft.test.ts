@@ -363,6 +363,17 @@ describe("automationApprovalGaps", () => {
     expect(gaps.maxIterations).toBe(10);
   });
 
+  it("keeps an existing compliant fast interval cap", () => {
+    const gaps = automationApprovalGaps({
+      ...base,
+      schedule: { type: "interval", everySeconds: 15 },
+      runtimeMode: "full-access",
+      acknowledgedRisks: [],
+      maxIterations: 3,
+    });
+    expect(gaps.maxIterations).toBeUndefined();
+  });
+
   it("does not show a cap-only repair for paused legacy fast loops", () => {
     const gaps = automationApprovalGaps({
       ...base,
