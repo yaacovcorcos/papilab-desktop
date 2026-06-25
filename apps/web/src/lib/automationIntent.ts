@@ -697,14 +697,14 @@ function stripAutomationScaffold(value: string): string {
   cleaned = cleaned
     .replace(
       new RegExp(
-        `\\b(?:you\\s+)?wake\\s+up\\s+every\\s+${INTERVAL_PATTERN}\\b\\s*(?:and|to|then|,)?\\s*`,
+        `\\b(?:you\\s+)?wake\\s+up\\s+(?:every|each)\\s+${INTERVAL_PATTERN}\\b\\s*(?:and|to|then|,)?\\s*`,
         "i",
       ),
       "",
     )
     .replace(
       new RegExp(
-        `\\b(?:you\\s+)?run\\s+(?:it|this)?\\s*every\\s+${INTERVAL_PATTERN}\\b\\s*(?:and|to|then|,)?\\s*`,
+        `\\b(?:you\\s+)?run\\s+(?:it|this)?\\s*(?:every|each)\\s+${INTERVAL_PATTERN}\\b\\s*(?:and|to|then|,)?\\s*`,
         "i",
       ),
       "",
