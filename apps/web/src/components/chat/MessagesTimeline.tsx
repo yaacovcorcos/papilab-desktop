@@ -127,6 +127,7 @@ import {
 } from "../../lib/subagentPresentation";
 import { RiRobot3Line } from "react-icons/ri";
 import { deriveUserMessagePreviewState } from "./userMessagePreview";
+import { resolveTextDirectionForContent } from "../../textDirection";
 
 const MAX_VISIBLE_INLINE_TOOL_ENTRIES = 4;
 // Changed-files list in the per-turn card is capped so large turns stay compact;
@@ -832,6 +833,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
               expanded: expandedUserMessagesById[row.message.id] ?? false,
             },
           );
+          const userMessageDirection = resolveTextDirectionForContent(userMessagePreview.text);
           const userMessageExpanded = expandedUserMessagesById[row.message.id] ?? false;
           const showUserText =
             userMessagePreview.text.trim().length > 0 || terminalContexts.length > 0;
@@ -935,6 +937,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                   >
                     <UserMessageBody
                       text={userMessagePreview.text}
+                      direction={userMessageDirection}
                       mentionReferences={row.message.mentions ?? []}
                       terminalContexts={terminalContexts}
                       chatTypographyStyle={userMessageTypographyStyle}
@@ -1165,6 +1168,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                     text={messageText}
                     cwd={markdownCwd}
                     isStreaming={Boolean(row.message.streaming)}
+                    direction={resolveTextDirectionForContent(messageText)}
                     style={chatTypographyStyle}
                     onImageExpand={onImageExpand}
                     markers={messageMarkers}
@@ -1826,7 +1830,8 @@ const UserMessageEditForm = memo(function UserMessageEditForm(props: {
         disabled={props.disabled}
         rows={1}
         aria-label="Edit message"
-        className="max-h-60 min-h-0 w-full resize-none overflow-y-auto border-0 bg-transparent p-0 font-system-ui text-foreground outline-none placeholder:text-muted-foreground/45 disabled:opacity-70"
+        className="max-h-60 min-h-0 w-full resize-none overflow-y-auto border-0 bg-transparent p-0 text-start font-system-ui text-foreground outline-none placeholder:text-muted-foreground/45 disabled:opacity-70"
+        dir="auto"
         style={props.chatTypographyStyle}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={handleKeyDown}
@@ -1859,6 +1864,7 @@ const UserMessageEditForm = memo(function UserMessageEditForm(props: {
 
 const UserMessageBody = memo(function UserMessageBody(props: {
   text: string;
+  direction: "ltr" | "rtl";
   mentionReferences: ReadonlyArray<ProviderMentionReference>;
   terminalContexts: ParsedTerminalContextEntry[];
   chatTypographyStyle: CSSProperties;
@@ -1915,7 +1921,8 @@ const UserMessageBody = memo(function UserMessageBody(props: {
 
         return (
           <div
-            className="block max-w-full min-w-0 wrap-break-word whitespace-pre-wrap font-system-ui text-foreground"
+            className="block max-w-full min-w-0 wrap-break-word whitespace-pre-wrap text-start font-system-ui text-foreground"
+            dir={props.direction}
             style={props.chatTypographyStyle}
           >
             {inlineNodes}
@@ -1953,7 +1960,8 @@ const UserMessageBody = memo(function UserMessageBody(props: {
 
     return (
       <div
-        className="block max-w-full min-w-0 wrap-break-word whitespace-pre-wrap font-system-ui text-foreground"
+        className="block max-w-full min-w-0 wrap-break-word whitespace-pre-wrap text-start font-system-ui text-foreground"
+        dir={props.direction}
         style={props.chatTypographyStyle}
       >
         {inlineNodes}
@@ -1971,7 +1979,8 @@ const UserMessageBody = memo(function UserMessageBody(props: {
   ) {
     return (
       <div
-        className="flex max-w-full min-w-0 items-center leading-none text-foreground [&>span]:translate-y-0"
+        className="flex max-w-full min-w-0 items-center text-start leading-none text-foreground [&>span]:translate-y-0"
+        dir={props.direction}
         style={props.chatTypographyStyle}
       >
         {renderUserMessageInlineText(
@@ -1986,7 +1995,8 @@ const UserMessageBody = memo(function UserMessageBody(props: {
 
   return (
     <div
-      className="block max-w-full min-w-0 whitespace-pre-wrap break-words font-system-ui text-foreground"
+      className="block max-w-full min-w-0 whitespace-pre-wrap break-words text-start font-system-ui text-foreground"
+      dir={props.direction}
       style={props.chatTypographyStyle}
     >
       {renderUserMessageInlineText(
