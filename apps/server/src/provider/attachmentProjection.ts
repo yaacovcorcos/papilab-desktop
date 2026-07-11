@@ -3,7 +3,11 @@
 // Layer: Provider adapter utility
 // Depends on: attachmentStore path resolution and shared byte formatting.
 
-import type { ChatAttachment, ChatFileAttachment, ChatImageAttachment } from "@synara/contracts";
+import type {
+  ChatAttachment,
+  ChatFileAttachment,
+  ChatImageAttachment,
+} from "@synara/contracts";
 import { formatBytes } from "@synara/shared/formatBytes";
 
 import { resolveAttachmentPath } from "../attachmentStore.ts";
@@ -12,7 +16,7 @@ function isProjectedFileAttachment(
   attachment: ChatAttachment,
   include: "all-files" | "non-pdf-files",
   includeImage: ((attachment: ChatImageAttachment) => boolean) | undefined,
-): attachment is ChatFileAttachment | ChatImageAttachment {
+): attachment is ChatImageAttachment | ChatFileAttachment {
   if (attachment.type === "image") {
     return includeImage?.(attachment) ?? false;
   }
