@@ -2662,7 +2662,7 @@ function SettingsRouteView() {
 
         <SettingsRow
           title="Provider updates"
-          description="Review installed provider tools that Synara can safely update."
+          description="Review installed provider tools that LitRev can safely update."
           status={
             !settings.enableProviderUpdateChecks
               ? "Automatic checks off"
