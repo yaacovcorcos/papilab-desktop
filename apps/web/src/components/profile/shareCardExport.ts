@@ -5,13 +5,14 @@
 // Layer: web profile feature.
 
 import { toBlob } from "html-to-image";
+import { copyPngBlobToDesktopClipboard } from "~/lib/desktopClipboard";
 import { readNativeApi } from "~/nativeApi";
 
 export { downloadBlob } from "~/lib/browserDownload";
 
 const SHARE_BRAND_HANDLE = "@trySynara";
 export const SHARE_TWEET_TEXT = `Just checking my ${SHARE_BRAND_HANDLE} dev stats. Absolute masterpiece of an IDE.`;
-const SHARE_URL = "https://trysynara.com";
+const SHARE_URL = "https://github.com/yaacovcorcos/LitRev";
 
 export type ShareTarget = "x" | "linkedin" | "reddit";
 
@@ -35,6 +36,10 @@ export async function renderNodeToPngBlob(
 }
 
 export async function copyImageToClipboard(blob: Blob): Promise<boolean> {
+  if (await copyPngBlobToDesktopClipboard(blob)) {
+    return true;
+  }
+
   try {
     if (typeof ClipboardItem === "undefined" || !navigator.clipboard?.write) {
       return false;
@@ -65,6 +70,6 @@ export function shareIntentUrl(target: ShareTarget): string {
     case "reddit":
       return `https://www.reddit.com/submit?url=${encodeURIComponent(
         SHARE_URL,
-      )}&title=${encodeURIComponent("My Synara dev stats")}`;
+      )}&title=${encodeURIComponent("My LitRev dev stats")}`;
   }
 }

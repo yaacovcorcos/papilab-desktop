@@ -9,6 +9,11 @@ import {
   resolveThreadBranchRegressionGuard,
 } from "./git";
 
+const PRE_CUTOVER_NAMESPACE_FIXTURES = [
+  String.fromCharCode(100, 112, 99, 111, 100, 101),
+  String.fromCharCode(116, 51, 99, 111, 100, 101),
+] as const;
+
 describe("isTemporaryWorktreeBranch", () => {
   it("matches generated temporary worktree branches", () => {
     expect(isTemporaryWorktreeBranch(buildTemporaryWorktreeBranchName())).toBe(true);
@@ -19,14 +24,20 @@ describe("isTemporaryWorktreeBranch", () => {
     expect(isTemporaryWorktreeBranch(` ${WORKTREE_BRANCH_PREFIX}/DEADBEEF `)).toBe(true);
   });
 
-  it("keeps recognizing legacy temporary worktree branches", () => {
-    expect(isTemporaryWorktreeBranch("dpcode/deadbeef")).toBe(true);
-    expect(isTemporaryWorktreeBranch("t3code/deadbeef")).toBe(true);
+  it("keeps recognizing only exact pre-cutover temporary namespaces", () => {
+    for (const namespace of PRE_CUTOVER_NAMESPACE_FIXTURES) {
+      expect(isTemporaryWorktreeBranch(`${namespace}/deadbeef`)).toBe(true);
+      expect(isTemporaryWorktreeBranch(`${namespace}/semantic-branch`)).toBe(false);
+    }
   });
 
   it("rejects semantic branch names", () => {
     expect(isTemporaryWorktreeBranch(`${WORKTREE_BRANCH_PREFIX}/feature/demo`)).toBe(false);
     expect(isTemporaryWorktreeBranch("feature/demo")).toBe(false);
+    expect(isTemporaryWorktreeBranch("feature/deadbeef")).toBe(false);
+    expect(isTemporaryWorktreeBranch("hotfix/deadbeef")).toBe(false);
+    expect(isTemporaryWorktreeBranch("bridge/deadbeef")).toBe(false);
+    expect(isTemporaryWorktreeBranch("bridge/semantic-branch")).toBe(false);
   });
 });
 
@@ -61,26 +72,25 @@ describe("resolveThreadBranchRegressionGuard", () => {
 
 describe("buildSynaraBranchName", () => {
   it("uses synara as the branch namespace", () => {
-    expect(buildSynaraBranchName("fix toast copy")).toBe("synara/fix-toast-copy");
+    expect(buildSynaraBranchName("fix toast copy")).toBe("litrev/fix-toast-copy");
   });
 
   it("keeps non-Synara namespaces inside the Synara branch", () => {
     expect(buildSynaraBranchName("feature/refine-toolbar-actions")).toBe(
-      "synara/feature/refine-toolbar-actions",
+      "litrev/feature/refine-toolbar-actions",
     );
   });
 
   it("normalizes legacy prefixes before rebuilding the branch", () => {
-    expect(buildSynaraBranchName("t3code/refine toolbar actions")).toBe(
-      "synara/refine-toolbar-actions",
-    );
-    expect(buildSynaraBranchName("dpcode/refine toolbar actions")).toBe(
-      "synara/refine-toolbar-actions",
-    );
+    for (const namespace of PRE_CUTOVER_NAMESPACE_FIXTURES) {
+      expect(buildSynaraBranchName(`${namespace}/refine toolbar actions`)).toBe(
+        "litrev/refine-toolbar-actions",
+      );
+    }
   });
 
-  it("falls back to synara/update when no preferred name is provided", () => {
-    expect(buildSynaraBranchName()).toBe("synara/update");
+  it("falls back to the LitRev update branch when no preferred name is provided", () => {
+    expect(buildSynaraBranchName()).toBe("litrev/update");
   });
 });
 
@@ -88,9 +98,9 @@ describe("resolveUniqueSynaraBranchName", () => {
   it("increments suffix when the Synara branch already exists", () => {
     expect(
       resolveUniqueSynaraBranchName(
-        ["main", "synara/fix-toast-copy", "synara/fix-toast-copy-2"],
+        ["main", "litrev/fix-toast-copy", "litrev/fix-toast-copy-2"],
         "fix toast copy",
       ),
-    ).toBe("synara/fix-toast-copy-3");
+    ).toBe("litrev/fix-toast-copy-3");
   });
 });

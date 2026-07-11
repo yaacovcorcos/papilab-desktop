@@ -3,7 +3,7 @@
 // Layer: UI state store
 // Exports: single-surface panel store, default-state helpers, and selectors.
 
-import type { ThreadId, TurnId } from "@t3tools/contracts";
+import type { ThreadId, TurnId } from "@synara/contracts";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { ChatRightPanel } from "./diffRouteSearch";
@@ -23,7 +23,7 @@ interface SingleChatPanelStore {
   clearThreadPanelState: (threadId: ThreadId) => void;
 }
 
-const SINGLE_CHAT_PANEL_STORAGE_KEY = "synara:single-chat-panel-state:v1";
+const SINGLE_CHAT_PANEL_STORAGE_KEY = "litrev:single-chat-panel-state:v1";
 
 export function createDefaultSingleChatPanelState(): SingleChatPanelState {
   return {

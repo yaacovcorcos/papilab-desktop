@@ -9,6 +9,7 @@ export const SETTINGS_SECTION_IDS = [
   "appearance",
   "notifications",
   "behavior",
+  "shortcuts",
   "worktrees",
   "archived",
   "models",
@@ -50,7 +51,7 @@ export const SETTINGS_NAV_GROUPS: ReadonlyArray<{
   label: string;
 }> = [
   { id: "app", label: "App" },
-  { id: "synara", label: "Synara" },
+  { id: "synara", label: "LitRev" },
 ] as const;
 
 export const SETTINGS_NAV_ITEMS: readonly SettingsNavItem[] = [
@@ -95,10 +96,18 @@ export const SETTINGS_NAV_ITEMS: readonly SettingsNavItem[] = [
     eyebrow: "Interaction rules",
   },
   {
+    id: "shortcuts",
+    group: "app",
+    label: "Keyboard Shortcuts",
+    description: "Every keyboard shortcut available in LitRev, grouped by context.",
+    icon: "shortcut",
+    eyebrow: "Key bindings",
+  },
+  {
     id: "worktrees",
     group: "app",
     label: "Worktrees",
-    description: "Review and clean up the worktrees created by Synara.",
+    description: "Review and clean up the worktrees created by LitRev.",
     icon: "branch-simple",
     eyebrow: "Workspace management",
   },

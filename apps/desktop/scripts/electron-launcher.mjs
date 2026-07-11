@@ -1,4 +1,4 @@
-// This file mostly exists because we want dev mode to say "Synara (Dev)" instead of "electron"
+// This file mostly exists because we want dev mode to use LitRev's own app identity.
 
 import { spawnSync } from "node:child_process";
 import {
@@ -13,15 +13,16 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createRequire } from "node:module";
+import { litrevBundleId } from "@synara/shared/desktopIdentity";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const isDevelopment = Boolean(process.env.VITE_DEV_SERVER_URL);
-const APP_DISPLAY_NAME = isDevelopment ? "Synara (Dev)" : "Synara";
-const APP_BUNDLE_ID = isDevelopment ? "com.t3tools.synara.dev" : "com.t3tools.synara";
+const APP_DISPLAY_NAME = isDevelopment ? "LitRev (Dev)" : "LitRev";
+const APP_BUNDLE_ID = litrevBundleId(isDevelopment);
 const LAUNCHER_VERSION = 2;
 const MICROPHONE_USAGE_DESCRIPTION =
-  "Synara needs microphone access so you can record voice notes and transcribe them into the chat composer.";
+  "LitRev needs microphone access so you can record voice notes and transcribe them into the chat composer.";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const desktopDir = resolve(__dirname, "..");

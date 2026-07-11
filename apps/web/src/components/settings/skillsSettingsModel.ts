@@ -3,8 +3,8 @@
 // Layer: Settings UI logic
 // Exports: origin metadata, canonical skill grouping, and section ordering helpers.
 
-import type { ProviderKind, ProviderSkillDescriptor } from "@t3tools/contracts";
-import { PROVIDER_DISPLAY_NAMES } from "@t3tools/contracts";
+import type { ProviderKind, ProviderSkillDescriptor } from "@synara/contracts";
+import { PROVIDER_DISPLAY_NAMES } from "@synara/contracts";
 
 export interface SkillOriginInfo {
   readonly label: string;
@@ -62,7 +62,7 @@ export const PROVIDER_STACK_ORDER: readonly ProviderKind[] = [
 export function skillOriginInfo(scope: string | undefined): SkillOriginInfo {
   switch (scope) {
     case "synara":
-      return { label: "Synara", provider: null };
+      return { label: "LitRev", provider: null };
     case "codex":
       return { label: PROVIDER_DISPLAY_NAMES.codex, provider: "codex" };
     case "claude":

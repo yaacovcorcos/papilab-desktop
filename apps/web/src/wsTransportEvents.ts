@@ -5,7 +5,7 @@
 
 export type WsTransportState = "connecting" | "open" | "closed" | "disposed";
 
-export const SYNARA_WS_TRANSPORT_STATE_EVENT = "synara:ws-transport-state";
+export const SYNARA_WS_TRANSPORT_STATE_EVENT = "litrev:ws-transport-state";
 
 export interface WsTransportStateEventDetail {
   state: WsTransportState;
