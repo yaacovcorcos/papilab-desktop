@@ -4353,10 +4353,7 @@ describe("ClaudeAdapterLive", () => {
       assert.ok(secondQuery);
       assert.equal(firstQuery.closeCalls, 1);
       assert.equal(harness.createInputs[1]?.options.model, "claude-opus-4-8");
-      assert.equal(
-        autoCompactWindowFromOptions(harness.createInputs[1]?.options),
-        1_000_000,
-      );
+      assert.equal(autoCompactWindowFromOptions(harness.createInputs[1]?.options), 1_000_000);
       assert.equal(yield* adapter.hasSession(THREAD_ID), true);
       assert.equal((yield* adapter.listSessions()).length, 1);
 
