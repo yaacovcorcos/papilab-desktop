@@ -28,10 +28,10 @@ describe("desktopUserDataProfile", () => {
   it("resolves the canonical Synara profile names", () => {
     const appDataBase = "/Users/tester/Library/Application Support";
     expect(resolveDesktopUserDataPath({ appDataBase, isDevelopment: true })).toBe(
-      "/Users/tester/Library/Application Support/synara-dev",
+      "/Users/tester/Library/Application Support/litrev-dev",
     );
     expect(resolveDesktopUserDataPath({ appDataBase, isDevelopment: false })).toBe(
-      "/Users/tester/Library/Application Support/synara",
+      "/Users/tester/Library/Application Support/litrev",
     );
   });
 
@@ -47,10 +47,10 @@ describe("desktopUserDataProfile", () => {
 
   it("repairs missing browser data from the profile recorded by the bridge", () => {
     const appDataBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "synara");
+    const targetPath = Path.join(appDataBase, "litrev");
     const sourcePath = Path.join(appDataBase, "previous-profile");
     const sourcePartitionPath = Path.join(sourcePath, "Partitions", "previous-browser");
-    const targetPartitionPath = Path.join(targetPath, "Partitions", "synara-browser");
+    const targetPartitionPath = Path.join(targetPath, "Partitions", "litrev-browser");
     FS.mkdirSync(Path.join(sourcePartitionPath, "Local Storage"), { recursive: true });
     FS.writeFileSync(Path.join(sourcePartitionPath, "Cookies"), "bridge-cookie");
     FS.writeFileSync(Path.join(sourcePartitionPath, "Cookies-journal"), "bridge-journal");
@@ -84,7 +84,7 @@ describe("desktopUserDataProfile", () => {
   it("rejects bridge manifests that point outside the Synara profile parent", () => {
     const appDataBase = makeTempDir();
     const unrelatedBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "synara");
+    const targetPath = Path.join(appDataBase, "litrev");
     FS.mkdirSync(targetPath, { recursive: true });
     FS.writeFileSync(
       Path.join(targetPath, "synara-profile-seed.json"),
@@ -100,10 +100,10 @@ describe("desktopUserDataProfile", () => {
 
   it("never adds a foreign SQLite sidecar beside an existing Synara database", () => {
     const appDataBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "synara");
+    const targetPath = Path.join(appDataBase, "litrev");
     const sourcePath = Path.join(appDataBase, "previous-profile");
     const sourcePartitionPath = Path.join(sourcePath, "Partitions", "previous-browser");
-    const targetPartitionPath = Path.join(targetPath, "Partitions", "synara-browser");
+    const targetPartitionPath = Path.join(targetPath, "Partitions", "litrev-browser");
     FS.mkdirSync(sourcePartitionPath, { recursive: true });
     FS.mkdirSync(targetPartitionPath, { recursive: true });
     FS.writeFileSync(Path.join(sourcePartitionPath, "Cookies"), "bridge-cookie");
@@ -126,10 +126,10 @@ describe("desktopUserDataProfile", () => {
 
   it("replaces an orphaned target sidecar with one from the repaired database generation", () => {
     const appDataBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "synara");
+    const targetPath = Path.join(appDataBase, "litrev");
     const sourcePath = Path.join(appDataBase, "previous-profile");
     const sourcePartitionPath = Path.join(sourcePath, "Partitions", "previous-browser");
-    const targetPartitionPath = Path.join(targetPath, "Partitions", "synara-browser");
+    const targetPartitionPath = Path.join(targetPath, "Partitions", "litrev-browser");
     FS.mkdirSync(sourcePartitionPath, { recursive: true });
     FS.mkdirSync(targetPartitionPath, { recursive: true });
     FS.writeFileSync(Path.join(sourcePartitionPath, "Cookies"), "bridge-cookie");
@@ -169,7 +169,7 @@ describe("desktopUserDataProfile", () => {
 
   it("copies from only the newest browser partition recorded under the bridge profile", () => {
     const appDataBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "synara");
+    const targetPath = Path.join(appDataBase, "litrev");
     const sourcePath = Path.join(appDataBase, "previous-profile");
     const olderPartitionPath = Path.join(sourcePath, "Partitions", "older-browser");
     const newerPartitionPath = Path.join(sourcePath, "Partitions", "newer-browser");
@@ -187,7 +187,7 @@ describe("desktopUserDataProfile", () => {
     );
 
     const result = repairBrowserProfileFromBridgeManifest(targetPath);
-    const targetPartitionPath = Path.join(targetPath, "Partitions", "synara-browser");
+    const targetPartitionPath = Path.join(targetPath, "Partitions", "litrev-browser");
 
     expect(result).toMatchObject({ status: "repaired", copiedEntries: ["Cookies"] });
     expect(FS.readFileSync(Path.join(targetPartitionPath, "Cookies"), "utf8")).toBe("newer-cookie");
@@ -196,7 +196,7 @@ describe("desktopUserDataProfile", () => {
 
   it("ignores a malformed bridge manifest without attempting a repair", () => {
     const appDataBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "synara");
+    const targetPath = Path.join(appDataBase, "litrev");
     FS.mkdirSync(targetPath, { recursive: true });
     FS.writeFileSync(Path.join(targetPath, "synara-profile-seed.json"), "{");
 

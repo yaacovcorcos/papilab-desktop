@@ -1340,32 +1340,32 @@ describe("resolveAutoFeatureBranchName", () => {
 });
 
 describe("resolveDefaultCreateBranchName", () => {
-  it("uses Synara as the default namespace", () => {
+  it("uses LitRev as the default namespace", () => {
     const branch = resolveDefaultCreateBranchName(["main"], "fix toast copy");
-    assert.equal(branch, "synara/fix-toast-copy");
+    assert.equal(branch, "litrev/fix-toast-copy");
   });
 
-  it("normalizes an existing legacy synara namespace", () => {
-    const branch = resolveDefaultCreateBranchName(["main"], "synara/refine-toolbar-actions");
-    assert.equal(branch, "synara/refine-toolbar-actions");
+  it("normalizes an existing legacy LitRev namespace", () => {
+    const branch = resolveDefaultCreateBranchName(["main"], "litrev/refine-toolbar-actions");
+    assert.equal(branch, "litrev/refine-toolbar-actions");
   });
 
-  it("preserves nested namespaces under Synara", () => {
+  it("preserves nested namespaces under LitRev", () => {
     const branch = resolveDefaultCreateBranchName(["main"], "feature/refine-toolbar-actions");
-    assert.equal(branch, "synara/feature/refine-toolbar-actions");
+    assert.equal(branch, "litrev/feature/refine-toolbar-actions");
   });
 
-  it("increments suffix when the Synara branch already exists", () => {
+  it("increments suffix when the LitRev branch already exists", () => {
     const branch = resolveDefaultCreateBranchName(
-      ["main", "synara/fix-toast-copy", "synara/fix-toast-copy-2"],
+      ["main", "litrev/fix-toast-copy", "litrev/fix-toast-copy-2"],
       "fix toast copy",
     );
-    assert.equal(branch, "synara/fix-toast-copy-3");
+    assert.equal(branch, "litrev/fix-toast-copy-3");
   });
 
-  it("falls back to synara/update when no preferred name is provided", () => {
+  it("falls back to litrev/update when no preferred name is provided", () => {
     const branch = resolveDefaultCreateBranchName(["main"]);
-    assert.equal(branch, "synara/update");
+    assert.equal(branch, "litrev/update");
   });
 });
 
@@ -1373,7 +1373,7 @@ describe("resolveLiveThreadBranchUpdate", () => {
   it("does not regress a semantic thread branch back to a temporary worktree branch", () => {
     const update = resolveLiveThreadBranchUpdate({
       threadBranch: "feature/semantic-branch",
-      gitStatus: status({ branch: "synara/deadbeef" }),
+      gitStatus: status({ branch: "litrev/deadbeef" }),
     });
 
     assert.equal(update, null);
@@ -1390,7 +1390,7 @@ describe("resolveLiveThreadBranchUpdate", () => {
 });
 
 describe("shouldOfferCreateBranchPrompt", () => {
-  const temporaryBranch = "synara/deadbeef";
+  const temporaryBranch = "litrev/deadbeef";
 
   it("shows the create-branch prompt for temporary worktree branches without upstream", () => {
     assert.isTrue(

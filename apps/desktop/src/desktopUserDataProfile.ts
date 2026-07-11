@@ -1,14 +1,14 @@
 // FILE: desktopUserDataProfile.ts
-// Purpose: Resolves Synara's Electron userData paths and completes bridge profile repair.
+// Purpose: Resolves LitRev's isolated Electron userData paths and legacy bridge repair utilities.
 
 import * as FS from "node:fs";
 import * as OS from "node:os";
 import * as Path from "node:path";
 
-const DEV_USER_DATA_DIR_NAME = "synara-dev";
-const PROD_USER_DATA_DIR_NAME = "synara";
+const DEV_USER_DATA_DIR_NAME = "litrev-dev";
+const PROD_USER_DATA_DIR_NAME = "litrev";
 const BRIDGE_PROFILE_MANIFEST_FILE_NAME = "synara-profile-seed.json";
-const CANONICAL_BROWSER_PARTITION_NAME = "synara-browser";
+const CANONICAL_BROWSER_PARTITION_NAME = "litrev-browser";
 const BROWSER_PARTITION_SEED_ENTRY_GROUPS = [
   ["Cookies", "Cookies-journal", "Cookies-wal", "Cookies-shm"],
   ["Local Storage"],

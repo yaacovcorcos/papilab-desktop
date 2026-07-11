@@ -15,7 +15,7 @@ const MAX_HASH_OFFSET = 3000;
 const MAX_PORT = 65535;
 
 export const DEFAULT_SYNARA_HOME = Effect.map(Effect.service(Path.Path), (path) =>
-  path.join(homedir(), ".synara"),
+  path.join(homedir(), ".litrev"),
 );
 
 const MODE_ARGS = {
@@ -73,7 +73,7 @@ const OffsetConfig = Config.all({
   portOffset: optionalIntegerConfig("SYNARA_PORT_OFFSET"),
   devInstance: optionalStringConfig("SYNARA_DEV_INSTANCE"),
 });
-const HomeConfig = optionalStringConfig("SYNARA_HOME");
+const HomeConfig = optionalStringConfig("LITREV_HOME");
 
 export function resolveOffset(config: {
   readonly portOffset: number | undefined;
@@ -156,6 +156,8 @@ export function createDevRunnerEnv({
       ELECTRON_RENDERER_PORT: String(webPort),
       VITE_WS_URL: `ws://[::1]:${serverPort}`,
       VITE_DEV_SERVER_URL: devUrl?.toString() ?? `http://localhost:${webPort}`,
+      LITREV_HOME: resolvedBaseDir,
+      // Inherited server packages still consume this compatibility variable.
       SYNARA_HOME: resolvedBaseDir,
     };
 
@@ -437,7 +439,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
         : "";
 
     yield* Effect.logInfo(
-      `[dev-runner] mode=${input.mode} source=${source}${selectionSuffix} serverPort=${String(env.SYNARA_PORT)} webPort=${String(env.PORT)} baseDir=${String(env.SYNARA_HOME)}`,
+      `[dev-runner] mode=${input.mode} source=${source}${selectionSuffix} serverPort=${String(env.SYNARA_PORT)} webPort=${String(env.PORT)} baseDir=${String(env.LITREV_HOME)}`,
     );
 
     if (input.dryRun) {
@@ -486,7 +488,7 @@ const devRunnerCli = Command.make("dev-runner", {
     Argument.withDescription("Development mode to run."),
   ),
   synaraHome: Flag.string("home-dir").pipe(
-    Flag.withDescription("Base directory for all Synara data (equivalent to SYNARA_HOME)."),
+    Flag.withDescription("Base directory for all LitRev data (equivalent to LITREV_HOME)."),
     Flag.withFallbackConfig(HomeConfig),
   ),
   authToken: Flag.string("auth-token").pipe(

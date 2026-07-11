@@ -16,8 +16,8 @@ const snapshot = (exportedAt = "2026-07-09T00:00:00.000Z") => ({
   version: 1 as const,
   exportedAt,
   entries: {
-    "synara:theme": "dark",
-    "synara.openUsage.enabled": "true",
+    "litrev:theme": "dark",
+    "litrev.openUsage.enabled": "true",
   },
 });
 
@@ -48,7 +48,7 @@ describe("desktopStorageMigration", () => {
     expect(
       validateSynaraStorageSnapshot({
         ...snapshot(),
-        entries: { "synara:large": "x".repeat(SYNARA_STORAGE_SNAPSHOT_MAX_BYTES) },
+        entries: { "litrev:large": "x".repeat(SYNARA_STORAGE_SNAPSHOT_MAX_BYTES) },
       }),
     ).toBeNull();
   });
@@ -59,8 +59,8 @@ describe("desktopStorageMigration", () => {
     expect(
       validateSynaraStorageSnapshot({
         ...snapshot(),
-        entries: { "synara:composer-drafts:v1": largeDraft },
-      })?.entries["synara:composer-drafts:v1"],
+        entries: { "litrev:composer-drafts:v1": largeDraft },
+      })?.entries["litrev:composer-drafts:v1"],
     ).toBe(largeDraft);
   });
 

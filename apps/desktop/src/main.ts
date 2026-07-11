@@ -44,10 +44,12 @@ import { autoUpdater, BaseUpdater, CancellationToken } from "electron-updater";
 import type { ContextMenuItem } from "@synara/contracts";
 import { getMacTrafficLightPosition } from "@synara/shared/desktopChrome";
 import {
-  SYNARA_DESKTOP_ENTRY_URL,
-  SYNARA_DESKTOP_SCHEME,
-  SYNARA_DESKTOP_UPDATE_CHANNEL,
-  synaraBundleId,
+  LITREV_APP_NAME,
+  LITREV_DESKTOP_ENTRY_URL,
+  LITREV_DESKTOP_SCHEME,
+  LITREV_DESKTOP_UPDATE_CHANNEL,
+  LITREV_DESKTOP_UPDATES_ENABLED,
+  litrevBundleId,
 } from "@synara/shared/desktopIdentity";
 import { NetService } from "@synara/shared/Net";
 import { RotatingFileSink } from "@synara/shared/logging";
@@ -144,11 +146,7 @@ import {
   normalizeDesktopWsUrl,
   resolveDesktopWsUrlFromEnv,
 } from "./desktopWsBridge";
-import {
-  repairBrowserProfileFromBridgeManifest,
-  resolveDesktopAppDataBase,
-  resolveDesktopUserDataPath,
-} from "./desktopUserDataProfile";
+import { resolveDesktopAppDataBase, resolveDesktopUserDataPath } from "./desktopUserDataProfile";
 import { isBrokenPipeError } from "./desktopProcessErrors";
 import {
   acknowledgeSynaraStorageSnapshot,
@@ -188,13 +186,13 @@ const UPDATE_DOWNLOAD_CHANNEL = "desktop:update-download";
 const UPDATE_INSTALL_CHANNEL = "desktop:update-install";
 const NOTIFICATIONS_IS_SUPPORTED_CHANNEL = "desktop:notifications-is-supported";
 const NOTIFICATIONS_SHOW_CHANNEL = "desktop:notifications-show";
-const BASE_DIR = process.env.SYNARA_HOME?.trim() || Path.join(OS.homedir(), ".synara");
+const BASE_DIR = process.env.LITREV_HOME?.trim() || Path.join(OS.homedir(), ".litrev");
 const STATE_DIR = Path.join(BASE_DIR, "userdata");
-const DESKTOP_SCHEME = SYNARA_DESKTOP_SCHEME;
+const DESKTOP_SCHEME = LITREV_DESKTOP_SCHEME;
 const ROOT_DIR = Path.resolve(__dirname, "../../..");
 const isDevelopment = Boolean(process.env.VITE_DEV_SERVER_URL);
-const APP_DISPLAY_NAME = isDevelopment ? "Synara (Dev)" : "Synara";
-const APP_USER_MODEL_ID = synaraBundleId(isDevelopment);
+const APP_DISPLAY_NAME = isDevelopment ? `${LITREV_APP_NAME} (Dev)` : LITREV_APP_NAME;
+const APP_USER_MODEL_ID = litrevBundleId(isDevelopment);
 const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
 const COMMIT_HASH_DISPLAY_LENGTH = 12;
 const LOG_DIR = Path.join(STATE_DIR, "logs");
@@ -226,7 +224,7 @@ const BROWSER_PERF_SAMPLE_INTERVAL_MS = 5_000;
 const DESKTOP_MENU_ZOOM_FACTOR_STEP = 1.1;
 const DESKTOP_MENU_MIN_ZOOM_FACTOR = 0.25;
 const DESKTOP_MENU_MAX_ZOOM_FACTOR = 5;
-const SYNARA_BROWSER_LABEL = "Synara browser";
+const SYNARA_BROWSER_LABEL = "LitRev browser";
 const browserPerfLoggingEnabled = process.env.SYNARA_BROWSER_PERF === "1";
 
 type DesktopUpdateErrorContext = DesktopUpdateState["errorContext"];
@@ -927,7 +925,7 @@ let servedStaticRootCache: ServedStaticRoot | null | undefined;
 // being replaced beneath the running app (Electron caches the header per process,
 // so every later read returns bytes from the wrong offsets). Extract the client
 // to a per-archive snapshot on real disk and serve that instead — both for the
-// synara:// protocol here and, via SYNARA_STATIC_DIR, for the backend's HTTP static
+// litrev:// protocol here and, via SYNARA_STATIC_DIR, for the backend's HTTP static
 // route. Memoized so one app run serves one coherent asset generation.
 function resolveServedStaticRoot(): ServedStaticRoot | null {
   if (servedStaticRootCache === undefined) {
@@ -1050,7 +1048,10 @@ function handleFatalStartupError(stage: string, error: unknown): void {
   console.error(`[desktop] fatal startup error (${stage})`, error);
   if (!isQuitting) {
     isQuitting = true;
-    dialog.showErrorBox("Synara failed to start", `Stage: ${stage}\n${message}${detail}`);
+    dialog.showErrorBox(
+      `${LITREV_APP_NAME} failed to start`,
+      `Stage: ${stage}\n${message}${detail}`,
+    );
   }
   stopBackend();
   restoreStdIoCapture?.();
@@ -1168,6 +1169,9 @@ function hasConfiguredUpdateFeed(): boolean {
 }
 
 function resolveAutoUpdateDisabledReason(): string | null {
+  if (!LITREV_DESKTOP_UPDATES_ENABLED) {
+    return "Updates are disabled until a LitRev-owned release feed is configured.";
+  }
   return getAutoUpdateDisabledReason({
     isDevelopment,
     isPackaged: app.isPackaged,
@@ -1205,14 +1209,14 @@ async function checkForUpdatesFromMenu(): Promise<void> {
     void dialog.showMessageBox({
       type: "info",
       title: "You're up to date!",
-      message: `Synara ${updateState.currentVersion} is currently the newest version available.`,
+      message: `${LITREV_APP_NAME} ${updateState.currentVersion} is currently the newest version available.`,
       buttons: ["OK"],
     });
   } else if (updateState.status === "downloading" || updateState.status === "available") {
     void dialog.showMessageBox({
       type: "info",
       title: "Update found",
-      message: "Synara is preparing the update in the background.",
+      message: `${LITREV_APP_NAME} is preparing the update in the background.`,
       buttons: ["OK"],
     });
   } else if (updateState.status === "downloaded") {
@@ -1472,28 +1476,11 @@ function showDesktopNotification(input: {
  * Resolve the Electron userData directory path.
  *
  * Electron derives the default userData path from `productName` in
- * package.json. We override it to a clean lowercase Synara name.
+ * package.json. We override it to LitRev's isolated lowercase profile name.
  */
 function resolveUserDataPath(): string {
   const appDataBase = resolveDesktopAppDataBase();
   return resolveDesktopUserDataPath({ appDataBase, isDevelopment });
-}
-
-function repairBrowserProfileBeforeElectronReady(userDataPath: string): void {
-  const browserProfileRepair = repairBrowserProfileFromBridgeManifest(userDataPath);
-  if (browserProfileRepair.status === "repaired") {
-    console.info("[desktop] Completed Synara browser profile bridge repair", {
-      sourcePath: browserProfileRepair.sourcePath,
-      targetPath: browserProfileRepair.targetPath,
-      copiedEntries: browserProfileRepair.copiedEntries,
-    });
-  } else if (browserProfileRepair.status === "repair-failed") {
-    console.warn("[desktop] Failed to complete Synara browser profile bridge repair", {
-      sourcePath: browserProfileRepair.sourcePath,
-      targetPath: browserProfileRepair.targetPath,
-      error: browserProfileRepair.error,
-    });
-  }
 }
 
 function configureAppIdentity(): void {
@@ -1503,7 +1490,7 @@ function configureAppIdentity(): void {
     applicationName: APP_DISPLAY_NAME,
     applicationVersion: app.getVersion(),
     version: commitHash ?? "unknown",
-    copyright: `© ${new Date().getFullYear()} Emanuele Di Pietro`,
+    copyright: `© ${new Date().getFullYear()} LitRev contributors`,
   });
 
   if (process.platform === "win32") {
@@ -1644,11 +1631,10 @@ function restartAfterStartupBundleSwap(error: BundleChangedDuringStartupError): 
   void dialog
     .showMessageBox({
       type: "warning",
-      title: "Synara needs to restart",
-      message: "Synara changed while it was opening.",
-      detail:
-        "The current process cannot safely read the replaced application bundle. Restart Synara to finish opening with one consistent version.",
-      buttons: ["Restart Synara"],
+      title: `${LITREV_APP_NAME} needs to restart`,
+      message: `${LITREV_APP_NAME} changed while it was opening.`,
+      detail: `The current process cannot safely read the replaced application bundle. Restart ${LITREV_APP_NAME} to finish opening with one consistent version.`,
+      buttons: [`Restart ${LITREV_APP_NAME}`],
       defaultId: 0,
     })
     .catch(() => undefined)
@@ -1660,7 +1646,7 @@ function restartAfterStartupBundleSwap(error: BundleChangedDuringStartupError): 
 
 // Electron caches the asar header per process, so once app.asar changes on disk
 // (updater retry racing a relaunch, a reinstall, a build copied over the bundle)
-// every archive read in this process — the synara:// protocol, the backend's static
+// every archive read in this process — the litrev:// protocol, the backend's static
 // files, lazily-loaded renderer chunks — resolves to stale offsets and silently
 // returns the wrong bytes. Detect the swap and offer a restart; continuing is
 // never safe.
@@ -1700,8 +1686,8 @@ function startBundleSwapWatcher(): void {
     void dialog
       .showMessageBox({
         type: "warning",
-        title: "Synara was replaced on disk",
-        message: "The installed Synara app changed while it was running.",
+        title: `${LITREV_APP_NAME} was replaced on disk`,
+        message: `The installed ${LITREV_APP_NAME} app changed while it was running.`,
         detail:
           "The interface keeps running from a safeguarded copy, but parts of the app loaded later can still read the replaced file. Restart now to pick up the new version safely.",
         buttons: ["Restart Now", "Later"],
@@ -1868,7 +1854,7 @@ function processInstallMarkerOnStartup(): void {
   }
 
   automaticUpdateActivitySuppressed = true;
-  const message = `Synara restarted, but update ${marker.toVersion} was not installed. Try again.`;
+  const message = `${LITREV_APP_NAME} restarted, but update ${marker.toVersion} was not installed. Try again.`;
   setUpdateState(
     reduceDesktopUpdateStateOnInstallRestartFailure(
       updateState,
@@ -2289,9 +2275,9 @@ function configureAutoUpdater(): void {
 
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = false;
-  // The dedicated channel keeps the permanent compatibility release on the
-  // default feed while Synara versions advance independently.
-  autoUpdater.channel = SYNARA_DESKTOP_UPDATE_CHANNEL;
+  // This channel is inert until LITREV_DESKTOP_UPDATES_ENABLED is deliberately
+  // enabled alongside a tested, LitRev-owned release feed.
+  autoUpdater.channel = LITREV_DESKTOP_UPDATE_CHANNEL;
   autoUpdater.allowPrerelease = DESKTOP_UPDATE_ALLOW_PRERELEASE;
   autoUpdater.allowDowngrade = false;
   // Match electron-updater's native GitHub provider path; the packaged
@@ -2453,11 +2439,14 @@ function backendEnv(): NodeJS.ProcessEnv {
   return {
     ...process.env,
     // Point the backend's HTTP static route at the same swap-immune snapshot the
-    // synara:// protocol serves, so both surfaces survive app.asar being replaced.
+    // litrev:// protocol serves, so both surfaces survive app.asar being replaced.
     ...(servedStaticRoot?.snapshotted ? { SYNARA_STATIC_DIR: servedStaticRoot.dir } : {}),
     SYNARA_MODE: "desktop",
     SYNARA_NO_BROWSER: "1",
     SYNARA_PORT: String(backendPort),
+    LITREV_HOME: BASE_DIR,
+    // The inherited server still consumes this internal compatibility variable.
+    // Its value is always LitRev's isolated base directory, never Synara's home.
     SYNARA_HOME: BASE_DIR,
     SYNARA_AUTH_TOKEN: backendAuthToken,
     [SYNARA_BROWSER_USE_PIPE_ENV]: SYNARA_BROWSER_USE_PIPE_PATH,
@@ -3013,7 +3002,7 @@ function registerIpcHandlers(): void {
   registerDesktopVoiceTranscriptionHandler();
   startBrowserPerformanceLogging();
   void ensureBrowserUsePipeServer().catch((error) => {
-    console.warn("[Synara browser] Failed to start browser-use native pipe", error);
+    console.warn("[LitRev browser] Failed to start browser-use native pipe", error);
   });
 
   registerBrowserIpcHandlers(ipcMain, browserManager);
@@ -3160,7 +3149,7 @@ function createWindow(): BrowserWindow {
     void window.loadURL(process.env.VITE_DEV_SERVER_URL as string);
     window.webContents.openDevTools({ mode: "detach" });
   } else {
-    void window.loadURL(SYNARA_DESKTOP_ENTRY_URL);
+    void window.loadURL(LITREV_DESKTOP_ENTRY_URL);
   }
 
   window.on("closed", () => {
@@ -3220,9 +3209,6 @@ function configureMediaPermissions(): void {
 // Chromium session data uses a filesystem-friendly directory name.
 // Must be called synchronously at the top level — before `app.whenReady()`.
 const userDataPath = resolveUserDataPath();
-if (hasSingleInstanceLock) {
-  repairBrowserProfileBeforeElectronReady(userDataPath);
-}
 app.setPath("userData", userDataPath);
 
 configureAppIdentity();

@@ -1279,7 +1279,7 @@ function SettingsRouteView() {
       return;
     }
 
-    const notification = new Notification(title, { body, tag: "synara:test-notification" });
+    const notification = new Notification(title, { body, tag: "litrev:test-notification" });
     notification.addEventListener("click", () => {
       window.focus();
     });
@@ -1801,7 +1801,7 @@ function SettingsRouteView() {
         <SettingsCard>
           <SettingsRow
             title="Theme"
-            description="Choose how Synara looks across the app."
+            description="Choose how LitRev looks across the app."
             resetAction={
               theme !== "system" ? (
                 <SettingResetButton label="theme" onClick={() => setTheme("system")} />

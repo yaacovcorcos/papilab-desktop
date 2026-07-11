@@ -19,37 +19,37 @@ describe("Codex home paths", () => {
     assert.ok(resolveBaseCodexHomePath({}).endsWith(`${path.sep}.codex`));
   });
 
-  it("anchors the overlay under SYNARA_HOME", () => {
+  it("anchors the overlay under LITREV_HOME", () => {
     assert.equal(
-      resolveSynaraCodexHomeOverlayPath({ SYNARA_HOME: "/synara/runtime" }, "/users/me/.codex"),
-      path.join("/synara/runtime", "codex-home-overlay"),
+      resolveSynaraCodexHomeOverlayPath({ LITREV_HOME: "/litrev/runtime" }, "/users/me/.codex"),
+      path.join("/litrev/runtime", "codex-home-overlay"),
     );
   });
 
   it("derives a default overlay beside the source home", () => {
     assert.equal(
       resolveSynaraCodexHomeOverlayPath({}, "/users/me/.codex"),
-      path.join("/users/me", ".synara", "runtime", "codex-home-overlay"),
+      path.join("/users/me", ".litrev", "runtime", "codex-home-overlay"),
     );
   });
 
   it("uses the isolated overlay as Codex's write home", () => {
     assert.equal(
       resolveActiveCodexHomeWritePath({
-        env: { SYNARA_HOME: "/synara/runtime" },
+        env: { LITREV_HOME: "/litrev/runtime" },
         homePath: "/users/me/.codex",
       }),
-      path.join("/synara/runtime", "codex-home-overlay"),
+      path.join("/litrev/runtime", "codex-home-overlay"),
     );
   });
 
   it("allowlists source and overlay homes when distinct", () => {
     assert.deepEqual(
       resolveCodexHomeAllowlistCandidates({
-        env: { SYNARA_HOME: "/synara/runtime" },
+        env: { LITREV_HOME: "/litrev/runtime" },
         homePath: "/users/me/.codex",
       }),
-      ["/users/me/.codex", path.join("/synara/runtime", "codex-home-overlay")],
+      ["/users/me/.codex", path.join("/litrev/runtime", "codex-home-overlay")],
     );
   });
 });

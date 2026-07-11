@@ -135,7 +135,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
     id: "appearance:theme",
     section: "appearance",
     title: "Theme",
-    keywords: "Choose how Synara looks across the app. dark light system color",
+    keywords: "Choose how LitRev looks across the app. dark light system color",
   },
   {
     id: "appearance:ui-density",

@@ -95,7 +95,7 @@ type ApplyOrchestrationEventOptions = {
   updateSidebarSummary?: boolean;
 };
 
-const PERSISTED_STATE_KEY = "synara:renderer-state:v8";
+const PERSISTED_STATE_KEY = "litrev:renderer-state:v8";
 const MAX_THREAD_MESSAGES = 2_000;
 const MAX_THREAD_ACTIVITIES = 500;
 // Stable empty reference for `threadIds` fallbacks. Consumers must read through

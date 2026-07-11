@@ -28,8 +28,8 @@ export function resolveSynaraCodexHomeOverlayPath(
   env: NodeJS.ProcessEnv,
   sourceHomePath: string,
 ): string {
-  const runtimeHome = env.SYNARA_HOME?.trim();
-  const overlayRoot = runtimeHome || path.join(path.dirname(sourceHomePath), ".synara", "runtime");
+  const runtimeHome = env.LITREV_HOME?.trim();
+  const overlayRoot = runtimeHome || path.join(path.dirname(sourceHomePath), ".litrev", "runtime");
   return path.join(overlayRoot, SYNARA_CODEX_HOME_OVERLAY_DIR);
 }
 

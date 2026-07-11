@@ -10,8 +10,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  SYNARA_DESKTOP_UPDATE_CHANNEL,
-  SYNARA_PRODUCTION_BUNDLE_ID,
+  LITREV_DESKTOP_UPDATE_CHANNEL,
+  LITREV_PRODUCTION_BUNDLE_ID,
 } from "@synara/shared/desktopIdentity";
 
 import { DESKTOP_STAGE_DEPENDENCY_OVERRIDES } from "./lib/desktop-stage-dependency-overrides.ts";
@@ -109,11 +109,11 @@ function verifyCanonicalIdentity(): void {
   ) {
     throw new Error("Expected the CLI to expose only the synara binary.");
   }
-  if (SYNARA_PRODUCTION_BUNDLE_ID !== "com.emanueledipietro.synara") {
-    throw new Error(`Unexpected production bundle ID: ${SYNARA_PRODUCTION_BUNDLE_ID}.`);
+  if (LITREV_PRODUCTION_BUNDLE_ID !== "com.yaacovcorcos.litrev") {
+    throw new Error(`Unexpected production bundle ID: ${LITREV_PRODUCTION_BUNDLE_ID}.`);
   }
-  if (SYNARA_DESKTOP_UPDATE_CHANNEL !== "synara") {
-    throw new Error(`Unexpected desktop update channel: ${SYNARA_DESKTOP_UPDATE_CHANNEL}.`);
+  if (LITREV_DESKTOP_UPDATE_CHANNEL !== "litrev") {
+    throw new Error(`Unexpected desktop update channel: ${LITREV_DESKTOP_UPDATE_CHANNEL}.`);
   }
 
   const releasePolicy = readReleaseUpdatePolicyConfig(repoRoot);
