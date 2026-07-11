@@ -246,9 +246,9 @@ interface ClaudeQueryRuntime extends AsyncIterable<SDKMessage> {
   readonly setModel: (model?: string) => Promise<void>;
   readonly setPermissionMode: (mode: PermissionMode) => Promise<void>;
   readonly setMaxThinkingTokens: (maxThinkingTokens: number | null) => Promise<void>;
-  readonly applyFlagSettings: (
-    settings: { [K in keyof Settings]?: Settings[K] | null },
-  ) => Promise<void>;
+  readonly applyFlagSettings: (settings: {
+    [K in keyof Settings]?: Settings[K] | null;
+  }) => Promise<void>;
   readonly getContextUsage: () => Promise<SDKControlGetContextUsageResponse>;
   readonly supportedCommands: () => Promise<SlashCommand[]>;
   readonly supportedModels: () => Promise<ModelInfo[]>;
@@ -3830,9 +3830,7 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
                 providerRefs: {},
               });
 
-              if (
-                context.currentAutoCompactWindow === CLAUDE_CONTEXT_WINDOW_MAX_TOKENS["1m"]
-              ) {
+              if (context.currentAutoCompactWindow === CLAUDE_CONTEXT_WINDOW_MAX_TOKENS["1m"]) {
                 context.emittedContextUsageWarnings.add("one-million-window");
                 yield* emitRuntimeWarning(
                   context,

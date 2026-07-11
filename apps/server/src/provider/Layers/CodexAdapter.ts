@@ -787,9 +787,7 @@ function mapItemLifecycle(
   // Only the provider-authored summary is user-visible reasoning. Raw content
   // may contain model trace data and must not leak into transcript activities.
   const detail =
-    itemType === "reasoning"
-      ? reasoningSummaryDetail(source)
-      : itemDetail(source, payload ?? {});
+    itemType === "reasoning" ? reasoningSummaryDetail(source) : itemDetail(source, payload ?? {});
   const status = itemStatus(lifecycle, source.status);
 
   return {
