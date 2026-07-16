@@ -73,36 +73,36 @@ describe("generatedImagePathFromRuntimeEvent", () => {
 });
 
 describe("resolveCodexGeneratedImagesRoot(s)", () => {
-  const previousLitrevHome = process.env.LITREV_HOME;
+  const previousLitrevHome = process.env.PAPILAB_HOME;
 
   afterEach(() => {
-    if (previousLitrevHome === undefined) delete process.env.LITREV_HOME;
-    else process.env.LITREV_HOME = previousLitrevHome;
+    if (previousLitrevHome === undefined) delete process.env.PAPILAB_HOME;
+    else process.env.PAPILAB_HOME = previousLitrevHome;
   });
 
   it("returns the overlay generated_images directory as the active write root by default", () => {
-    process.env.LITREV_HOME = "/litrev-test/runtime";
+    process.env.PAPILAB_HOME = "/papilab-test/runtime";
     assert.equal(
       resolveCodexGeneratedImagesRoot("/codex-test/.codex"),
-      path.join("/litrev-test/runtime", "codex-home-overlay", "generated_images"),
+      path.join("/papilab-test/runtime", "codex-home-overlay", "generated_images"),
     );
   });
 
   it("returns both source and overlay generated_images roots for the allowlist", () => {
-    process.env.LITREV_HOME = "/litrev-test/runtime";
+    process.env.PAPILAB_HOME = "/papilab-test/runtime";
     assert.deepEqual(resolveCodexGeneratedImagesRoots("/codex-test/.codex"), [
       path.join("/codex-test/.codex", "generated_images"),
-      path.join("/litrev-test/runtime", "codex-home-overlay", "generated_images"),
+      path.join("/papilab-test/runtime", "codex-home-overlay", "generated_images"),
     ]);
   });
 
   it("collapses to a single root when overlay equals source", () => {
-    delete process.env.LITREV_HOME;
-    // The overlay falls under `<dirname(source)>/.litrev/runtime/codex-home-overlay`,
+    delete process.env.PAPILAB_HOME;
+    // The overlay falls under `<dirname(source)>/.papilab/runtime/codex-home-overlay`,
     // which is always distinct from `<source>` itself, so the helper still returns
     // both candidates; this test guards the dedupe path with an artificial home
     // whose dirname happens to equal the overlay root.
-    const homePath = "/runtime/.litrev/runtime/codex-home-overlay";
+    const homePath = "/runtime/.papilab/runtime/codex-home-overlay";
     const roots = resolveCodexGeneratedImagesRoots(homePath);
     assert.ok(roots.length >= 1 && roots.length <= 2, `expected 1-2 roots, got ${roots.length}`);
     assert.ok(roots.includes(path.join(homePath, "generated_images")));

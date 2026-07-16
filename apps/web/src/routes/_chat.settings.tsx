@@ -1373,7 +1373,7 @@ function SettingsRouteView() {
       return;
     }
 
-    const notification = new Notification(title, { body, tag: "litrev:test-notification" });
+    const notification = new Notification(title, { body, tag: "papilab:test-notification" });
     notification.addEventListener("click", () => {
       window.focus();
     });
@@ -1968,7 +1968,7 @@ function SettingsRouteView() {
         <SettingsCard>
           <SettingsRow
             title="Theme"
-            description="Choose how LitRev looks across the app."
+            description="Choose how PapiLab looks across the app."
             resetAction={
               theme !== "system" ? (
                 <SettingResetButton label="theme" onClick={() => setTheme("system")} />
@@ -2980,7 +2980,7 @@ function SettingsRouteView() {
 
         <SettingsRow
           title="Provider updates"
-          description="Review installed provider tools that LitRev can safely update."
+          description="Review installed provider tools that PapiLab can safely update."
           status={
             !settings.enableProviderUpdateChecks
               ? "Automatic checks off"

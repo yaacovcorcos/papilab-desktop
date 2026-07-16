@@ -294,7 +294,7 @@ describe("store pure functions", () => {
       makeState(initialThread),
       makeReadModel(
         makeReadModelThread({
-          branch: "litrev/abc123ef",
+          branch: "papilab/abc123ef",
           updatedAt: "2026-02-27T00:05:00.000Z",
         }),
       ),
@@ -362,7 +362,7 @@ describe("store pure functions", () => {
     );
 
     const next = setThreadWorkspace(state, ThreadId.makeUnsafe("thread-1"), {
-      branch: "litrev/abc123ef",
+      branch: "papilab/abc123ef",
     });
 
     expect(next.threads[0]?.branch).toBe("feature/semantic-branch");
@@ -1947,7 +1947,7 @@ describe("store read model sync", () => {
   it("adds the desktop bridge token to server attachment preview URLs", () => {
     const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
     const testWindow = {
-      location: { origin: "litrev://app" },
+      location: { origin: "papilab://app" },
       desktopBridge: {
         getWsUrl: () => "ws://127.0.0.1:53036/?token=desktop-secret",
       },
@@ -3560,7 +3560,7 @@ describe("store read model sync", () => {
       addEventListener: vi.fn(),
     };
     storage.set(
-      "litrev:renderer-state:v8",
+      "papilab:renderer-state:v8",
       JSON.stringify({
         projectNamesByCwd: {
           "/tmp/project": "synara",
@@ -3648,7 +3648,7 @@ describe("store read model sync", () => {
       freshStore.useStore.getState().renameProjectLocally(projectId, "synara");
 
       expect(setItem).toHaveBeenCalled();
-      expect(JSON.parse(storage.get("litrev:renderer-state:v8") ?? "{}")).toMatchObject({
+      expect(JSON.parse(storage.get("papilab:renderer-state:v8") ?? "{}")).toMatchObject({
         projectNamesByCwd: {
           "/tmp/project": "synara",
         },

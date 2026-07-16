@@ -10,9 +10,9 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  LITREV_DESKTOP_UPDATES_ENABLED,
-  LITREV_DESKTOP_UPDATE_CHANNEL,
-  LITREV_PRODUCTION_BUNDLE_ID,
+  PAPILAB_DESKTOP_UPDATES_ENABLED,
+  PAPILAB_DESKTOP_UPDATE_CHANNEL,
+  PAPILAB_PRODUCTION_BUNDLE_ID,
 } from "@synara/shared/desktopIdentity";
 
 import { DESKTOP_STAGE_DEPENDENCY_OVERRIDES } from "./lib/desktop-stage-dependency-overrides.ts";
@@ -111,13 +111,13 @@ function verifyCanonicalIdentity(): void {
   ) {
     throw new Error("Expected the CLI to expose only the synara binary.");
   }
-  if (LITREV_PRODUCTION_BUNDLE_ID !== "com.yaacovcorcos.litrev") {
-    throw new Error(`Unexpected production bundle ID: ${LITREV_PRODUCTION_BUNDLE_ID}.`);
+  if (PAPILAB_PRODUCTION_BUNDLE_ID !== "com.yaacovcorcos.papilab") {
+    throw new Error(`Unexpected production bundle ID: ${PAPILAB_PRODUCTION_BUNDLE_ID}.`);
   }
-  if (LITREV_DESKTOP_UPDATE_CHANNEL !== "litrev") {
-    throw new Error(`Unexpected desktop update channel: ${LITREV_DESKTOP_UPDATE_CHANNEL}.`);
+  if (PAPILAB_DESKTOP_UPDATE_CHANNEL !== "papilab") {
+    throw new Error(`Unexpected desktop update channel: ${PAPILAB_DESKTOP_UPDATE_CHANNEL}.`);
   }
-  if (LITREV_DESKTOP_UPDATES_ENABLED) {
+  if (PAPILAB_DESKTOP_UPDATES_ENABLED) {
     throw new Error(
       "Release publication must not implicitly enable desktop clients; a reviewed code change is required.",
     );
@@ -138,17 +138,17 @@ function verifyReleaseWorkflowSafety(): void {
   const workflow = readFileSync(resolve(repoRoot, ".github/workflows/release.yml"), "utf8");
   assertContains(
     workflow,
-    "if: ${{ vars.LITREV_DESKTOP_RELEASES_ENABLED == 'true' }}",
-    "Expected desktop release jobs to remain gated until LitRev releases are explicitly enabled.",
+    "if: ${{ vars.PAPILAB_DESKTOP_RELEASES_ENABLED == 'true' }}",
+    "Expected desktop release jobs to remain gated until PapiLab releases are explicitly enabled.",
   );
   assertContains(
     workflow,
-    "UPDATE_REPOSITORY: ${{ vars.LITREV_DESKTOP_UPDATE_REPOSITORY }}",
+    "UPDATE_REPOSITORY: ${{ vars.PAPILAB_DESKTOP_UPDATE_REPOSITORY }}",
     "Expected release preflight to require the owned updater repository.",
   );
   assertContains(
     workflow,
-    "LITREV_DESKTOP_UPDATE_REPOSITORY: ${{ needs.preflight.outputs.update_repository }}",
+    "PAPILAB_DESKTOP_UPDATE_REPOSITORY: ${{ needs.preflight.outputs.update_repository }}",
     "Expected artifact builds to receive the verified owned updater repository.",
   );
   assertContains(

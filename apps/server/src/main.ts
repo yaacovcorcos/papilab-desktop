@@ -110,7 +110,7 @@ const CliEnvConfig = Config.all({
   ),
   port: Config.port("SYNARA_PORT").pipe(Config.option, Config.map(Option.getOrUndefined)),
   host: Config.string("SYNARA_HOST").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  synaraHome: Config.string("LITREV_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  synaraHome: Config.string("PAPILAB_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
   devUrl: Config.url("VITE_DEV_SERVER_URL").pipe(Config.option, Config.map(Option.getOrUndefined)),
   noBrowser: Config.boolean("SYNARA_NO_BROWSER").pipe(
     Config.option,
@@ -359,7 +359,7 @@ const hostFlag = Flag.string("host").pipe(
   Flag.optional,
 );
 const synaraHomeFlag = Flag.string("home-dir").pipe(
-  Flag.withDescription("Base directory for all LitRev data (equivalent to LITREV_HOME)."),
+  Flag.withDescription("Base directory for all PapiLab data (equivalent to PAPILAB_HOME)."),
   Flag.optional,
 );
 const devUrlFlag = Flag.string("dev-url").pipe(

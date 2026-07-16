@@ -19,7 +19,7 @@ import {
   MAC_APPSNAP_HELPER_STAGE_PATH,
   validateDesktopNativeBuildHost,
 } from "./lib/desktop-platform-build-config.ts";
-import { LITREV_PRODUCTION_BUNDLE_ID } from "@synara/shared/desktopIdentity";
+import { PAPILAB_PRODUCTION_BUNDLE_ID } from "@synara/shared/desktopIdentity";
 import { parseBooleanEnvValue } from "./lib/env-bool.ts";
 import { finalizeMacUpdateZip } from "./lib/mac-update-zip-finalize.ts";
 import { resolveCatalogDependencies } from "./lib/resolve-catalog.ts";
@@ -506,7 +506,7 @@ function resolveGitHubPublishConfig():
       readonly releaseType: "release";
     }
   | undefined {
-  const rawRepo = process.env.LITREV_DESKTOP_UPDATE_REPOSITORY?.trim() || "";
+  const rawRepo = process.env.PAPILAB_DESKTOP_UPDATE_REPOSITORY?.trim() || "";
   if (!rawRepo) return undefined;
 
   const [owner, repo, ...rest] = rawRepo.split("/");
@@ -548,9 +548,9 @@ const createBuildConfig = Effect.fn("createBuildConfig")(function* (
   mockUpdateServerPort: string | undefined,
 ) {
   const buildConfig: Record<string, unknown> = {
-    appId: LITREV_PRODUCTION_BUNDLE_ID,
+    appId: PAPILAB_PRODUCTION_BUNDLE_ID,
     productName,
-    artifactName: "LitRev-${version}-${arch}.${ext}",
+    artifactName: "PapiLab-${version}-${arch}.${ext}",
     directories: {
       buildResources: "apps/desktop/resources",
     },
@@ -764,18 +764,18 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
   yield* fs.copy(stageResourcesDir, path.join(stageAppDir, "apps/desktop/prod-resources"));
 
   const stagePackageJson: StagePackageJson = {
-    name: "litrev-desktop",
+    name: "papilab-desktop",
     version: appVersion,
     buildVersion: appVersion,
     synaraCommitHash: commitHash,
     private: true,
-    description: "LitRev desktop build",
+    description: "PapiLab desktop build",
     author: "Yaacov Corcos",
     main: "apps/desktop/dist-electron/main.js",
     build: yield* createBuildConfig(
       options.platform,
       options.target,
-      desktopPackageJson.productName ?? "LitRev",
+      desktopPackageJson.productName ?? "PapiLab",
       options.signed,
       options.mockUpdates,
       options.mockUpdateServerPort,

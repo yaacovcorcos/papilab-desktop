@@ -28,7 +28,7 @@ describe("storageOriginMigration", () => {
   });
 
   it("imports missing keys without overwriting current-origin state", async () => {
-    globalThis.localStorage.setItem("litrev:theme", "current");
+    globalThis.localStorage.setItem("papilab:theme", "current");
     const { importSynaraStorageSnapshot } = await import("./storageOriginMigration");
 
     expect(
@@ -36,13 +36,13 @@ describe("storageOriginMigration", () => {
         version: 1,
         exportedAt: "2026-07-09T00:00:00.000Z",
         entries: {
-          "litrev:theme": "snapshot",
-          "litrev:composer-drafts:v1": "draft",
+          "papilab:theme": "snapshot",
+          "papilab:composer-drafts:v1": "draft",
         },
       }),
     ).toBe(true);
-    expect(globalThis.localStorage.getItem("litrev:theme")).toBe("current");
-    expect(globalThis.localStorage.getItem("litrev:composer-drafts:v1")).toBe("draft");
+    expect(globalThis.localStorage.getItem("papilab:theme")).toBe("current");
+    expect(globalThis.localStorage.getItem("papilab:composer-drafts:v1")).toBe("draft");
   });
 
   it("rejects an invalid snapshot before writing any entry", async () => {
@@ -52,12 +52,12 @@ describe("storageOriginMigration", () => {
         version: 1,
         exportedAt: "2026-07-09T00:00:00.000Z",
         entries: {
-          "litrev:theme": "dark",
+          "papilab:theme": "dark",
           "foreign:theme": "light",
         },
       }),
     ).toBe(false);
-    expect(globalThis.localStorage.getItem("litrev:theme")).toBeNull();
+    expect(globalThis.localStorage.getItem("papilab:theme")).toBeNull();
   });
 
   it("imports snapshots containing large composer drafts", async () => {
@@ -68,10 +68,10 @@ describe("storageOriginMigration", () => {
       importSynaraStorageSnapshot({
         version: 1,
         exportedAt: "2026-07-09T00:00:00.000Z",
-        entries: { "litrev:composer-drafts:v1": largeDraft },
+        entries: { "papilab:composer-drafts:v1": largeDraft },
       }),
     ).toBe(true);
-    expect(globalThis.localStorage.getItem("litrev:composer-drafts:v1")).toBe(largeDraft);
+    expect(globalThis.localStorage.getItem("papilab:composer-drafts:v1")).toBe(largeDraft);
   });
 
   it("keeps the snapshot retryable after a partial storage failure", async () => {
@@ -87,13 +87,13 @@ describe("storageOriginMigration", () => {
     const snapshot = {
       version: 1 as const,
       exportedAt: "2026-07-09T00:00:00.000Z",
-      entries: { "litrev:theme": "dark", "litrev:composer-drafts:v1": "draft" },
+      entries: { "papilab:theme": "dark", "papilab:composer-drafts:v1": "draft" },
     };
 
     expect(importSynaraStorageSnapshot(snapshot, storage)).toBe(false);
     storage.setItem = setItem;
     expect(importSynaraStorageSnapshot(snapshot, storage)).toBe(true);
-    expect(storage.getItem("litrev:composer-drafts:v1")).toBe("draft");
+    expect(storage.getItem("papilab:composer-drafts:v1")).toBe("draft");
   });
 
   it("acknowledges the desktop snapshot only after a complete bootstrap import", async () => {
@@ -104,7 +104,7 @@ describe("storageOriginMigration", () => {
           readSnapshot: () => ({
             version: 1,
             exportedAt: "2026-07-09T00:00:00.000Z",
-            entries: { "litrev:theme": "dark" },
+            entries: { "papilab:theme": "dark" },
           }),
           acknowledgeSnapshot,
         },
@@ -113,7 +113,7 @@ describe("storageOriginMigration", () => {
 
     await import("./storageOriginMigration");
     await vi.waitFor(() => expect(acknowledgeSnapshot).toHaveBeenCalledOnce());
-    expect(globalThis.localStorage.getItem("litrev:theme")).toBe("dark");
+    expect(globalThis.localStorage.getItem("papilab:theme")).toBe("dark");
   });
 
   it("does not acknowledge when renderer storage rejects a write", async () => {
@@ -130,7 +130,7 @@ describe("storageOriginMigration", () => {
           readSnapshot: () => ({
             version: 1,
             exportedAt: "2026-07-09T00:00:00.000Z",
-            entries: { "litrev:theme": "dark" },
+            entries: { "papilab:theme": "dark" },
           }),
           acknowledgeSnapshot,
         },

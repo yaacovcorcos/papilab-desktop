@@ -475,7 +475,7 @@ describe("buildCodexProcessEnv", () => {
       );
 
       const env = buildCodexProcessEnv({
-        env: { LITREV_HOME: runtimeHome },
+        env: { PAPILAB_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -512,7 +512,7 @@ describe("buildCodexProcessEnv", () => {
 
       const overlayHome = path.join(runtimeHome, "codex-home-overlay");
       const env = buildCodexProcessEnv({
-        env: { LITREV_HOME: runtimeHome },
+        env: { PAPILAB_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -552,7 +552,7 @@ describe("buildCodexProcessEnv", () => {
       );
 
       const env = buildCodexProcessEnv({
-        env: { LITREV_HOME: runtimeHome },
+        env: { PAPILAB_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -587,7 +587,7 @@ describe("buildCodexProcessEnv", () => {
       writeFileSync(overlayMemoryPath, "stale-overlay-db", "utf8");
 
       const env = buildCodexProcessEnv({
-        env: { LITREV_HOME: runtimeHome },
+        env: { PAPILAB_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -615,7 +615,7 @@ describe("buildCodexProcessEnv", () => {
       writeFileSync(overlayAuthPath, '{"tokens":{"access_token":"stale"}}', "utf8");
 
       const env = buildCodexProcessEnv({
-        env: { LITREV_HOME: runtimeHome },
+        env: { PAPILAB_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -646,7 +646,7 @@ describe("buildCodexProcessEnv", () => {
       writeFileSync(overlayImagePath, "overlay-image", "utf8");
 
       const env = buildCodexProcessEnv({
-        env: { LITREV_HOME: runtimeHome },
+        env: { PAPILAB_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });

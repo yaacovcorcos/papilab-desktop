@@ -6440,9 +6440,9 @@ export default function Sidebar() {
       },
       {
         id: "feedback",
-        label: "Feedback LitRev",
-        description: "Send feedback or report an issue to the LitRev team.",
-        keywords: ["feedback", "bug", "issue", "problem", "report", "support", "litrev"],
+        label: "Feedback PapiLab",
+        description: "Send feedback or report an issue to the PapiLab team.",
+        keywords: ["feedback", "bug", "issue", "problem", "report", "support", "papilab"],
       },
       {
         id: "settings",
@@ -6483,7 +6483,7 @@ export default function Sidebar() {
             toastManager.add({
               type: "info",
               title: "Preparing update",
-              description: `LitRev is preparing version ${nextState.availableVersion ?? "available"} in the background.`,
+              description: `PapiLab is preparing version ${nextState.availableVersion ?? "available"} in the background.`,
             });
             return;
           }
@@ -6492,7 +6492,7 @@ export default function Sidebar() {
             toastManager.add({
               type: "info",
               title: "Preparing update",
-              description: "LitRev is downloading the update in the background.",
+              description: "PapiLab is downloading the update in the background.",
             });
             return;
           }
@@ -6510,7 +6510,7 @@ export default function Sidebar() {
             toastManager.add({
               type: "info",
               title: "You're up to date",
-              description: `LitRev ${nextState.currentVersion} is already the newest version.`,
+              description: `PapiLab ${nextState.currentVersion} is already the newest version.`,
             });
             return;
           }

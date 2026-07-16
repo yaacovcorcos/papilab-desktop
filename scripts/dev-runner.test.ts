@@ -22,7 +22,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
     for (const name of [
       "SYNARA_MODE",
       "SYNARA_PORT",
-      "LITREV_HOME",
+      "PAPILAB_HOME",
       "SYNARA_HOME",
       "SYNARA_NO_BROWSER",
       "SYNARA_AUTH_TOKEN",
@@ -70,7 +70,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
   });
 
   describe("createDevRunnerEnv", () => {
-    it.effect("defaults LitRev and compatibility homes to ~/.litrev when not provided", () =>
+    it.effect("defaults PapiLab and compatibility homes to ~/.papilab when not provided", () =>
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
@@ -87,8 +87,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.LITREV_HOME, resolve(homedir(), ".litrev"));
-        assert.equal(env.SYNARA_HOME, resolve(homedir(), ".litrev"));
+        assert.equal(env.PAPILAB_HOME, resolve(homedir(), ".papilab"));
+        assert.equal(env.SYNARA_HOME, resolve(homedir(), ".papilab"));
       }),
     );
 
@@ -109,7 +109,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: new URL("http://localhost:7331"),
         });
 
-        assert.equal(env.LITREV_HOME, resolve("/tmp/custom-synara"));
+        assert.equal(env.PAPILAB_HOME, resolve("/tmp/custom-synara"));
         assert.equal(env.SYNARA_HOME, resolve("/tmp/custom-synara"));
         assert.equal(env.SYNARA_PORT, "4222");
         assert.equal(env.VITE_WS_URL, "ws://[::1]:4222");
@@ -183,7 +183,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.LITREV_HOME, resolve("/tmp/my-synara"));
+        assert.equal(env.PAPILAB_HOME, resolve("/tmp/my-synara"));
         assert.equal(env.SYNARA_HOME, resolve("/tmp/my-synara"));
       }),
     );

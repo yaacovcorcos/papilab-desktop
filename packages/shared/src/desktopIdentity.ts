@@ -1,15 +1,15 @@
 // FILE: desktopIdentity.ts
-// Purpose: Defines LitRev's canonical desktop application identity across packaging and runtime.
+// Purpose: Defines PapiLab's canonical desktop application identity across packaging and runtime.
 
-export const LITREV_APP_NAME = "LitRev";
-export const LITREV_DESKTOP_SCHEME = "litrev";
-export const LITREV_DESKTOP_ORIGIN = `${LITREV_DESKTOP_SCHEME}://app`;
-export const LITREV_DESKTOP_ENTRY_URL = `${LITREV_DESKTOP_ORIGIN}/index.html`;
-export const LITREV_DESKTOP_UPDATE_CHANNEL = "litrev";
-export const LITREV_DESKTOP_UPDATES_ENABLED = false;
-export const LITREV_PRODUCTION_BUNDLE_ID = "com.yaacovcorcos.litrev";
-export const LITREV_DEVELOPMENT_BUNDLE_ID = `${LITREV_PRODUCTION_BUNDLE_ID}.dev`;
+export const PAPILAB_APP_NAME = "PapiLab";
+export const PAPILAB_DESKTOP_SCHEME = "papilab";
+export const PAPILAB_DESKTOP_ORIGIN = `${PAPILAB_DESKTOP_SCHEME}://app`;
+export const PAPILAB_DESKTOP_ENTRY_URL = `${PAPILAB_DESKTOP_ORIGIN}/index.html`;
+export const PAPILAB_DESKTOP_UPDATE_CHANNEL = "papilab";
+export const PAPILAB_DESKTOP_UPDATES_ENABLED = false;
+export const PAPILAB_PRODUCTION_BUNDLE_ID = "com.yaacovcorcos.papilab";
+export const PAPILAB_DEVELOPMENT_BUNDLE_ID = `${PAPILAB_PRODUCTION_BUNDLE_ID}.dev`;
 
-export function litrevBundleId(isDevelopment: boolean): string {
-  return isDevelopment ? LITREV_DEVELOPMENT_BUNDLE_ID : LITREV_PRODUCTION_BUNDLE_ID;
+export function papilabBundleId(isDevelopment: boolean): string {
+  return isDevelopment ? PAPILAB_DEVELOPMENT_BUNDLE_ID : PAPILAB_PRODUCTION_BUNDLE_ID;
 }

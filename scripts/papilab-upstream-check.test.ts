@@ -4,9 +4,9 @@ import {
   assertCurrentUpstream,
   githubRepositoryFromRemote,
   shouldFetchUpstream,
-} from "./litrev-upstream-check.ts";
+} from "./papilab-upstream-check.ts";
 
-describe("litrev upstream source check", () => {
+describe("papilab upstream source check", () => {
   it("accepts equivalent GitHub SSH and HTTPS remote forms", () => {
     assert.equal(
       githubRepositoryFromRemote("git@github.com:yaacovcorcos/synara.git"),

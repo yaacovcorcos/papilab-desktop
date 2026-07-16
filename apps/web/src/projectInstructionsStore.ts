@@ -8,7 +8,7 @@ import { clampThreadNotes } from "@synara/shared/pinnedMessages";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-const PROJECT_INSTRUCTIONS_STORAGE_KEY = "litrev:project-instructions:v1";
+const PROJECT_INSTRUCTIONS_STORAGE_KEY = "papilab:project-instructions:v1";
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

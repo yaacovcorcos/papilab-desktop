@@ -111,7 +111,7 @@ export function SkillsSettingsPanel() {
     <div className="space-y-8">
       <SettingsSection title="Portable skills">
         <SettingsRow
-          title="LitRev skills folder"
+          title="PapiLab skills folder"
           description="Skills placed here are available on every provider. When a provider already ships its own copy of a skill, that copy is used; otherwise Synara's copy is the fallback."
           status={
             synaraSkillsDir ? (

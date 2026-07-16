@@ -27,7 +27,7 @@ concurrency:
 jobs:
   preflight:
     name: Preflight
-    if: ${{ vars.LITREV_DESKTOP_RELEASES_ENABLED == 'true' }}
+    if: ${{ vars.PAPILAB_DESKTOP_RELEASES_ENABLED == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
@@ -47,14 +47,14 @@ jobs:
         uses: actions/checkout@v6
 
       - id: release_config
-        name: Verify LitRev release configuration
+        name: Verify PapiLab release configuration
         shell: bash
         env:
-          UPDATE_REPOSITORY: ${{ vars.LITREV_DESKTOP_UPDATE_REPOSITORY }}
+          UPDATE_REPOSITORY: ${{ vars.PAPILAB_DESKTOP_UPDATE_REPOSITORY }}
         run: |
           set -euo pipefail
           if [[ -z "$UPDATE_REPOSITORY" ]]; then
-            echo "Set the LITREV_DESKTOP_UPDATE_REPOSITORY repository variable before enabling LitRev desktop releases." >&2
+            echo "Set the PAPILAB_DESKTOP_UPDATE_REPOSITORY repository variable before enabling PapiLab desktop releases." >&2
             exit 1
           fi
           if [[ "$UPDATE_REPOSITORY" != "$GITHUB_REPOSITORY" ]]; then
@@ -221,7 +221,7 @@ jobs:
           AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
           AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
           AZURE_TRUSTED_SIGNING_PUBLISHER_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_PUBLISHER_NAME }}
-          LITREV_DESKTOP_UPDATE_REPOSITORY: ${{ needs.preflight.outputs.update_repository }}
+          PAPILAB_DESKTOP_UPDATE_REPOSITORY: ${{ needs.preflight.outputs.update_repository }}
         run: |
           args=(
             --platform "${{ matrix.platform }}"

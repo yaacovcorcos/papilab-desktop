@@ -61,19 +61,19 @@ const runResolveCanonicalWorkspaceRoots = (input: {
   Effect.runPromise(resolveCanonicalWorkspaceRoots(input).pipe(Effect.provide(NodeServices.layer)));
 
 describe("resolveDefaultChatWorkspaceRoot", () => {
-  it("places the managed chat workspace under Documents/LitRev on macOS and Linux", () => {
+  it("places the managed chat workspace under Documents/PapiLab on macOS and Linux", () => {
     expect(
       resolveDefaultChatWorkspaceRoot({
         homeDir: "/Users/tester",
         platform: "darwin",
       }),
-    ).toBe("/Users/tester/Documents/LitRev");
+    ).toBe("/Users/tester/Documents/PapiLab");
     expect(
       resolveDefaultChatWorkspaceRoot({
         homeDir: "/home/tester",
         platform: "linux",
       }),
-    ).toBe("/home/tester/Documents/LitRev");
+    ).toBe("/home/tester/Documents/PapiLab");
   });
 
   it("uses Windows separators when deriving the managed chat workspace on Windows", () => {
@@ -82,7 +82,7 @@ describe("resolveDefaultChatWorkspaceRoot", () => {
         homeDir: "C:\\Users\\tester",
         platform: "win32",
       }),
-    ).toBe("C:\\Users\\tester\\Documents\\LitRev");
+    ).toBe("C:\\Users\\tester\\Documents\\PapiLab");
   });
 
   it("defaults to the current process platform when no platform is supplied", () => {
@@ -94,7 +94,7 @@ describe("resolveDefaultChatWorkspaceRoot", () => {
 
     try {
       expect(resolveDefaultChatWorkspaceRoot({ homeDir: "C:\\Users\\tester" })).toBe(
-        "C:\\Users\\tester\\Documents\\LitRev",
+        "C:\\Users\\tester\\Documents\\PapiLab",
       );
     } finally {
       Object.defineProperty(process, "platform", originalPlatformDescriptor!);
@@ -103,19 +103,19 @@ describe("resolveDefaultChatWorkspaceRoot", () => {
 });
 
 describe("resolveDefaultStudioWorkspaceRoot", () => {
-  it("places the Studio workspace under Documents/LitRev/Studio on macOS and Linux", () => {
+  it("places the Studio workspace under Documents/PapiLab/Studio on macOS and Linux", () => {
     expect(
       resolveDefaultStudioWorkspaceRoot({
         homeDir: "/Users/tester",
         platform: "darwin",
       }),
-    ).toBe("/Users/tester/Documents/LitRev/Studio");
+    ).toBe("/Users/tester/Documents/PapiLab/Studio");
     expect(
       resolveDefaultStudioWorkspaceRoot({
         homeDir: "/home/tester",
         platform: "linux",
       }),
-    ).toBe("/home/tester/Documents/LitRev/Studio");
+    ).toBe("/home/tester/Documents/PapiLab/Studio");
   });
 
   it("uses Windows separators when deriving the Studio workspace on Windows", () => {
@@ -124,7 +124,7 @@ describe("resolveDefaultStudioWorkspaceRoot", () => {
         homeDir: "C:\\Users\\tester",
         platform: "win32",
       }),
-    ).toBe("C:\\Users\\tester\\Documents\\LitRev\\Studio");
+    ).toBe("C:\\Users\\tester\\Documents\\PapiLab\\Studio");
   });
 });
 
@@ -146,9 +146,9 @@ describe("resolveCanonicalWorkspaceRoots", () => {
     // chatWorkspaceRoot/studioWorkspaceRoot don't exist yet under the resolved
     // home, so they must be re-derived from the canonicalized (symlink-free)
     // home rather than the raw, symlinked input.
-    expect(result.chatWorkspaceRoot).toBe(path.join(expectedHomeDir, "Documents", "LitRev"));
+    expect(result.chatWorkspaceRoot).toBe(path.join(expectedHomeDir, "Documents", "PapiLab"));
     expect(result.studioWorkspaceRoot).toBe(
-      path.join(expectedHomeDir, "Documents", "LitRev", "Studio"),
+      path.join(expectedHomeDir, "Documents", "PapiLab", "Studio"),
     );
   });
 
@@ -171,8 +171,8 @@ describe("resolveCanonicalWorkspaceRoots", () => {
 
     const expectedDocuments = fs.realpathSync(realDocuments);
     expect(result.homeDir).toBe(fs.realpathSync(homeDir));
-    expect(result.chatWorkspaceRoot).toBe(path.join(expectedDocuments, "LitRev"));
-    expect(result.studioWorkspaceRoot).toBe(path.join(expectedDocuments, "LitRev", "Studio"));
+    expect(result.chatWorkspaceRoot).toBe(path.join(expectedDocuments, "PapiLab"));
+    expect(result.studioWorkspaceRoot).toBe(path.join(expectedDocuments, "PapiLab", "Studio"));
     expect(fs.existsSync(result.chatWorkspaceRoot)).toBe(false);
     expect(fs.existsSync(result.studioWorkspaceRoot)).toBe(false);
 

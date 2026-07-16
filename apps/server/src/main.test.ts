@@ -81,7 +81,7 @@ const runCli = (args: ReadonlyArray<string>, env: Record<string, string> = {}) =
       ConfigProvider.layer(
         ConfigProvider.fromEnv({
           env: {
-            LITREV_HOME: defaultSynaraHome,
+            PAPILAB_HOME: defaultSynaraHome,
             SYNARA_NO_BROWSER: "true",
             ...env,
           },
@@ -162,7 +162,7 @@ it.layer(testLayer)("server CLI command", (it) => {
         SYNARA_MODE: "desktop",
         SYNARA_PORT: "4999",
         SYNARA_HOST: "100.88.10.4",
-        LITREV_HOME: envHome,
+        PAPILAB_HOME: envHome,
         VITE_DEV_SERVER_URL: "http://localhost:5173",
         SYNARA_NO_BROWSER: "true",
         SYNARA_AUTH_TOKEN: "env-token",

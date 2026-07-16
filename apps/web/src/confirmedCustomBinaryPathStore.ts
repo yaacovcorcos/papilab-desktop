@@ -8,7 +8,7 @@
 import type { ProviderKind } from "@synara/contracts";
 import { isPlainObject } from "./persistedRecord";
 
-const STORAGE_KEY = "litrev:confirmed-custom-binary-paths:v1";
+const STORAGE_KEY = "papilab:confirmed-custom-binary-paths:v1";
 
 // Mirror of the ProviderKind literal union; the explicit annotation makes the
 // compiler reject this list if a new provider is added without updating it.

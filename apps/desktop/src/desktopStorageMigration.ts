@@ -7,7 +7,7 @@ import * as Path from "node:path";
 
 import type { SynaraStorageSnapshot } from "@synara/contracts";
 
-export const SYNARA_STORAGE_SNAPSHOT_FILE_NAME = "litrev-storage-origin-v1.json";
+export const SYNARA_STORAGE_SNAPSHOT_FILE_NAME = "papilab-storage-origin-v1.json";
 export const SYNARA_STORAGE_SNAPSHOT_MAX_BYTES = 16 * 1024 * 1024;
 export const SYNARA_STORAGE_SNAPSHOT_MAX_ENTRIES = 2_048;
 export const SYNARA_STORAGE_SNAPSHOT_MAX_KEY_LENGTH = 512;
@@ -27,7 +27,7 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function isSynaraStorageKey(key: string): boolean {
-  return key.startsWith("litrev:") || key.startsWith("litrev.");
+  return key.startsWith("papilab:") || key.startsWith("papilab.");
 }
 
 export function validateSynaraStorageSnapshot(value: unknown): SynaraStorageSnapshot | null {

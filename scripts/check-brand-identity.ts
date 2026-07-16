@@ -72,11 +72,11 @@ export interface BrandIdentityBinaryFile {
   readonly contents: Uint8Array;
 }
 
-const requiredLitRevIdentityText = new Map<string, readonly string[]>([
-  ["apps/desktop/package.json", ['"productName": "LitRev"']],
+const requiredPapiLabIdentityText = new Map<string, readonly string[]>([
+  ["apps/desktop/package.json", ['"productName": "PapiLab"']],
   [
     "scripts/build-desktop-artifact.ts",
-    ['name: "litrev-desktop"', 'description: "LitRev desktop build"', 'author: "Yaacov Corcos"'],
+    ['name: "papilab-desktop"', 'description: "PapiLab desktop build"', 'author: "Yaacov Corcos"'],
   ],
   [
     "apps/web/src/whatsNew/entries.ts",
@@ -90,7 +90,7 @@ const litRevOnlySurfacePaths = new Set([
   "apps/web/src/components/desktopUpdate.logic.ts",
 ]);
 
-export function findLitRevSurfaceIdentityViolations(
+export function findPapiLabSurfaceIdentityViolations(
   files: readonly BrandIdentityFile[],
   surfacePaths: ReadonlySet<string> = litRevOnlySurfacePaths,
 ): BrandIdentityViolation[] {
@@ -154,16 +154,16 @@ export function findVisualBrandAssetViolations(
   return violations;
 }
 
-export function findLitRevIdentityViolations(
+export function findPapiLabIdentityViolations(
   files: readonly BrandIdentityFile[],
-  requirements: ReadonlyMap<string, readonly string[]> = requiredLitRevIdentityText,
+  requirements: ReadonlyMap<string, readonly string[]> = requiredPapiLabIdentityText,
 ): BrandIdentityViolation[] {
   const filesByPath = new Map(files.map((file) => [file.path, file.contents]));
   const violations: BrandIdentityViolation[] = [];
   for (const [path, requiredText] of requirements) {
     const contents = filesByPath.get(path);
     if (contents === undefined) {
-      violations.push({ path, line: null, text: "Required LitRev identity source is missing." });
+      violations.push({ path, line: null, text: "Required PapiLab identity source is missing." });
       continue;
     }
     for (const text of requiredText) {
@@ -171,7 +171,7 @@ export function findLitRevIdentityViolations(
         violations.push({
           path,
           line: null,
-          text: `Required LitRev identity is missing: ${text}`,
+          text: `Required PapiLab identity is missing: ${text}`,
         });
       }
     }
@@ -194,12 +194,12 @@ function main(): void {
   }));
   const violations = [
     ...findBrandIdentityViolations(searchableFiles),
-    ...findLitRevIdentityViolations(searchableFiles),
-    ...findLitRevSurfaceIdentityViolations(searchableFiles),
+    ...findPapiLabIdentityViolations(searchableFiles),
+    ...findPapiLabSurfaceIdentityViolations(searchableFiles),
     ...findVisualBrandAssetViolations(trackedFiles),
   ];
   if (violations.length === 0) {
-    console.log("LitRev identity check passed.");
+    console.log("PapiLab identity check passed.");
     return;
   }
 

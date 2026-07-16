@@ -142,7 +142,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
     id: "appearance:theme",
     section: "appearance",
     title: "Theme",
-    keywords: "Choose how LitRev looks across the app. dark light system color",
+    keywords: "Choose how PapiLab looks across the app. dark light system color",
   },
   {
     id: "appearance:ui-density",
@@ -332,7 +332,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
     id: "providers:provider-updates",
     section: "providers",
     title: "Provider updates",
-    keywords: "Update installed provider tools that LitRev can safely update. upgrade cli",
+    keywords: "Update installed provider tools that PapiLab can safely update. upgrade cli",
   },
   {
     id: "providers:installed-clis",
