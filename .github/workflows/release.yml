@@ -99,7 +99,7 @@ jobs:
           fi
 
       - name: Verify pinned compatibility feed
-        if: ${{ steps.release_meta.outputs.release_lane == 'clean' && steps.release_mode.outputs.publish_release == 'true' }}
+        if: ${{ steps.release_meta.outputs.release_lane == 'clean' && steps.release_mode.outputs.publish_release == 'true' && steps.release_meta.outputs.mirror_to_stable_channel == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
           BRIDGE_TAG: ${{ steps.release_meta.outputs.bridge_tag }}
@@ -460,7 +460,7 @@ jobs:
           done
 
       - name: Recheck pinned compatibility feed
-        if: ${{ needs.preflight.outputs.release_lane == 'clean' }}
+        if: ${{ needs.preflight.outputs.release_lane == 'clean' && needs.preflight.outputs.mirror_to_stable_channel == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
           BRIDGE_TAG: ${{ needs.preflight.outputs.bridge_tag }}

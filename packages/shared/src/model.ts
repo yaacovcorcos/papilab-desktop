@@ -11,6 +11,7 @@ import {
   type GeminiModelOptions,
   type GeminiThinkingBudget,
   type GeminiThinkingLevel,
+  type DroidModelOptions,
   type GrokModelOptions,
   type GrokReasoningEffort,
   type ModelCapabilities,
@@ -32,6 +33,7 @@ const MODEL_SLUG_SET_BY_PROVIDER: Record<ProviderKind, ReadonlySet<ModelSlug>> =
   cursor: new Set(MODEL_OPTIONS_BY_PROVIDER.cursor.map((option) => option.slug)),
   gemini: new Set(MODEL_OPTIONS_BY_PROVIDER.gemini.map((option) => option.slug)),
   grok: new Set(MODEL_OPTIONS_BY_PROVIDER.grok.map((option) => option.slug)),
+  droid: new Set(MODEL_OPTIONS_BY_PROVIDER.droid.map((option) => option.slug)),
   kilo: new Set(MODEL_OPTIONS_BY_PROVIDER.kilo.map((option) => option.slug)),
   opencode: new Set(MODEL_OPTIONS_BY_PROVIDER.opencode.map((option) => option.slug)),
   pi: new Set<ModelSlug>(),
@@ -583,6 +585,12 @@ export function getModelCapabilities(
   if (provider === "gemini") {
     return geminiCapabilitiesForModel(slug ?? model, EMPTY_MODEL_CAPABILITIES);
   }
+  if (provider === "grok" && slug) {
+    // Grok exposes reasoning effort as a provider-level CLI option, while its
+    // runtime model catalog contains only model ids. New models must inherit the
+    // provider ladder even before runtime discovery has returned their descriptor.
+    return MODEL_CAPABILITIES_INDEX.grok["grok-build"] ?? EMPTY_MODEL_CAPABILITIES;
+  }
   return EMPTY_MODEL_CAPABILITIES;
 }
 
@@ -878,6 +886,14 @@ export function normalizeGrokModelOptions(
     return undefined;
   }
   return { reasoningEffort: reasoningEffort as GrokReasoningEffort };
+}
+
+export function normalizeDroidModelOptions(
+  _model: string | null | undefined,
+  modelOptions: DroidModelOptions | null | undefined,
+): DroidModelOptions | undefined {
+  const reasoningEffort = trimOrNull(modelOptions?.reasoningEffort);
+  return reasoningEffort ? { reasoningEffort } : undefined;
 }
 
 export function normalizePiModelOptions(
