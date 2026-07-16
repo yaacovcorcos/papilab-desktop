@@ -321,7 +321,7 @@ const makeServerProgram = (input: CliInput) =>
         ? `http://${formatHostForUrl(config.host)}:${config.port}`
         : localUrl;
     const { authToken, devUrl, ...safeConfig } = config;
-    yield* Effect.logInfo("Synara running", {
+    yield* Effect.logInfo("PapiLab running", {
       ...safeConfig,
       devUrl: devUrl?.toString(),
       authEnabled: Boolean(authToken),
@@ -408,6 +408,6 @@ export const synaraCli = Command.make("synara", {
   logProviderEvents: logProviderEventsFlag,
   logWebSocketEvents: logWebSocketEventsFlag,
 }).pipe(
-  Command.withDescription("Run the Synara server."),
+  Command.withDescription("Run the PapiLab server."),
   Command.withHandler((input) => Effect.scoped(makeServerProgram(input))),
 );
