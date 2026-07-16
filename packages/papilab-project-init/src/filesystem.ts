@@ -157,7 +157,7 @@ export function assertRelativePathWithinRoot(root: string, relativePath: string)
   }
   const target = path.resolve(root, ...segments);
   const relative = path.relative(root, target);
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
     throw new ProjectInitializationError(
       "PATH_ESCAPE",
       `Path escapes project root: ${relativePath}`,

@@ -183,7 +183,7 @@ export function validateProfileDescriptor(
   const filePaths = new Set<string>();
   for (const file of descriptor.files ?? []) {
     const normalizedPath = validatePortableRelativePath(file.path);
-    const portableKey = normalizedPath.toLowerCase();
+    const portableKey = normalizedPath.normalize("NFC").toLowerCase();
     if (filePaths.has(portableKey)) {
       throw new ProjectInitializationError(
         "INVALID_PROFILE",

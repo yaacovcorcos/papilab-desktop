@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { inspectProjectFolder } from "./inspect.ts";
 import { planProjectInitialization } from "./plan.ts";
+import { renderAgentsMarkdown } from "./templates.ts";
 import { makeTemporaryProject, TEST_IDENTITY } from "./testUtils.ts";
 import { ProjectInitializationError, type ProjectProfileDescriptor } from "./types.ts";
 
@@ -83,6 +84,21 @@ describe("planProjectInitialization", () => {
     if (proposal?.kind !== "propose") throw new Error("Expected AGENTS.md proposal.");
     expect(proposal.contents).toContain("# Windows Rules\r\n\r\nKeep this.\r\n");
     expect(proposal.contents.replaceAll("\r\n", "")).not.toContain("\n");
+  });
+
+  it("preserves a compatible CRLF AGENTS.md without proposing a phantom change", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    await writeFile(
+      path.join(fixture.root, "AGENTS.md"),
+      renderAgentsMarkdown([]).replaceAll("\n", "\r\n"),
+    );
+
+    const plan = await deterministicPlan(fixture.root);
+
+    expect(plan.operations).toContainEqual(
+      expect.objectContaining({ kind: "preserve", path: "AGENTS.md" }),
+    );
   });
 
   it("blocks top-level file symlink conflicts", async () => {
@@ -243,6 +259,42 @@ describe("planProjectInitialization", () => {
     await expect(deterministicPlan(fixture.root, profiles)).rejects.toMatchObject({
       code: "INVALID_PROFILE",
     });
+  });
+
+  it("rejects profile file collisions across Unicode normalization forms", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    const profile: ProjectProfileDescriptor = {
+      id: "unicode-collision",
+      version: 1,
+      displayName: "Unicode collision",
+      files: [
+        { path: "notes/caf\u00e9.md", contents: "one\n" },
+        { path: "notes/cafe\u0301.md", contents: "two\n" },
+      ],
+    };
+
+    await expect(deterministicPlan(fixture.root, [profile])).rejects.toMatchObject({
+      code: "INVALID_PROFILE",
+    });
+  });
+
+  it("allows safe path segments whose names begin with two dots", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    const profile: ProjectProfileDescriptor = {
+      id: "dot-prefix",
+      version: 1,
+      displayName: "Dot prefix",
+      files: [{ path: "..notes/README.md", contents: "# Notes\n" }],
+    };
+
+    const plan = await deterministicPlan(fixture.root, [profile]);
+
+    expect(plan.status).toBe("ready");
+    expect(plan.operations).toContainEqual(
+      expect.objectContaining({ kind: "create", path: "..notes/README.md" }),
+    );
   });
 
   it("rejects profile file and directory paths that overlap", async () => {

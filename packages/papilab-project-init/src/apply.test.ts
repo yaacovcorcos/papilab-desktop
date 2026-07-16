@@ -270,6 +270,50 @@ describe("applyProjectInitialization", () => {
     expect(await readFile(path.join(outside.root, "NOTES.md")).catch(() => null)).toBeNull();
   });
 
+  it("does not follow a replaced profile parent during rollback", async () => {
+    const fixture = await makeTemporaryProject();
+    const outside = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup, outside.cleanup);
+    const profile: ProjectProfileDescriptor = {
+      id: "test-analysis",
+      version: 1,
+      displayName: "Test Analysis",
+      files: [{ path: "analysis/NOTES.md", contents: "# Notes\n" }],
+    };
+    await expect(
+      applyProjectInitialization(await makePlan(fixture.root, [profile]), {
+        onStep: (step) => {
+          if (step.kind === "file-created" && step.path === "analysis/NOTES.md") {
+            throw new Error("simulated crash");
+          }
+        },
+      }),
+    ).rejects.toThrow("simulated crash");
+    await writeFile(path.join(outside.root, "NOTES.md"), "# Notes\n");
+    await rename(path.join(fixture.root, "analysis"), path.join(fixture.root, "analysis-original"));
+    await symlink(outside.root, path.join(fixture.root, "analysis"));
+
+    await expect(rollbackProjectInitialization(fixture.root)).rejects.toMatchObject({
+      code: "PATH_ESCAPE",
+    });
+    expect(await readFile(path.join(outside.root, "NOTES.md"), "utf8")).toBe("# Notes\n");
+  });
+
+  it("creates a profile file beneath a safe two-dot-prefixed directory", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    const profile: ProjectProfileDescriptor = {
+      id: "dot-prefix",
+      version: 1,
+      displayName: "Dot prefix",
+      files: [{ path: "..notes/README.md", contents: "# Notes\n" }],
+    };
+
+    await applyProjectInitialization(await makePlan(fixture.root, [profile]));
+
+    expect(await readFile(path.join(fixture.root, "..notes/README.md"), "utf8")).toBe("# Notes\n");
+  });
+
   it("repairs an empty metadata directory left before a marker could be written", async () => {
     const fixture = await makeTemporaryProject();
     cleanups.push(fixture.cleanup);

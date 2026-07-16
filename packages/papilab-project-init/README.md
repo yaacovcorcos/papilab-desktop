@@ -1,0 +1,64 @@
+# `@papilab/project-init`
+
+This package is the UI-independent, PapiLab-owned kernel for recognizing and
+initializing local scientific project folders. It is permanent product code,
+not a prototype fixture.
+
+The public workflow is intentionally split into three steps:
+
+1. `inspectProjectFolder` reads and classifies a folder without writing.
+2. `planProjectInitialization` returns explicit create, preserve, propose, or
+   conflict operations.
+3. `applyProjectInitialization` applies only a still-valid, conflict-free plan.
+
+Initialization creates the smallest universal foundation:
+
+- `PROJECT.md` for human-readable project orientation;
+- `AGENTS.md` for portable baseline agent rules, while preserving existing
+  user-owned content through proposals;
+- `.papilab/project.json` for path-independent project identity, written last.
+
+Discipline-specific additions are data-only `ProjectProfileDescriptor` values.
+The package does not contain a default medicine, biology, chemistry, physics,
+or mathematics profile.
+
+## Boundary
+
+The kernel depends on Node filesystem and cryptography primitives, but not on
+Electron, React, the PapiLab desktop shell, Synara application modules,
+OpenCode, or SQLite. The future desktop UI and agent tools should call this
+package rather than reimplementing its rules.
+
+## Safety contract
+
+- Inspection and planning perform no writes.
+- Apply never overwrites an existing path.
+- Existing `PROJECT.md` is preserved.
+- Existing `AGENTS.md` changes remain proposals until explicitly accepted.
+- Relative paths are validated for traversal, symlink, case, Unicode, and
+  cross-platform filename hazards.
+- A recoverable transaction marker is written before project files.
+- Project identity is written last, so incomplete work is never reported as a
+  fully initialized project.
+- Recovery and rollback refuse ambiguous or externally redirected state.
+
+The exclusive hard-link install step is deliberate: it provides a no-clobber
+commit of a fully written and synced temporary file. Filesystems without hard
+link support currently fail safely instead of falling back to a rename that
+could overwrite a concurrently created target.
+
+## Developer CLI
+
+The CLI is a development adapter, not the future product UI:
+
+```sh
+bun src/cli.ts inspect /path/to/project
+bun src/cli.ts plan /path/to/project --title "Example project"
+bun src/cli.ts apply /path/to/project --title "Example project"
+bun src/cli.ts recover /path/to/project
+bun src/cli.ts rollback /path/to/project
+```
+
+The application integration should retain and present the returned plan before
+calling apply; the CLI's `apply` command creates its own fresh plan because it
+is an explicit developer operation.

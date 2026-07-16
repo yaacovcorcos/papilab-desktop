@@ -1,10 +1,11 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 describe("PapiLab project-initiation dependency boundary", () => {
   it("does not import Synara, Electron, React, OpenCode, SQLite, or application modules", async () => {
-    const sourceRoot = path.dirname(new URL(import.meta.url).pathname);
+    const sourceRoot = path.dirname(fileURLToPath(import.meta.url));
     const sourceFiles = (await readdir(sourceRoot)).filter(
       (file) => file.endsWith(".ts") && !file.endsWith(".test.ts"),
     );

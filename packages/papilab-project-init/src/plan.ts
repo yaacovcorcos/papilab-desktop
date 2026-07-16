@@ -124,7 +124,7 @@ async function planAgentsFile(
       MAX_MANAGED_TEXT_BYTES,
     );
     const proposedContents = proposeManagedAgentsContents(existing, profiles);
-    if (proposedContents === existing.replace(/\r\n?/g, "\n")) {
+    if (proposedContents === existing) {
       return preserveOperation(
         PAPILAB_AGENTS_FILE,
         snapshot,

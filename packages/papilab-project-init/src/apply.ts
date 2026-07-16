@@ -118,13 +118,15 @@ async function writeExclusiveAtomic(input: {
 }
 
 async function removeMatchingTemporaryFile(input: {
-  readonly targetPath: string;
+  readonly root: string;
+  readonly relativePath: string;
   readonly contents: string;
   readonly transactionId: string;
 }): Promise<void> {
+  const targetPath = await assertSafeExistingParents(input.root, input.relativePath);
   const temporaryPath = path.join(
-    path.dirname(input.targetPath),
-    `.${path.basename(input.targetPath)}.papilab-init-${input.transactionId}.tmp`,
+    path.dirname(targetPath),
+    `.${path.basename(targetPath)}.papilab-init-${input.transactionId}.tmp`,
   );
   const observed = await snapshotPath(temporaryPath);
   if (observed.kind === "missing") return;
@@ -135,20 +137,45 @@ async function removeMatchingTemporaryFile(input: {
   ) {
     throw new ProjectInitializationError(
       "RECOVERY_CONFLICT",
-      `A stale temporary file cannot be attributed safely to ${input.targetPath}.`,
+      `A stale temporary file cannot be attributed safely to ${targetPath}.`,
     );
   }
+  await assertSafeExistingParents(input.root, input.relativePath);
   await unlink(temporaryPath);
 }
 
 function assertCanonicalChild(root: string, candidate: string, relativePath: string): void {
   const relative = path.relative(root, candidate);
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
     throw new ProjectInitializationError(
       "PATH_ESCAPE",
       `Path resolves outside the project root: ${relativePath}`,
     );
   }
+}
+
+async function assertSafeExistingParents(root: string, relativePath: string): Promise<string> {
+  const targetPath = assertRelativePathWithinRoot(root, relativePath);
+  const segments = relativePath.split("/").slice(0, -1);
+  let current = root;
+  for (const segment of segments) {
+    current = path.join(current, segment);
+    let stat;
+    try {
+      stat = await lstat(current);
+    } catch (error) {
+      if (isNodeError(error, "ENOENT")) return targetPath;
+      throw error;
+    }
+    if (stat.isSymbolicLink() || !stat.isDirectory()) {
+      throw new ProjectInitializationError(
+        "PATH_ESCAPE",
+        `A parent of ${relativePath} is not a real directory: ${segment}`,
+      );
+    }
+    assertCanonicalChild(root, await realpath(current), relativePath);
+  }
+  return targetPath;
 }
 
 async function ensureSafeParentDirectories(root: string, relativePath: string): Promise<string> {
@@ -302,7 +329,8 @@ async function runTransaction(input: {
       observed.size === Buffer.byteLength(operation.contents, "utf8")
     ) {
       await removeMatchingTemporaryFile({
-        targetPath,
+        root: input.root,
+        relativePath: operation.path,
         contents: operation.contents,
         transactionId: input.transaction.transactionId,
       });
@@ -432,7 +460,7 @@ async function removeEmptyCreatedParents(
   const ordered = [...candidates].toSorted((left, right) => right.length - left.length);
   for (const relativePath of ordered) {
     try {
-      await rmdir(assertRelativePathWithinRoot(root, relativePath));
+      await rmdir(await assertSafeExistingParents(root, relativePath));
     } catch (error) {
       if (!isNodeError(error, "ENOENT") && !isNodeError(error, "ENOTEMPTY")) throw error;
     }
@@ -451,10 +479,11 @@ export async function rollbackProjectInitialization(
     .filter((operation): operation is CreateOperation => operation.kind === "create")
     .toReversed();
   for (const operation of createOperations) {
-    const targetPath = assertRelativePathWithinRoot(root, operation.path);
+    const targetPath = await assertSafeExistingParents(root, operation.path);
     const observed = await snapshotPath(targetPath);
     await removeMatchingTemporaryFile({
-      targetPath,
+      root,
+      relativePath: operation.path,
       contents: operation.contents,
       transactionId: transaction.transactionId,
     });
@@ -464,7 +493,7 @@ export async function rollbackProjectInitialization(
       observed.sha256 === sha256(operation.contents) &&
       observed.size === Buffer.byteLength(operation.contents, "utf8")
     ) {
-      await unlink(targetPath);
+      await unlink(await assertSafeExistingParents(root, operation.path));
       removed.push(operation.path);
     } else {
       preserved.push(operation.path);
