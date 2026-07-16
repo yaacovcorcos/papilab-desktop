@@ -252,5 +252,12 @@ export async function readInitializationTransaction(
 }
 
 export function serializeInitializationTransaction(transaction: InitializationTransaction): string {
-  return `${JSON.stringify(transaction, null, 2)}\n`;
+  const serialized = `${JSON.stringify(transaction, null, 2)}\n`;
+  if (Buffer.byteLength(serialized, "utf8") > MAX_TRANSACTION_BYTES) {
+    throw new ProjectInitializationError(
+      "INVALID_TRANSACTION",
+      `Initialization transaction exceeds the ${MAX_TRANSACTION_BYTES}-byte recovery limit.`,
+    );
+  }
+  return serialized;
 }

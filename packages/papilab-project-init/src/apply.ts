@@ -52,6 +52,11 @@ function transactionFromPlan(plan: InitializationPlan): InitializationTransactio
         reason: "Preserve the existing file until its proposed update is explicitly approved.",
         expected: operation.expected,
       });
+    } else {
+      throw new ProjectInitializationError(
+        "INVALID_PLAN",
+        `Initialization plan contains unresolved conflict at ${operation.path}.`,
+      );
     }
   }
   return {
@@ -242,6 +247,27 @@ async function prepareMetadataDirectory(root: string): Promise<void> {
   }
 }
 
+async function readSafeInitializationTransaction(root: string): Promise<InitializationTransaction> {
+  const metadataPath = path.join(root, PAPILAB_METADATA_DIRECTORY);
+  const metadataSnapshot = await snapshotPath(metadataPath);
+  if (metadataSnapshot.kind !== "directory") {
+    throw new ProjectInitializationError(
+      "INVALID_TRANSACTION",
+      "PapiLab initialization metadata is not stored in a real project directory.",
+    );
+  }
+  assertCanonicalChild(root, await realpath(metadataPath), PAPILAB_METADATA_DIRECTORY);
+  const transactionPath = path.join(root, PAPILAB_TRANSACTION_FILE);
+  const transactionSnapshot = await snapshotPath(transactionPath);
+  if (transactionSnapshot.kind !== "file") {
+    throw new ProjectInitializationError(
+      "INVALID_TRANSACTION",
+      "PapiLab initialization transaction is not a regular project file.",
+    );
+  }
+  return readInitializationTransaction(transactionPath);
+}
+
 async function emitStep(
   options: ApplyInitializationOptions,
   step: ApplyStep,
@@ -356,6 +382,12 @@ export async function applyProjectInitialization(
       recovered: false,
     };
   }
+  if (plan.status !== "ready" || plan.planVersion !== 1) {
+    throw new ProjectInitializationError(
+      "INVALID_PLAN",
+      "Initialization plan has an unsupported status or version.",
+    );
+  }
   const root = await resolveProjectRoot(plan.root);
   if (root !== plan.root) {
     throw new ProjectInitializationError(
@@ -364,6 +396,7 @@ export async function applyProjectInitialization(
     );
   }
   const transaction = validateInitializationTransaction(transactionFromPlan(plan));
+  const transactionContents = serializeInitializationTransaction(transaction);
   for (const operation of transaction.operations) {
     await assertOperationPrecondition(root, operation);
   }
@@ -373,7 +406,7 @@ export async function applyProjectInitialization(
     root,
     relativePath: PAPILAB_TRANSACTION_FILE,
     targetPath: transactionPath,
-    contents: serializeInitializationTransaction(transaction),
+    contents: transactionContents,
     transactionId: transaction.transactionId,
     mode: 0o600,
   });
@@ -392,7 +425,7 @@ export async function recoverProjectInitialization(
   options: ApplyInitializationOptions = {},
 ): Promise<ApplyInitializationResult> {
   const root = await resolveProjectRoot(requestedRoot);
-  const transaction = await readInitializationTransaction(path.join(root, PAPILAB_TRANSACTION_FILE));
+  const transaction = await readSafeInitializationTransaction(root);
   return runTransaction({ root, transaction, recovered: true, options });
 }
 
@@ -421,7 +454,7 @@ export async function rollbackProjectInitialization(
 ): Promise<RollbackInitializationResult> {
   const root = await resolveProjectRoot(requestedRoot);
   const transactionPath = path.join(root, PAPILAB_TRANSACTION_FILE);
-  const transaction = await readInitializationTransaction(transactionPath);
+  const transaction = await readSafeInitializationTransaction(root);
   const removed: string[] = [];
   const preserved: string[] = [];
   const createOperations = transaction.operations

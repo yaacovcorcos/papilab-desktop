@@ -25,9 +25,9 @@ import { validateProjectIdentity } from "./validation.ts";
 export async function inspectProjectFolder(requestedRoot: string): Promise<ProjectFolderInspection> {
   const root = await resolveProjectRoot(requestedRoot);
   const entries = (await readdir(root)).toSorted();
-  const projectFile = await snapshotPath(path.join(root, PAPILAB_PROJECT_FILE));
-  const agentsFile = await snapshotPath(path.join(root, PAPILAB_AGENTS_FILE));
-  const metadataDirectory = await snapshotPath(path.join(root, PAPILAB_METADATA_DIRECTORY));
+  const projectFile = await snapshotRelativePathSafely(root, PAPILAB_PROJECT_FILE);
+  const agentsFile = await snapshotRelativePathSafely(root, PAPILAB_AGENTS_FILE);
+  const metadataDirectory = await snapshotRelativePathSafely(root, PAPILAB_METADATA_DIRECTORY);
   const identityFile =
     metadataDirectory.kind === "directory"
       ? await snapshotRelativePathSafely(root, PAPILAB_IDENTITY_FILE)

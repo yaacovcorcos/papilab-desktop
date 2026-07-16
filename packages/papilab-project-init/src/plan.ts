@@ -57,6 +57,20 @@ function profileVersionRecord(
   return Object.fromEntries(profiles.map((profile) => [profile.id, profile.version]));
 }
 
+function portablePathKey(value: string): string {
+  return value.normalize("NFC").toLowerCase();
+}
+
+function pathsOverlap(left: string, right: string): boolean {
+  const leftKey = portablePathKey(left);
+  const rightKey = portablePathKey(right);
+  return (
+    leftKey === rightKey ||
+    leftKey.startsWith(`${rightKey}/`) ||
+    rightKey.startsWith(`${leftKey}/`)
+  );
+}
+
 async function planProjectFile(
   snapshot: PathSnapshot,
   contents: string,
@@ -135,17 +149,17 @@ async function planProfileFiles(
         profileId: profile.id,
       })),
     )
-    .toSorted((left, right) => left.path.localeCompare(right.path));
+    .toSorted((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0));
   for (const file of files) {
-    const portableKey = file.path.toLowerCase();
-    const existingOwner = owners.get(portableKey);
-    if (existingOwner) {
+    const conflictingPath = [...owners.keys()].find((ownedPath) => pathsOverlap(ownedPath, file.path));
+    if (conflictingPath) {
+      const existingOwner = owners.get(conflictingPath);
       throw new ProjectInitializationError(
         "INVALID_PROFILE",
-        `Profiles ${existingOwner} and ${file.profileId} both define ${file.path}.`,
+        `Profiles ${existingOwner} and ${file.profileId} define overlapping paths ${conflictingPath} and ${file.path}.`,
       );
     }
-    owners.set(portableKey, file.profileId);
+    owners.set(file.path, file.profileId);
     const observed = await snapshotRelativePathSafely(root, file.path);
     if (observed.kind === "missing") {
       operations.push(

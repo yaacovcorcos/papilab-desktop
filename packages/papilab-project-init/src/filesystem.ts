@@ -1,4 +1,5 @@
-import { lstat, readFile, readlink, realpath, stat } from "node:fs/promises";
+import { constants } from "node:fs";
+import { lstat, open, readdir, readlink, realpath } from "node:fs/promises";
 import path from "node:path";
 
 import { sha256File } from "./hash.ts";
@@ -24,29 +25,58 @@ export async function snapshotPath(targetPath: string): Promise<PathSnapshot> {
 }
 
 export async function readUtf8FileBounded(targetPath: string, maxBytes: number): Promise<string> {
-  const fileStat = await stat(targetPath);
-  if (fileStat.size > maxBytes) {
-    throw new ProjectInitializationError(
-      "INVALID_FOLDER",
-      `${targetPath} exceeds the ${maxBytes}-byte safety limit.`,
-    );
-  }
-  const contents = await readFile(targetPath);
-  if (contents.byteLength > maxBytes) {
-    throw new ProjectInitializationError(
-      "INVALID_FOLDER",
-      `${targetPath} exceeds the ${maxBytes}-byte safety limit.`,
-    );
-  }
+  const noFollow = constants.O_NOFOLLOW ?? 0;
+  let handle;
   try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(contents);
-  } catch (error) {
-    throw new ProjectInitializationError(
-      "INVALID_FOLDER",
-      `${targetPath} is not valid UTF-8 text.`,
-      { cause: error },
-    );
+    handle = await open(targetPath, constants.O_RDONLY | noFollow);
+    const [openedStat, pathStat] = await Promise.all([handle.stat(), lstat(targetPath)]);
+    if (
+      !openedStat.isFile() ||
+      pathStat.isSymbolicLink() ||
+      !pathStat.isFile() ||
+      openedStat.dev !== pathStat.dev ||
+      openedStat.ino !== pathStat.ino
+    ) {
+      throw new ProjectInitializationError(
+        "INVALID_FOLDER",
+        `${targetPath} is not a stable regular file.`,
+      );
+    }
+    if (openedStat.size > maxBytes) {
+      throw new ProjectInitializationError(
+        "INVALID_FOLDER",
+        `${targetPath} exceeds the ${maxBytes}-byte safety limit.`,
+      );
+    }
+    const contents = await handle.readFile();
+    if (contents.byteLength > maxBytes) {
+      throw new ProjectInitializationError(
+        "INVALID_FOLDER",
+        `${targetPath} exceeds the ${maxBytes}-byte safety limit.`,
+      );
+    }
+    try {
+      return new TextDecoder("utf-8", { fatal: true }).decode(contents);
+    } catch (error) {
+      throw new ProjectInitializationError(
+        "INVALID_FOLDER",
+        `${targetPath} is not valid UTF-8 text.`,
+        { cause: error },
+      );
+    }
+  } finally {
+    await handle?.close();
   }
+}
+
+function portableNameKey(value: string): string {
+  return value.normalize("NFC").toLowerCase();
+}
+
+async function hasPortableSiblingCollision(directory: string, segment: string): Promise<boolean> {
+  const requestedKey = portableNameKey(segment);
+  const entries = await readdir(directory);
+  return entries.some((entry) => entry !== segment && portableNameKey(entry) === requestedKey);
 }
 
 export async function snapshotRelativePathSafely(
@@ -57,12 +87,14 @@ export async function snapshotRelativePathSafely(
   const segments = relativePath.split("/");
   let current = root;
   for (const segment of segments.slice(0, -1)) {
+    if (await hasPortableSiblingCollision(current, segment)) return { kind: "other" };
     current = path.join(current, segment);
     const observed = await snapshotPath(current);
     if (observed.kind === "missing") return { kind: "missing" };
     if (observed.kind === "symlink") return observed;
     if (observed.kind !== "directory") return { kind: "other" };
   }
+  if (await hasPortableSiblingCollision(current, segments.at(-1)!)) return { kind: "other" };
   return snapshotPath(path.join(root, ...segments));
 }
 

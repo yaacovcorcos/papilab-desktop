@@ -15,6 +15,8 @@ const MAX_TEXT_LENGTH = 10_000;
 const MAX_PROFILE_FILE_LENGTH = 1_048_576;
 const PROFILE_ID_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 const PROJECT_ID_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9._:-]{0,126}[A-Za-z0-9])?$/;
+const WINDOWS_FORBIDDEN_NAME_CHARACTERS = /[<>:"|?*\u0000-\u001f]/;
+const WINDOWS_RESERVED_BASENAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 const RESERVED_PROJECT_HEADINGS = new Set(
   [
     "Purpose",
@@ -90,9 +92,24 @@ export function validatePortableRelativePath(input: string): string {
     throw new ProjectInitializationError("INVALID_PROFILE", `Invalid profile file path: ${input}`);
   }
   if (
-    segments[0] === PAPILAB_METADATA_DIRECTORY ||
-    input === PAPILAB_PROJECT_FILE ||
-    input === PAPILAB_AGENTS_FILE
+    segments.some(
+      (segment) =>
+        WINDOWS_FORBIDDEN_NAME_CHARACTERS.test(segment) ||
+        segment.endsWith(".") ||
+        segment.endsWith(" ") ||
+        WINDOWS_RESERVED_BASENAME.test(segment),
+    )
+  ) {
+    throw new ProjectInitializationError(
+      "INVALID_PROFILE",
+      `Profile file path is not portable across supported filesystems: ${input}`,
+    );
+  }
+  const portableInput = input.normalize("NFC").toLowerCase();
+  if (
+    segments[0]?.normalize("NFC").toLowerCase() === PAPILAB_METADATA_DIRECTORY ||
+    portableInput === PAPILAB_PROJECT_FILE.toLowerCase() ||
+    portableInput === PAPILAB_AGENTS_FILE.toLowerCase()
   ) {
     throw new ProjectInitializationError(
       "INVALID_PROFILE",
