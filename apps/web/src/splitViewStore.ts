@@ -112,11 +112,11 @@ interface SplitViewStore {
   setHasHydrated: (hasHydrated: boolean) => void;
 }
 
-// Keep the v1 suffix stable while using the LitRev namespace. LitRev snapshots
+// Keep the v1 suffix stable while using the PapiLab namespace. PapiLab snapshots
 // are copied over by
 // `storageKeyMigration` before this store hydrates, so older payloads still
 // flow through the v1 -> v2 schema migration below.
-const SPLIT_VIEW_STORAGE_KEY = "litrev:split-view-state:v1";
+const SPLIT_VIEW_STORAGE_KEY = "papilab:split-view-state:v1";
 const SPLIT_VIEW_STORAGE_VERSION = 2;
 const DEFAULT_RATIO = 0.5;
 const MIN_RATIO = 0.25;

@@ -61,7 +61,7 @@ function listStaleComputerUsePids() {
     return [];
   }
 
-  const result = spawnSync("pgrep", ["-fal", "LitRev \\(Dev\\).*(computerUseMcp\\.mjs mcp)"], {
+  const result = spawnSync("pgrep", ["-fal", "PapiLab \\(Dev\\).*(computerUseMcp\\.mjs mcp)"], {
     encoding: "utf8",
   });
   const output = typeof result.stdout === "string" ? result.stdout.trim() : "";
@@ -102,7 +102,7 @@ function cleanupStaleComputerUseApps() {
   }
 
   console.error(
-    `[desktop-dev] Cleaning up ${stalePids.length} stale LitRev (Dev) Computer Use helper process${stalePids.length === 1 ? "" : "es"} from other worktrees.`,
+    `[desktop-dev] Cleaning up ${stalePids.length} stale PapiLab (Dev) Computer Use helper process${stalePids.length === 1 ? "" : "es"} from other worktrees.`,
   );
 
   for (const pid of stalePids) {
@@ -121,16 +121,20 @@ function warnIfReleaseAppRunning() {
     return;
   }
 
-  const result = spawnSync("pgrep", ["-fal", "/Applications/LitRev\\.app/Contents/MacOS/LitRev"], {
-    encoding: "utf8",
-  });
+  const result = spawnSync(
+    "pgrep",
+    ["-fal", "/Applications/PapiLab\\.app/Contents/MacOS/PapiLab"],
+    {
+      encoding: "utf8",
+    },
+  );
   const output = typeof result.stdout === "string" ? result.stdout.trim() : "";
   if (!output) {
     return;
   }
 
   console.error(
-    "[desktop-dev] LitRev is still running. Close it before testing voice in LitRev (Dev), or you may be looking at the wrong app/runtime.",
+    "[desktop-dev] PapiLab is still running. Close it before testing voice in PapiLab (Dev), or you may be looking at the wrong app/runtime.",
   );
   console.error(output);
 }

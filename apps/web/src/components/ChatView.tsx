@@ -5140,7 +5140,7 @@ export default function ChatView({
         toastManager.add({
           type: "warning",
           title: "Select a unique phrase to mark it.",
-          description: "Try including a few more words so Synara can find the exact place.",
+          description: "Try including a few more words so PapiLab can find the exact place.",
         });
         return;
       }
@@ -6637,7 +6637,7 @@ export default function ChatView({
                 type: "warning",
                 title: "Thread note not added",
                 description:
-                  "The automation was created, but Synara could not add the activity note.",
+                  "The automation was created, but PapiLab could not add the activity note.",
               });
             }
           })();
@@ -6656,7 +6656,7 @@ export default function ChatView({
           type: "error",
           title: "Could not create automation",
           description:
-            error instanceof Error ? error.message : "Synara could not save the automation.",
+            error instanceof Error ? error.message : "PapiLab could not save the automation.",
         });
         return false;
       } finally {
@@ -6724,7 +6724,7 @@ export default function ChatView({
           toastManager.add({
             type: "error",
             title: "Could not create chat",
-            description: "Synara could not promote this draft before saving the automation.",
+            description: "PapiLab could not promote this draft before saving the automation.",
           });
           return null;
         }
@@ -6747,7 +6747,7 @@ export default function ChatView({
           description:
             error instanceof Error
               ? error.message
-              : "Synara could not promote this draft before saving the automation.",
+              : "PapiLab could not promote this draft before saving the automation.",
         });
         return null;
       }
@@ -11043,7 +11043,7 @@ export default function ChatView({
                       CHAT_COLUMN_FRAME_CLASS_NAME,
                     )}
                   >
-                    <SynaraLogo aria-label="LitRev logo" className="size-10" />
+                    <SynaraLogo aria-label="PapiLab logo" className="size-10" />
                     <h2
                       data-testid="empty-landing-heading"
                       className="text-[26px] font-normal leading-[1.15] tracking-[-0.015em] text-foreground/95 sm:text-[30px]"

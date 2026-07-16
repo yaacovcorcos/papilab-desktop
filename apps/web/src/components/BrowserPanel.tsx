@@ -86,9 +86,9 @@ interface BrowserPanelProps {
 
 const BROWSER_BOUNDS_SYNC_BURST_FRAMES = 30;
 const BROWSER_BOUNDS_SYNC_STABLE_FRAME_TARGET = 2;
-const BROWSER_WEBVIEW_PARTITION = "persist:litrev-browser";
+const BROWSER_WEBVIEW_PARTITION = "persist:papilab-browser";
 const BROWSER_PERF_SAMPLE_INTERVAL_MS = 5_000;
-const SYNARA_BROWSER_LABEL = "LitRev browser";
+const SYNARA_BROWSER_LABEL = "PapiLab browser";
 // The address field and tab pills share one chrome-control surface so the whole row reads
 // as a single cohesive control: matching height, radius, border width, and type scale.
 const BROWSER_CHROME_CONTROL_CLASS_NAME = "h-8 rounded-lg border text-xs";
@@ -331,7 +331,7 @@ function isBrowserPerfLoggingEnabled(): boolean {
   }
 
   try {
-    return window.localStorage.getItem("litrev:browser-perf") === "1";
+    return window.localStorage.getItem("papilab:browser-perf") === "1";
   } catch {
     return false;
   }

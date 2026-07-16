@@ -72,25 +72,25 @@ describe("resolveThreadBranchRegressionGuard", () => {
 
 describe("buildSynaraBranchName", () => {
   it("uses synara as the branch namespace", () => {
-    expect(buildSynaraBranchName("fix toast copy")).toBe("litrev/fix-toast-copy");
+    expect(buildSynaraBranchName("fix toast copy")).toBe("papilab/fix-toast-copy");
   });
 
   it("keeps non-Synara namespaces inside the Synara branch", () => {
     expect(buildSynaraBranchName("feature/refine-toolbar-actions")).toBe(
-      "litrev/feature/refine-toolbar-actions",
+      "papilab/feature/refine-toolbar-actions",
     );
   });
 
   it("normalizes legacy prefixes before rebuilding the branch", () => {
     for (const namespace of PRE_CUTOVER_NAMESPACE_FIXTURES) {
       expect(buildSynaraBranchName(`${namespace}/refine toolbar actions`)).toBe(
-        "litrev/refine-toolbar-actions",
+        "papilab/refine-toolbar-actions",
       );
     }
   });
 
-  it("falls back to the LitRev update branch when no preferred name is provided", () => {
-    expect(buildSynaraBranchName()).toBe("litrev/update");
+  it("falls back to the PapiLab update branch when no preferred name is provided", () => {
+    expect(buildSynaraBranchName()).toBe("papilab/update");
   });
 });
 
@@ -98,9 +98,9 @@ describe("resolveUniqueSynaraBranchName", () => {
   it("increments suffix when the Synara branch already exists", () => {
     expect(
       resolveUniqueSynaraBranchName(
-        ["main", "litrev/fix-toast-copy", "litrev/fix-toast-copy-2"],
+        ["main", "papilab/fix-toast-copy", "papilab/fix-toast-copy-2"],
         "fix toast copy",
       ),
-    ).toBe("litrev/fix-toast-copy-3");
+    ).toBe("papilab/fix-toast-copy-3");
   });
 });

@@ -152,7 +152,7 @@ function withFakeCodexEnv<A, E, R>(
       const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "synara-codex-text-" });
       const binDir = yield* makeFakeCodexBinary(tempDir);
       const previousPath = process.env.PATH;
-      const previousLitrevHome = process.env.LITREV_HOME;
+      const previousLitrevHome = process.env.PAPILAB_HOME;
       const previousOutput = process.env.SYNARA_FAKE_CODEX_OUTPUT_B64;
       const previousExitCode = process.env.SYNARA_FAKE_CODEX_EXIT_CODE;
       const previousStderr = process.env.SYNARA_FAKE_CODEX_STDERR;
@@ -171,7 +171,7 @@ function withFakeCodexEnv<A, E, R>(
 
       yield* Effect.sync(() => {
         process.env.PATH = `${binDir}:${previousPath ?? ""}`;
-        process.env.LITREV_HOME = tempDir;
+        process.env.PAPILAB_HOME = tempDir;
         process.env.SYNARA_FAKE_CODEX_OUTPUT_B64 = Buffer.from(input.output, "utf8").toString(
           "base64",
         );
@@ -268,9 +268,9 @@ function withFakeCodexEnv<A, E, R>(
       Effect.sync(() => {
         process.env.PATH = previous.previousPath;
         if (previous.previousLitrevHome === undefined) {
-          delete process.env.LITREV_HOME;
+          delete process.env.PAPILAB_HOME;
         } else {
-          process.env.LITREV_HOME = previous.previousLitrevHome;
+          process.env.PAPILAB_HOME = previous.previousLitrevHome;
         }
 
         if (previous.previousOutput === undefined) {

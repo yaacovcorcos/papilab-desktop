@@ -72,27 +72,102 @@ export interface BrandIdentityBinaryFile {
   readonly contents: Uint8Array;
 }
 
-const requiredLitRevIdentityText = new Map<string, readonly string[]>([
-  ["apps/desktop/package.json", ['"productName": "LitRev"']],
+const requiredPapiLabIdentityText = new Map<string, readonly string[]>([
+  ["README.md", ["# PapiLab Desktop", "yaacovcorcos/papilab-desktop"]],
+  ["KEYBINDINGS.md", ["# PapiLab Keybindings", "~/.papilab/userdata/keybindings.json"]],
+  ["apps/desktop/package.json", ['"productName": "PapiLab"']],
+  [
+    "packages/shared/src/desktopIdentity.ts",
+    [
+      'PAPILAB_APP_NAME = "PapiLab"',
+      'PAPILAB_DESKTOP_SCHEME = "papilab"',
+      'PAPILAB_PRODUCTION_BUNDLE_ID = "com.yaacovcorcos.papilab"',
+      "PAPILAB_DESKTOP_UPDATES_ENABLED = false",
+    ],
+  ],
+  ["apps/web/src/branding.ts", ['APP_BASE_NAME = "PapiLab"']],
   [
     "scripts/build-desktop-artifact.ts",
-    ['name: "litrev-desktop"', 'description: "LitRev desktop build"', 'author: "Yaacov Corcos"'],
+    ['name: "papilab-desktop"', 'description: "PapiLab desktop build"', 'author: "Yaacov Corcos"'],
   ],
   [
     "apps/web/src/whatsNew/entries.ts",
     ["export const WHATS_NEW_ENTRIES: readonly WhatsNewEntry[] = [];"],
   ],
+  [
+    "apps/marketing/src/lib/releases.ts",
+    ["yaacovcorcos/papilab-desktop", '"papilab-latest-release"'],
+  ],
+  ["apps/marketing/src/pages/index.astro", ["PapiLab is a scientific workspace"]],
+  ["apps/marketing/src/pages/download.astro", ["Download — PapiLab"]],
+  ["apps/marketing/src/layouts/Layout.astro", ["PapiLab — A local-first scientific workspace"]],
 ]);
 
-const litRevOnlySurfacePaths = new Set([
+// These files render, export, or transmit PapiLab-owned product copy. Internal
+// Synara package/type names remain intentionally outside this list so the fork
+// can preserve upstream structure without leaking predecessor branding to users.
+const papiLabOnlySurfacePaths = new Set([
+  "README.md",
+  "CONTRIBUTING.md",
+  "KEYBINDINGS.md",
+  "REMOTE.md",
+  "apps/marketing/src/layouts/Layout.astro",
+  "apps/marketing/src/lib/releases.ts",
+  "apps/marketing/src/pages/download.astro",
+  "apps/marketing/src/pages/index.astro",
   "apps/desktop/scripts/dev-electron.mjs",
+  "apps/desktop/src/appSnapManager.ts",
+  "apps/desktop/src/browserUsePipeServer.ts",
+  "apps/desktop/src/voiceTranscription.ts",
+  "apps/server/src/checkpointing/Layers/CheckpointStore.ts",
+  "apps/server/src/codexAppServerManager.ts",
+  "apps/server/src/environment/Layers/ServerEnvironmentLabel.ts",
+  "apps/server/src/git/Layers/OpenCodeTextGeneration.ts",
+  "apps/server/src/git/textGenerationShared.ts",
+  "apps/server/src/localServerMonitor.ts",
+  "apps/server/src/main.ts",
+  "apps/server/src/orchestration/exportThreadArchive.ts",
+  "apps/server/src/orchestration/handoff.ts",
+  "apps/server/src/persistence/Errors.ts",
+  "apps/server/src/provider/Layers/ClaudeAdapter.ts",
+  "apps/server/src/provider/Layers/CursorAdapter.ts",
+  "apps/server/src/provider/Layers/DroidAdapter.ts",
+  "apps/server/src/provider/Layers/GeminiAdapter.ts",
+  "apps/server/src/provider/Layers/GrokAdapter.ts",
+  "apps/server/src/provider/Layers/OpenCodeAdapter.ts",
+  "apps/server/src/provider/Layers/PiAdapter.ts",
+  "apps/server/src/provider/Layers/ProviderDiscoveryService.ts",
+  "apps/server/src/provider/Layers/ProviderHealth.ts",
+  "apps/server/src/provider/codexCliVersion.ts",
+  "apps/server/src/provider/geminiAcpProbe.ts",
+  "apps/server/src/provider/planMode.ts",
+  "apps/server/src/providerUsage/providers/codex.ts",
+  "apps/server/src/studioWorkspaceScaffold.ts",
+  "apps/server/src/terminal/managedTerminalWrappers.ts",
+  "apps/web/src/components/AppSnapCoordinator.tsx",
+  "apps/web/src/components/AppSnapWelcomeDialog.tsx",
+  "apps/web/src/components/BranchToolbarBranchSelector.tsx",
+  "apps/web/src/components/ChatView.logic.ts",
+  "apps/web/src/components/ChatView.tsx",
   "apps/web/src/components/Sidebar.tsx",
+  "apps/web/src/components/chat/ComposerCommandMenu.tsx",
   "apps/web/src/components/desktopUpdate.logic.ts",
+  "apps/web/src/components/profile/ShareCard.tsx",
+  "apps/web/src/components/profile/shareCardExport.ts",
+  "apps/web/src/components/pullRequest/PullRequestsUnavailableState.tsx",
+  "apps/web/src/components/settings/ProfileSettingsPanel.tsx",
+  "apps/web/src/components/settings/SkillsSettingsPanel.tsx",
+  "apps/web/src/composerSlashCommands.ts",
+  "apps/web/src/lib/automationDraft.ts",
+  "apps/web/src/lib/projectCreation.ts",
+  "apps/web/src/routes/-automations.shared.tsx",
+  "apps/web/src/routes/_chat.settings.tsx",
+  "apps/web/src/settingsSearchIndex.ts",
 ]);
 
-export function findLitRevSurfaceIdentityViolations(
+export function findPapiLabSurfaceIdentityViolations(
   files: readonly BrandIdentityFile[],
-  surfacePaths: ReadonlySet<string> = litRevOnlySurfacePaths,
+  surfacePaths: ReadonlySet<string> = papiLabOnlySurfacePaths,
 ): BrandIdentityViolation[] {
   const violations: BrandIdentityViolation[] = [];
   for (const file of files) {
@@ -154,16 +229,16 @@ export function findVisualBrandAssetViolations(
   return violations;
 }
 
-export function findLitRevIdentityViolations(
+export function findPapiLabIdentityViolations(
   files: readonly BrandIdentityFile[],
-  requirements: ReadonlyMap<string, readonly string[]> = requiredLitRevIdentityText,
+  requirements: ReadonlyMap<string, readonly string[]> = requiredPapiLabIdentityText,
 ): BrandIdentityViolation[] {
   const filesByPath = new Map(files.map((file) => [file.path, file.contents]));
   const violations: BrandIdentityViolation[] = [];
   for (const [path, requiredText] of requirements) {
     const contents = filesByPath.get(path);
     if (contents === undefined) {
-      violations.push({ path, line: null, text: "Required LitRev identity source is missing." });
+      violations.push({ path, line: null, text: "Required PapiLab identity source is missing." });
       continue;
     }
     for (const text of requiredText) {
@@ -171,7 +246,7 @@ export function findLitRevIdentityViolations(
         violations.push({
           path,
           line: null,
-          text: `Required LitRev identity is missing: ${text}`,
+          text: `Required PapiLab identity is missing: ${text}`,
         });
       }
     }
@@ -194,12 +269,12 @@ function main(): void {
   }));
   const violations = [
     ...findBrandIdentityViolations(searchableFiles),
-    ...findLitRevIdentityViolations(searchableFiles),
-    ...findLitRevSurfaceIdentityViolations(searchableFiles),
+    ...findPapiLabIdentityViolations(searchableFiles),
+    ...findPapiLabSurfaceIdentityViolations(searchableFiles),
     ...findVisualBrandAssetViolations(trackedFiles),
   ];
   if (violations.length === 0) {
-    console.log("LitRev identity check passed.");
+    console.log("PapiLab identity check passed.");
     return;
   }
 

@@ -1,32 +1,32 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  LITREV_APP_NAME,
-  LITREV_DESKTOP_ENTRY_URL,
-  LITREV_DESKTOP_ORIGIN,
-  LITREV_DESKTOP_UPDATE_CHANNEL,
-  LITREV_DESKTOP_UPDATES_ENABLED,
-  LITREV_DEVELOPMENT_BUNDLE_ID,
-  LITREV_PRODUCTION_BUNDLE_ID,
-  litrevBundleId,
+  PAPILAB_APP_NAME,
+  PAPILAB_DESKTOP_ENTRY_URL,
+  PAPILAB_DESKTOP_ORIGIN,
+  PAPILAB_DESKTOP_UPDATE_CHANNEL,
+  PAPILAB_DESKTOP_UPDATES_ENABLED,
+  PAPILAB_DEVELOPMENT_BUNDLE_ID,
+  PAPILAB_PRODUCTION_BUNDLE_ID,
+  papilabBundleId,
 } from "./desktopIdentity";
 
 describe("desktopIdentity", () => {
-  it("uses the exact LitRev product name and bundle IDs", () => {
-    expect(LITREV_APP_NAME).toBe("LitRev");
-    expect(LITREV_PRODUCTION_BUNDLE_ID).toBe("com.yaacovcorcos.litrev");
-    expect(LITREV_DEVELOPMENT_BUNDLE_ID).toBe("com.yaacovcorcos.litrev.dev");
-    expect(litrevBundleId(false)).toBe(LITREV_PRODUCTION_BUNDLE_ID);
-    expect(litrevBundleId(true)).toBe(LITREV_DEVELOPMENT_BUNDLE_ID);
+  it("uses the exact PapiLab product name and bundle IDs", () => {
+    expect(PAPILAB_APP_NAME).toBe("PapiLab");
+    expect(PAPILAB_PRODUCTION_BUNDLE_ID).toBe("com.yaacovcorcos.papilab");
+    expect(PAPILAB_DEVELOPMENT_BUNDLE_ID).toBe("com.yaacovcorcos.papilab.dev");
+    expect(papilabBundleId(false)).toBe(PAPILAB_PRODUCTION_BUNDLE_ID);
+    expect(papilabBundleId(true)).toBe(PAPILAB_DEVELOPMENT_BUNDLE_ID);
   });
 
   it("uses the exact packaged renderer origin and entry URL", () => {
-    expect(LITREV_DESKTOP_ORIGIN).toBe("litrev://app");
-    expect(LITREV_DESKTOP_ENTRY_URL).toBe("litrev://app/index.html");
+    expect(PAPILAB_DESKTOP_ORIGIN).toBe("papilab://app");
+    expect(PAPILAB_DESKTOP_ENTRY_URL).toBe("papilab://app/index.html");
   });
 
-  it("keeps updates off until the LitRev-owned release channel is ready", () => {
-    expect(LITREV_DESKTOP_UPDATE_CHANNEL).toBe("litrev");
-    expect(LITREV_DESKTOP_UPDATES_ENABLED).toBe(false);
+  it("keeps updates off until the PapiLab-owned release channel is ready", () => {
+    expect(PAPILAB_DESKTOP_UPDATE_CHANNEL).toBe("papilab");
+    expect(PAPILAB_DESKTOP_UPDATES_ENABLED).toBe(false);
   });
 });

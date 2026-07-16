@@ -79,7 +79,7 @@ export interface CliConfigShape {
  * CliConfig - Service tag for startup CLI/runtime helpers.
  */
 export class CliConfig extends ServiceMap.Service<CliConfig, CliConfigShape>()(
-  "synara/main/CliConfig",
+  "papilab/main/CliConfig",
 ) {
   static readonly layer = Layer.effect(
     CliConfig,
@@ -110,7 +110,7 @@ const CliEnvConfig = Config.all({
   ),
   port: Config.port("SYNARA_PORT").pipe(Config.option, Config.map(Option.getOrUndefined)),
   host: Config.string("SYNARA_HOST").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  synaraHome: Config.string("LITREV_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  synaraHome: Config.string("PAPILAB_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
   devUrl: Config.url("VITE_DEV_SERVER_URL").pipe(Config.option, Config.map(Option.getOrUndefined)),
   noBrowser: Config.boolean("SYNARA_NO_BROWSER").pipe(
     Config.option,
@@ -321,7 +321,7 @@ const makeServerProgram = (input: CliInput) =>
         ? `http://${formatHostForUrl(config.host)}:${config.port}`
         : localUrl;
     const { authToken, devUrl, ...safeConfig } = config;
-    yield* Effect.logInfo("Synara running", {
+    yield* Effect.logInfo("PapiLab running", {
       ...safeConfig,
       devUrl: devUrl?.toString(),
       authEnabled: Boolean(authToken),
@@ -359,7 +359,7 @@ const hostFlag = Flag.string("host").pipe(
   Flag.optional,
 );
 const synaraHomeFlag = Flag.string("home-dir").pipe(
-  Flag.withDescription("Base directory for all LitRev data (equivalent to LITREV_HOME)."),
+  Flag.withDescription("Base directory for all PapiLab data (equivalent to PAPILAB_HOME)."),
   Flag.optional,
 );
 const devUrlFlag = Flag.string("dev-url").pipe(
@@ -396,7 +396,7 @@ const logWebSocketEventsFlag = Flag.boolean("log-websocket-events").pipe(
   Flag.optional,
 );
 
-export const synaraCli = Command.make("synara", {
+export const synaraCli = Command.make("papilab", {
   mode: modeFlag,
   port: portFlag,
   host: hostFlag,
@@ -408,6 +408,6 @@ export const synaraCli = Command.make("synara", {
   logProviderEvents: logProviderEventsFlag,
   logWebSocketEvents: logWebSocketEventsFlag,
 }).pipe(
-  Command.withDescription("Run the Synara server."),
+  Command.withDescription("Run the PapiLab server."),
   Command.withHandler((input) => Effect.scoped(makeServerProgram(input))),
 );

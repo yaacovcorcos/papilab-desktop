@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
-// FILE: litrev-upstream-check.ts
+// FILE: papilab-upstream-check.ts
 // Purpose: Verifies the owned Synara fork topology and current deterministic source baseline.
 // Layer: Maintainer verification script
 
 import { execFileSync } from "node:child_process";
 
 import {
-  LITREV_APP_NAME,
-  LITREV_DESKTOP_ORIGIN,
-  LITREV_DESKTOP_UPDATES_ENABLED,
+  PAPILAB_APP_NAME,
+  PAPILAB_DESKTOP_ORIGIN,
+  PAPILAB_DESKTOP_UPDATES_ENABLED,
 } from "@synara/shared/desktopIdentity";
 
 const EXPECTED_ORIGIN_REPOSITORY = "yaacovcorcos/papilab-desktop";
@@ -126,12 +126,12 @@ function main(): void {
   ]).split(/\s+/);
   assertCurrentUpstream(behind, args);
 
-  if (LITREV_APP_NAME !== "LitRev" || LITREV_DESKTOP_ORIGIN !== "litrev://app") {
-    throw new Error("LitRev desktop identity invariant failed.");
+  if (PAPILAB_APP_NAME !== "PapiLab" || PAPILAB_DESKTOP_ORIGIN !== "papilab://app") {
+    throw new Error("PapiLab desktop identity invariant failed.");
   }
-  if (LITREV_DESKTOP_UPDATES_ENABLED) {
+  if (PAPILAB_DESKTOP_UPDATES_ENABLED) {
     throw new Error(
-      "Automatic updates must remain disabled until client update support is explicitly enabled in a reviewed code change and a LitRev-owned feed is approved.",
+      "Automatic updates must remain disabled until client update support is explicitly enabled in a reviewed code change and a PapiLab-owned feed is approved.",
     );
   }
 
@@ -164,9 +164,9 @@ function main(): void {
         ahead,
         behind,
         upstreamFetched: fetched,
-        identity: LITREV_APP_NAME,
-        origin: LITREV_DESKTOP_ORIGIN,
-        automaticUpdatesEnabled: LITREV_DESKTOP_UPDATES_ENABLED,
+        identity: PAPILAB_APP_NAME,
+        origin: PAPILAB_DESKTOP_ORIGIN,
+        automaticUpdatesEnabled: PAPILAB_DESKTOP_UPDATES_ENABLED,
         deterministicSourceChecksRun: sourceChecks,
         crossRepositoryOpenCodeSmokeRun: false,
       },

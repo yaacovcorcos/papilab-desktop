@@ -92,7 +92,7 @@ describe("desktop update button state", () => {
       status: "error",
       availableVersion: "1.1.0",
       downloadedVersion: null,
-      message: "LitRev restarted before the update was installed.",
+      message: "PapiLab restarted before the update was installed.",
       errorContext: "install",
       canRetry: true,
       installFailureCount: 1,
@@ -102,7 +102,7 @@ describe("desktop update button state", () => {
     expect(isDesktopUpdateButtonDisabled(state)).toBe(false);
     expect(getDesktopUpdateButtonLabel(state)).toBe("Retry");
     expect(getDesktopUpdateButtonTooltip(state)).toBe(
-      "LitRev restarted, but update 1.1.0 was not installed. Click to try again.",
+      "PapiLab restarted, but update 1.1.0 was not installed. Click to try again.",
     );
   });
 

@@ -18,7 +18,7 @@ const BROWSER_USE_INITIAL_URL = "about:blank";
 const BROWSER_USE_PANEL_READY_TIMEOUT_MS = 2_000;
 const BROWSER_USE_PANEL_READY_POLL_MS = 50;
 const BROWSER_USE_PIPE_DIR = "codex-browser-use";
-const BROWSER_USE_PIPE_NAME_PREFIX = "synara-iab";
+const BROWSER_USE_PIPE_NAME_PREFIX = "papilab-iab";
 export const SYNARA_BROWSER_USE_PIPE_ENV = "SYNARA_BROWSER_USE_PIPE_PATH";
 
 type BrowserUseRpcId = string | number;
@@ -265,7 +265,7 @@ export class BrowserUsePipeServer {
       case "getInfo":
         const sessionId = asString(asObject(params)?.session_id);
         return {
-          name: "Synara In-app Browser",
+          name: "PapiLab In-app Browser",
           version: "0.1.0",
           type: "iab",
           ...(sessionId ? { metadata: { codexSessionId: sessionId } } : {}),
@@ -372,7 +372,7 @@ export class BrowserUsePipeServer {
   }> {
     const snapshot = await this.waitForActiveBrowserHostState();
     if (!snapshot) {
-      throw new Error("No active Synara browser pane available");
+      throw new Error("No active PapiLab browser pane available");
     }
     const nextState = this.browserManager.newTab({
       threadId: snapshot.threadId,

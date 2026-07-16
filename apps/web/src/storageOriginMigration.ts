@@ -9,7 +9,7 @@ const MAX_SNAPSHOT_VALUE_LENGTH = 16 * 1024 * 1024;
 const MAX_SNAPSHOT_BYTES = 16 * 1024 * 1024;
 
 function isCanonicalStorageKey(key: string): boolean {
-  return key.startsWith("litrev:") || key.startsWith("litrev.");
+  return key.startsWith("papilab:") || key.startsWith("papilab.");
 }
 
 function getLocalStorage(): Storage | null {

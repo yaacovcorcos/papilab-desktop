@@ -1,5 +1,5 @@
 // FILE: SynaraLogo.tsx
-// Purpose: Render the LitRev mark as an inline SVG that follows theme foreground color.
+// Purpose: Render the PapiLab mark as an inline SVG that follows theme foreground color.
 // Layer: Shared app branding primitive
 
 import type { SVGProps } from "react";

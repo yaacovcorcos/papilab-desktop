@@ -1340,32 +1340,32 @@ describe("resolveAutoFeatureBranchName", () => {
 });
 
 describe("resolveDefaultCreateBranchName", () => {
-  it("uses LitRev as the default namespace", () => {
+  it("uses PapiLab as the default namespace", () => {
     const branch = resolveDefaultCreateBranchName(["main"], "fix toast copy");
-    assert.equal(branch, "litrev/fix-toast-copy");
+    assert.equal(branch, "papilab/fix-toast-copy");
   });
 
-  it("normalizes an existing legacy LitRev namespace", () => {
-    const branch = resolveDefaultCreateBranchName(["main"], "litrev/refine-toolbar-actions");
-    assert.equal(branch, "litrev/refine-toolbar-actions");
+  it("normalizes an existing legacy PapiLab namespace", () => {
+    const branch = resolveDefaultCreateBranchName(["main"], "papilab/refine-toolbar-actions");
+    assert.equal(branch, "papilab/refine-toolbar-actions");
   });
 
-  it("preserves nested namespaces under LitRev", () => {
+  it("preserves nested namespaces under PapiLab", () => {
     const branch = resolveDefaultCreateBranchName(["main"], "feature/refine-toolbar-actions");
-    assert.equal(branch, "litrev/feature/refine-toolbar-actions");
+    assert.equal(branch, "papilab/feature/refine-toolbar-actions");
   });
 
-  it("increments suffix when the LitRev branch already exists", () => {
+  it("increments suffix when the PapiLab branch already exists", () => {
     const branch = resolveDefaultCreateBranchName(
-      ["main", "litrev/fix-toast-copy", "litrev/fix-toast-copy-2"],
+      ["main", "papilab/fix-toast-copy", "papilab/fix-toast-copy-2"],
       "fix toast copy",
     );
-    assert.equal(branch, "litrev/fix-toast-copy-3");
+    assert.equal(branch, "papilab/fix-toast-copy-3");
   });
 
-  it("falls back to litrev/update when no preferred name is provided", () => {
+  it("falls back to papilab/update when no preferred name is provided", () => {
     const branch = resolveDefaultCreateBranchName(["main"]);
-    assert.equal(branch, "litrev/update");
+    assert.equal(branch, "papilab/update");
   });
 });
 
@@ -1373,7 +1373,7 @@ describe("resolveLiveThreadBranchUpdate", () => {
   it("does not regress a semantic thread branch back to a temporary worktree branch", () => {
     const update = resolveLiveThreadBranchUpdate({
       threadBranch: "feature/semantic-branch",
-      gitStatus: status({ branch: "litrev/deadbeef" }),
+      gitStatus: status({ branch: "papilab/deadbeef" }),
     });
 
     assert.equal(update, null);
@@ -1390,7 +1390,7 @@ describe("resolveLiveThreadBranchUpdate", () => {
 });
 
 describe("shouldOfferCreateBranchPrompt", () => {
-  const temporaryBranch = "litrev/deadbeef";
+  const temporaryBranch = "papilab/deadbeef";
 
   it("shows the create-branch prompt for temporary worktree branches without upstream", () => {
     assert.isTrue(

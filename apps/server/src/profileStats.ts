@@ -1180,7 +1180,7 @@ const makeProfileStatsQuery = Effect.gen(function* () {
       const totalSkillsUsed = allSkillUsages.reduce((sum, row) => sum + row.runCount, 0);
 
       // ── Identity ──
-      const homeDirBasename = nodePath.basename(config.homeDir) || "litrev";
+      const homeDirBasename = nodePath.basename(config.homeDir) || "papilab";
 
       return {
         generatedAt: new Date().toISOString(),

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   findBrandIdentityViolations,
-  findLitRevIdentityViolations,
-  findLitRevSurfaceIdentityViolations,
+  findPapiLabIdentityViolations,
+  findPapiLabSurfaceIdentityViolations,
   findVisualBrandAssetViolations,
 } from "./check-brand-identity";
 
@@ -63,22 +63,22 @@ describe("brand identity guard", () => {
     expect(findVisualBrandAssetViolations([], approvedDigests)).toHaveLength(1);
   });
 
-  it("requires LitRev identity in distributable package metadata", () => {
+  it("requires PapiLab identity in distributable package metadata", () => {
     const requirements = new Map([
-      ["package.json", ['name: "litrev-desktop"', 'description: "LitRev desktop build"']],
+      ["package.json", ['name: "papilab-desktop"', 'description: "PapiLab desktop build"']],
     ]);
     expect(
-      findLitRevIdentityViolations(
-        [{ path: "package.json", contents: 'name: "litrev-desktop"' }],
+      findPapiLabIdentityViolations(
+        [{ path: "package.json", contents: 'name: "papilab-desktop"' }],
         requirements,
       ),
     ).toHaveLength(1);
     expect(
-      findLitRevIdentityViolations(
+      findPapiLabIdentityViolations(
         [
           {
             path: "package.json",
-            contents: 'name: "litrev-desktop"\ndescription: "LitRev desktop build"',
+            contents: 'name: "papilab-desktop"\ndescription: "PapiLab desktop build"',
           },
         ],
         requirements,
@@ -86,26 +86,26 @@ describe("brand identity guard", () => {
     ).toEqual([]);
   });
 
-  it("keeps upstream release marketing out of the LitRev UI", () => {
+  it("keeps upstream release marketing out of the PapiLab UI", () => {
     const requirements = new Map([["entries.ts", ["WHATS_NEW_ENTRIES = []"]]]);
     expect(
-      findLitRevIdentityViolations(
+      findPapiLabIdentityViolations(
         [{ path: "entries.ts", contents: "WHATS_NEW_ENTRIES = upstreamEntries" }],
         requirements,
       ),
     ).toHaveLength(1);
     expect(
-      findLitRevIdentityViolations(
+      findPapiLabIdentityViolations(
         [{ path: "entries.ts", contents: "WHATS_NEW_ENTRIES = []" }],
         requirements,
       ),
     ).toEqual([]);
   });
 
-  it("rejects Synara copy from LitRev-owned user and developer surfaces", () => {
+  it("rejects Synara copy from PapiLab-owned user and developer surfaces", () => {
     const surfacePaths = new Set(["Sidebar.tsx", "desktopUpdate.logic.ts", "dev-electron.mjs"]);
     expect(
-      findLitRevSurfaceIdentityViolations(
+      findPapiLabSurfaceIdentityViolations(
         [
           { path: "desktopUpdate.logic.ts", contents: "Synara restarted." },
           { path: "dev-electron.mjs", contents: "SYNARA (Dev) is running." },
@@ -115,9 +115,9 @@ describe("brand identity guard", () => {
       ),
     ).toHaveLength(3);
     expect(
-      findLitRevSurfaceIdentityViolations(
+      findPapiLabSurfaceIdentityViolations(
         [
-          { path: "desktopUpdate.logic.ts", contents: "LitRev restarted." },
+          { path: "desktopUpdate.logic.ts", contents: "PapiLab restarted." },
           {
             path: "dev-electron.mjs",
             contents: "--synara-dev-root=/tmp/project\nimport '@synara/contracts';",

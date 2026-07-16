@@ -6,10 +6,10 @@ import type { ProviderKind } from "@synara/contracts";
 import { Schema } from "effect";
 
 export const FAVORITE_MODEL_STORAGE_KEYS = {
-  cursor: "litrev:cursor-favourite-models:v1",
-  kilo: "litrev:kilo-favourite-models:v1",
-  opencode: "litrev:opencode-favourite-models:v1",
-  pi: "litrev:pi-favourite-models:v1",
+  cursor: "papilab:cursor-favourite-models:v1",
+  kilo: "papilab:kilo-favourite-models:v1",
+  opencode: "papilab:opencode-favourite-models:v1",
+  pi: "papilab:pi-favourite-models:v1",
 } as const;
 
 export type FavoriteModelProvider = keyof typeof FAVORITE_MODEL_STORAGE_KEYS;

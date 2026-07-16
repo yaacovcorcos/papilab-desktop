@@ -21,7 +21,7 @@ declare global {
   }
 }
 
-const TERMINAL_PERF_STORAGE_KEY = "litrev:terminal-perf";
+const TERMINAL_PERF_STORAGE_KEY = "papilab:terminal-perf";
 const MAX_TERMINAL_PERF_SAMPLES = 200;
 
 function terminalPerfEnabled(): boolean {
