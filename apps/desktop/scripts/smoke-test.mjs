@@ -26,12 +26,17 @@ child.stderr.on("data", (chunk) => {
   output += chunk.toString();
 });
 
+let forceKillTimeout;
 const timeout = setTimeout(() => {
-  child.kill();
+  child.kill("SIGTERM");
+  forceKillTimeout = setTimeout(() => {
+    if (child.exitCode === null) child.kill("SIGKILL");
+  }, 2_000);
 }, 8_000);
 
 child.on("exit", () => {
   clearTimeout(timeout);
+  if (forceKillTimeout) clearTimeout(forceKillTimeout);
 
   const fatalPatterns = [
     "Cannot find module",
