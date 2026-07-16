@@ -1,4 +1,5 @@
 import { Option, Schema, SchemaIssue, Struct } from "effect";
+import * as SchemaGetter from "effect/SchemaGetter";
 import {
   AntigravityModelOptions,
   ClaudeModelOptions,
@@ -49,7 +50,7 @@ export const ORCHESTRATION_WS_CHANNELS = {
   threadEvent: "orchestration.threadEvent",
 } as const;
 
-export const ProviderKind = Schema.Literals([
+const CanonicalProviderKind = Schema.Literals([
   "codex",
   "claudeAgent",
   "cursor",
@@ -60,6 +61,26 @@ export const ProviderKind = Schema.Literals([
   "opencode",
   "pi",
 ]);
+const PersistedProviderKind = Schema.Literals([
+  "codex",
+  "claudeAgent",
+  "cursor",
+  "antigravity",
+  "gemini",
+  "grok",
+  "droid",
+  "kilo",
+  "opencode",
+  "pi",
+]);
+export const ProviderKind = PersistedProviderKind.pipe(
+  Schema.decodeTo(CanonicalProviderKind, {
+    decode: SchemaGetter.transform((provider) =>
+      provider === "gemini" ? "antigravity" : provider,
+    ),
+    encode: SchemaGetter.transform((provider) => provider),
+  }),
+);
 export type ProviderKind = typeof ProviderKind.Type;
 export const ProviderApprovalPolicy = Schema.Literals([
   "untrusted",
