@@ -1,14 +1,4 @@
-import {
-  link,
-  lstat,
-  mkdir,
-  open,
-  readdir,
-  realpath,
-  rm,
-  rmdir,
-  unlink,
-} from "node:fs/promises";
+import { link, lstat, mkdir, open, readdir, realpath, rm, rmdir, unlink } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -268,10 +258,7 @@ async function readSafeInitializationTransaction(root: string): Promise<Initiali
   return readInitializationTransaction(transactionPath);
 }
 
-async function emitStep(
-  options: ApplyInitializationOptions,
-  step: ApplyStep,
-): Promise<void> {
+async function emitStep(options: ApplyInitializationOptions, step: ApplyStep): Promise<void> {
   await options.onStep?.(step);
 }
 
@@ -429,7 +416,10 @@ export async function recoverProjectInitialization(
   return runTransaction({ root, transaction, recovered: true, options });
 }
 
-async function removeEmptyCreatedParents(root: string, relativePaths: readonly string[]): Promise<void> {
+async function removeEmptyCreatedParents(
+  root: string,
+  relativePaths: readonly string[],
+): Promise<void> {
   const candidates = new Set<string>();
   for (const relativePath of relativePaths) {
     const segments = relativePath.split("/").slice(0, -1);
@@ -480,7 +470,10 @@ export async function rollbackProjectInitialization(
       preserved.push(operation.path);
     }
   }
-  await removeEmptyCreatedParents(root, createOperations.map((operation) => operation.path));
+  await removeEmptyCreatedParents(
+    root,
+    createOperations.map((operation) => operation.path),
+  );
   if (preserved.length > 0) {
     return { complete: false, removed, preserved };
   }

@@ -13,6 +13,7 @@ import { makeTemporaryProject, TEST_IDENTITY } from "./testUtils.ts";
 import {
   PAPILAB_TRANSACTION_FILE,
   ProjectInitializationError,
+  type InitializationPlan,
   type ProjectProfileDescriptor,
 } from "./types.ts";
 
@@ -57,7 +58,9 @@ describe("applyProjectInitialization", () => {
       state: "initialized-compatible",
       identity: { projectId: TEST_IDENTITY.projectId },
     });
-    expect(await readFile(path.join(fixture.root, PAPILAB_TRANSACTION_FILE)).catch(() => null)).toBeNull();
+    expect(
+      await readFile(path.join(fixture.root, PAPILAB_TRANSACTION_FILE)).catch(() => null),
+    ).toBeNull();
   });
 
   it("is idempotent after successful initialization", async () => {
@@ -103,7 +106,9 @@ describe("applyProjectInitialization", () => {
     expect(await readFile(path.join(fixture.root, "PROJECT.md"), "utf8")).toBe(
       "# Human race winner\n",
     );
-    expect(await readFile(path.join(fixture.root, ".papilab/project.json")).catch(() => null)).toBeNull();
+    expect(
+      await readFile(path.join(fixture.root, ".papilab/project.json")).catch(() => null),
+    ).toBeNull();
   });
 
   it("recovers after interruption at every created-file boundary", async () => {
@@ -196,7 +201,9 @@ describe("applyProjectInitialization", () => {
 
     expect(result.complete).toBe(true);
     expect(result.removed).toEqual(expect.arrayContaining(["PROJECT.md", "AGENTS.md"]));
-    expect(await inspectProjectFolder(fixture.root)).toMatchObject({ state: "empty-uninitialized" });
+    expect(await inspectProjectFolder(fixture.root)).toMatchObject({
+      state: "empty-uninitialized",
+    });
   });
 
   it("preserves a user-modified partial file during rollback", async () => {
@@ -257,7 +264,9 @@ describe("applyProjectInitialization", () => {
     };
     const plan = await makePlan(fixture.root, [profile]);
 
-    await expect(applyProjectInitialization(plan)).rejects.toBeInstanceOf(ProjectInitializationError);
+    await expect(applyProjectInitialization(plan)).rejects.toBeInstanceOf(
+      ProjectInitializationError,
+    );
     expect(await readFile(path.join(outside.root, "NOTES.md")).catch(() => null)).toBeNull();
   });
 
@@ -269,5 +278,71 @@ describe("applyProjectInitialization", () => {
     await applyProjectInitialization(await makePlan(fixture.root));
 
     expect((await inspectProjectFolder(fixture.root)).state).toBe("initialized-compatible");
+  });
+
+  it("rejects a transaction that cannot fit inside the recovery read limit before writing", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    const profiles: readonly ProjectProfileDescriptor[] = Array.from({ length: 5 }, (_, index) => ({
+      id: `large-profile-${index}`,
+      version: 1,
+      displayName: `Large profile ${index}`,
+      files: [{ path: `large/file-${index}.txt`, contents: "x".repeat(900_000) }],
+    }));
+    const plan = await makePlan(fixture.root, profiles);
+
+    await expect(applyProjectInitialization(plan)).rejects.toMatchObject({
+      code: "INVALID_TRANSACTION",
+    });
+    expect(await inspectProjectFolder(fixture.root)).toMatchObject({
+      state: "empty-uninitialized",
+    });
+  });
+
+  it("rejects an unresolved conflict even if a caller marks the plan ready", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    const plan = await makePlan(fixture.root);
+    const invalidPlan: InitializationPlan = {
+      ...plan,
+      operations: [
+        ...plan.operations,
+        {
+          kind: "conflict",
+          path: "unsafe.md",
+          reason: "Synthetic invalid plan.",
+          observed: { kind: "missing" },
+        },
+      ],
+    };
+
+    await expect(applyProjectInitialization(invalidPlan)).rejects.toMatchObject({
+      code: "INVALID_PLAN",
+    });
+    expect(await inspectProjectFolder(fixture.root)).toMatchObject({
+      state: "empty-uninitialized",
+    });
+  });
+
+  it("rejects a transaction symlink when recovery is invoked directly", async () => {
+    const fixture = await makeTemporaryProject();
+    const outside = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup, outside.cleanup);
+    const plan = await makePlan(fixture.root);
+    await expect(
+      applyProjectInitialization(plan, {
+        onStep: (step) => {
+          if (step.kind === "marker-written") throw new Error("simulated crash");
+        },
+      }),
+    ).rejects.toThrow("simulated crash");
+    const transactionPath = path.join(fixture.root, PAPILAB_TRANSACTION_FILE);
+    const outsideTransactionPath = path.join(outside.root, "transaction.json");
+    await rename(transactionPath, outsideTransactionPath);
+    await symlink(outsideTransactionPath, transactionPath);
+
+    await expect(recoverProjectInitialization(fixture.root)).rejects.toMatchObject({
+      code: "INVALID_TRANSACTION",
+    });
   });
 });

@@ -6,7 +6,6 @@ import {
   readUtf8FileBounded,
   resolveProjectRoot,
   snapshotRelativePathSafely,
-  snapshotPath,
 } from "./filesystem.ts";
 import { readInitializationTransaction } from "./transaction.ts";
 import {
@@ -22,7 +21,9 @@ import {
 } from "./types.ts";
 import { validateProjectIdentity } from "./validation.ts";
 
-export async function inspectProjectFolder(requestedRoot: string): Promise<ProjectFolderInspection> {
+export async function inspectProjectFolder(
+  requestedRoot: string,
+): Promise<ProjectFolderInspection> {
   const root = await resolveProjectRoot(requestedRoot);
   const entries = (await readdir(root)).toSorted();
   const projectFile = await snapshotRelativePathSafely(root, PAPILAB_PROJECT_FILE);
@@ -43,7 +44,9 @@ export async function inspectProjectFolder(requestedRoot: string): Promise<Proje
   if (identityFile.kind === "file") {
     try {
       identity = validateProjectIdentity(
-        JSON.parse(await readUtf8FileBounded(path.join(root, PAPILAB_IDENTITY_FILE), MAX_IDENTITY_BYTES)),
+        JSON.parse(
+          await readUtf8FileBounded(path.join(root, PAPILAB_IDENTITY_FILE), MAX_IDENTITY_BYTES),
+        ),
       );
     } catch (error) {
       issues.push({

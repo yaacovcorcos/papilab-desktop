@@ -26,7 +26,11 @@ function validateOperationPath(value: unknown): string {
   if (typeof value !== "string") {
     throw new ProjectInitializationError("INVALID_TRANSACTION", "Transaction path must be text.");
   }
-  if (value === PAPILAB_PROJECT_FILE || value === PAPILAB_AGENTS_FILE || value === PAPILAB_IDENTITY_FILE) {
+  if (
+    value === PAPILAB_PROJECT_FILE ||
+    value === PAPILAB_AGENTS_FILE ||
+    value === PAPILAB_IDENTITY_FILE
+  ) {
     return value;
   }
   try {
@@ -95,7 +99,8 @@ function validateOperation(value: unknown): CreateOperation | PreserveOperation 
   }
   const candidate = value as Record<string, unknown>;
   const operationPath = validateOperationPath(candidate.path);
-  const reason = typeof candidate.reason === "string" ? candidate.reason : "Recorded initialization operation.";
+  const reason =
+    typeof candidate.reason === "string" ? candidate.reason : "Recorded initialization operation.";
   if (candidate.kind === "create") {
     const expected = validateSnapshot(candidate.expected, true);
     if (expected.kind !== "missing") {
@@ -180,10 +185,7 @@ export function validateInitializationTransaction(value: unknown): Initializatio
     }
     paths.add(operation.path);
   }
-  if (
-    typeof candidate.projectId !== "string" ||
-    typeof candidate.createdAt !== "string"
-  ) {
+  if (typeof candidate.projectId !== "string" || typeof candidate.createdAt !== "string") {
     throw new ProjectInitializationError(
       "INVALID_TRANSACTION",
       "Transaction identity fields are invalid.",

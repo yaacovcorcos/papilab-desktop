@@ -15,7 +15,7 @@ const MAX_TEXT_LENGTH = 10_000;
 const MAX_PROFILE_FILE_LENGTH = 1_048_576;
 const PROFILE_ID_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 const PROJECT_ID_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9._:-]{0,126}[A-Za-z0-9])?$/;
-const WINDOWS_FORBIDDEN_NAME_CHARACTERS = /[<>:"|?*\u0000-\u001f]/;
+const WINDOWS_FORBIDDEN_NAME_CHARACTERS = /[<>:"|?*]/;
 const WINDOWS_RESERVED_BASENAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 const RESERVED_PROJECT_HEADINGS = new Set(
   [
@@ -95,6 +95,7 @@ export function validatePortableRelativePath(input: string): string {
     segments.some(
       (segment) =>
         WINDOWS_FORBIDDEN_NAME_CHARACTERS.test(segment) ||
+        [...segment].some((character) => character.codePointAt(0)! < 32) ||
         segment.endsWith(".") ||
         segment.endsWith(" ") ||
         WINDOWS_RESERVED_BASENAME.test(segment),
@@ -216,7 +217,7 @@ export function resolveSelectedProfiles(input: {
     }
     registry.set(profile.id, profile);
   }
-  return input.profileIds.map((profileId) => {
+  const selected = input.profileIds.map((profileId) => {
     const profile = registry.get(profileId);
     if (!profile) {
       throw new ProjectInitializationError(
@@ -226,6 +227,21 @@ export function resolveSelectedProfiles(input: {
     }
     return profile;
   });
+  const sectionOwners = new Map<string, string>();
+  for (const profile of selected) {
+    for (const section of profile.projectSections ?? []) {
+      const sectionKey = section.heading.trim().normalize("NFC").toLowerCase();
+      const existingOwner = sectionOwners.get(sectionKey);
+      if (existingOwner) {
+        throw new ProjectInitializationError(
+          "INVALID_PROFILE",
+          `Profiles ${existingOwner} and ${profile.id} both define project section ${section.heading.trim()}.`,
+        );
+      }
+      sectionOwners.set(sectionKey, profile.id);
+    }
+  }
+  return selected;
 }
 
 export function validateProjectIdentity(value: unknown): PapiLabProjectIdentity {

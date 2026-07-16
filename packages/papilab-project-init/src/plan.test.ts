@@ -175,7 +175,16 @@ describe("planProjectInitialization", () => {
   it("rejects profile traversal and universal-file replacement", async () => {
     const fixture = await makeTemporaryProject();
     cleanups.push(fixture.cleanup);
-    const invalidPaths = ["../escape.md", "/absolute.md", "PROJECT.md", ".papilab/secret"];
+    const invalidPaths = [
+      "../escape.md",
+      "/absolute.md",
+      "PROJECT.md",
+      "project.md",
+      ".PAPILAB/secret",
+      "notes/CON.txt",
+      "notes/trailing. ",
+      "notes/question?.md",
+    ];
     for (const invalidPath of invalidPaths) {
       await expect(
         deterministicPlan(fixture.root, [
@@ -234,5 +243,64 @@ describe("planProjectInitialization", () => {
     await expect(deterministicPlan(fixture.root, profiles)).rejects.toMatchObject({
       code: "INVALID_PROFILE",
     });
+  });
+
+  it("rejects profile file and directory paths that overlap", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    const profiles: readonly ProjectProfileDescriptor[] = [
+      {
+        id: "profile-one",
+        version: 1,
+        displayName: "One",
+        files: [{ path: "analysis", contents: "not a directory\n" }],
+      },
+      {
+        id: "profile-two",
+        version: 1,
+        displayName: "Two",
+        files: [{ path: "analysis/NOTES.md", contents: "notes\n" }],
+      },
+    ];
+
+    await expect(deterministicPlan(fixture.root, profiles)).rejects.toMatchObject({
+      code: "INVALID_PROFILE",
+    });
+  });
+
+  it("rejects duplicate project sections across selected profiles", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    const profiles: readonly ProjectProfileDescriptor[] = [
+      {
+        id: "profile-one",
+        version: 1,
+        displayName: "One",
+        projectSections: [{ heading: "Analysis Approach" }],
+      },
+      {
+        id: "profile-two",
+        version: 1,
+        displayName: "Two",
+        projectSections: [{ heading: "analysis approach" }],
+      },
+    ];
+
+    await expect(deterministicPlan(fixture.root, profiles)).rejects.toMatchObject({
+      code: "INVALID_PROFILE",
+    });
+  });
+
+  it("blocks portable-name collisions with an existing foundation file", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    await writeFile(path.join(fixture.root, "project.md"), "# Lowercase project\n");
+
+    const plan = await deterministicPlan(fixture.root);
+
+    expect(plan.status).toBe("blocked");
+    expect(plan.operations).toContainEqual(
+      expect.objectContaining({ kind: "conflict", path: "PROJECT.md" }),
+    );
   });
 });

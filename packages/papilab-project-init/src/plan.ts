@@ -6,7 +6,11 @@ import {
   readUtf8FileBounded,
   snapshotRelativePathSafely,
 } from "./filesystem.ts";
-import { renderAgentsMarkdown, renderProjectMarkdown, proposeManagedAgentsContents } from "./templates.ts";
+import {
+  renderAgentsMarkdown,
+  renderProjectMarkdown,
+  proposeManagedAgentsContents,
+} from "./templates.ts";
 import {
   PAPILAB_AGENTS_FILE,
   PAPILAB_FORMAT_VERSION,
@@ -65,9 +69,7 @@ function pathsOverlap(left: string, right: string): boolean {
   const leftKey = portablePathKey(left);
   const rightKey = portablePathKey(right);
   return (
-    leftKey === rightKey ||
-    leftKey.startsWith(`${rightKey}/`) ||
-    rightKey.startsWith(`${leftKey}/`)
+    leftKey === rightKey || leftKey.startsWith(`${rightKey}/`) || rightKey.startsWith(`${leftKey}/`)
   );
 }
 
@@ -76,7 +78,11 @@ async function planProjectFile(
   contents: string,
 ): Promise<InitializationPlanOperation> {
   if (snapshot.kind === "missing") {
-    return createOperation(PAPILAB_PROJECT_FILE, contents, "Create the human-readable project orientation.");
+    return createOperation(
+      PAPILAB_PROJECT_FILE,
+      contents,
+      "Create the human-readable project orientation.",
+    );
   }
   if (snapshot.kind === "file") {
     return preserveOperation(
@@ -99,7 +105,11 @@ async function planAgentsFile(
   profiles: readonly ProjectProfileDescriptor[],
 ): Promise<InitializationPlanOperation> {
   if (snapshot.kind === "missing") {
-    return createOperation(PAPILAB_AGENTS_FILE, contents, "Create the portable root agent guidance.");
+    return createOperation(
+      PAPILAB_AGENTS_FILE,
+      contents,
+      "Create the portable root agent guidance.",
+    );
   }
   if (snapshot.kind !== "file") {
     return conflictOperation(
@@ -109,7 +119,10 @@ async function planAgentsFile(
     );
   }
   try {
-    const existing = await readUtf8FileBounded(path.join(root, PAPILAB_AGENTS_FILE), MAX_MANAGED_TEXT_BYTES);
+    const existing = await readUtf8FileBounded(
+      path.join(root, PAPILAB_AGENTS_FILE),
+      MAX_MANAGED_TEXT_BYTES,
+    );
     const proposedContents = proposeManagedAgentsContents(existing, profiles);
     if (proposedContents === existing.replace(/\r\n?/g, "\n")) {
       return preserveOperation(
@@ -144,14 +157,16 @@ async function planProfileFiles(
   const files = profiles
     .flatMap((profile) =>
       (profile.files ?? []).map((file) => ({
-        ...file,
         path: validatePortableRelativePath(file.path),
+        contents: file.contents,
         profileId: profile.id,
       })),
     )
     .toSorted((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0));
   for (const file of files) {
-    const conflictingPath = [...owners.keys()].find((ownedPath) => pathsOverlap(ownedPath, file.path));
+    const conflictingPath = [...owners.keys()].find((ownedPath) =>
+      pathsOverlap(ownedPath, file.path),
+    );
     if (conflictingPath) {
       const existingOwner = owners.get(conflictingPath);
       throw new ProjectInitializationError(
@@ -182,7 +197,10 @@ export async function planProjectInitialization(
   input: InitializationPlanInput,
 ): Promise<InitializationPlan> {
   const request = normalizeInitializationRequest(input.request);
-  const profiles = resolveSelectedProfiles({ profileIds: request.profileIds, profiles: input.profiles ?? [] });
+  const profiles = resolveSelectedProfiles({
+    profileIds: request.profileIds,
+    profiles: input.profiles ?? [],
+  });
 
   if (input.inspection.state === "initialized-compatible" && input.inspection.identity) {
     const operations: InitializationPlanOperation[] = [];
