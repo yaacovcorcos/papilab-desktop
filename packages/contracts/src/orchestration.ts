@@ -1,9 +1,10 @@
 import { Option, Schema, SchemaIssue, Struct } from "effect";
+import * as SchemaGetter from "effect/SchemaGetter";
 import {
+  AntigravityModelOptions,
   ClaudeModelOptions,
   CodexModelOptions,
   CursorModelOptions,
-  GeminiModelOptions,
   DroidModelOptions,
   GrokModelOptions,
   OpenCodeModelOptions,
@@ -53,7 +54,7 @@ export const ProviderKind = Schema.Literals([
   "codex",
   "claudeAgent",
   "cursor",
-  "gemini",
+  "antigravity",
   "grok",
   "droid",
   "kilo",
@@ -97,12 +98,12 @@ export const CursorModelSelection = Schema.Struct({
 });
 export type CursorModelSelection = typeof CursorModelSelection.Type;
 
-export const GeminiModelSelection = Schema.Struct({
-  provider: Schema.Literal("gemini"),
+export const AntigravityModelSelection = Schema.Struct({
+  provider: Schema.Literal("antigravity"),
   model: TrimmedNonEmptyString,
-  options: Schema.optional(GeminiModelOptions),
+  options: Schema.optional(AntigravityModelOptions),
 });
-export type GeminiModelSelection = typeof GeminiModelSelection.Type;
+export type AntigravityModelSelection = typeof AntigravityModelSelection.Type;
 
 export const GrokModelSelection = Schema.Struct({
   provider: Schema.Literal("grok"),
@@ -143,7 +144,7 @@ export const ModelSelection = Schema.Union([
   CodexModelSelection,
   ClaudeModelSelection,
   CursorModelSelection,
-  GeminiModelSelection,
+  AntigravityModelSelection,
   GrokModelSelection,
   DroidModelSelection,
   KiloModelSelection,
@@ -163,7 +164,7 @@ export const ClaudeProviderStartOptions = Schema.Struct({
   maxThinkingTokens: Schema.optional(NonNegativeInt),
 });
 
-export const GeminiProviderStartOptions = Schema.Struct({
+export const AntigravityProviderStartOptions = Schema.Struct({
   binaryPath: Schema.optional(TrimmedNonEmptyString),
 });
 
@@ -202,7 +203,7 @@ export const ProviderStartOptions = Schema.Struct({
   codex: Schema.optional(CodexProviderStartOptions),
   claudeAgent: Schema.optional(ClaudeProviderStartOptions),
   cursor: Schema.optional(CursorProviderStartOptions),
-  gemini: Schema.optional(GeminiProviderStartOptions),
+  antigravity: Schema.optional(AntigravityProviderStartOptions),
   grok: Schema.optional(GrokProviderStartOptions),
   droid: Schema.optional(DroidProviderStartOptions),
   kilo: Schema.optional(KiloProviderStartOptions),
@@ -433,9 +434,20 @@ export const OrchestrationMessage = Schema.Struct({
 });
 export type OrchestrationMessage = typeof OrchestrationMessage.Type;
 
+const PersistedThreadHandoffProviderKind = Schema.Union([
+  ProviderKind,
+  Schema.Literal("gemini"),
+]).pipe(
+  Schema.decodeTo(ProviderKind, {
+    decode: SchemaGetter.transform((provider) =>
+      provider === "gemini" ? "antigravity" : provider,
+    ),
+    encode: SchemaGetter.transform((provider) => provider),
+  }),
+);
 export const ThreadHandoff = Schema.Struct({
   sourceThreadId: ThreadId,
-  sourceProvider: ProviderKind,
+  sourceProvider: PersistedThreadHandoffProviderKind,
   importedAt: IsoDateTime,
   bootstrapStatus: ThreadHandoffBootstrapStatus,
 });
