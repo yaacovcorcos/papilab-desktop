@@ -8,6 +8,7 @@ import {
   WS_METHODS,
   WsRpcError,
   WsRpcGroup,
+  PullRequestsUnavailableError,
   type GitActionProgressEvent,
   type OrchestrationEvent,
   type ProjectDevServerEvent,
@@ -36,8 +37,9 @@ import {
   STUDIO_WORKSPACE_SUBDIRECTORIES,
 } from "./studioWorkspaceScaffold";
 import { DevServerManager, findProjectDevServerForLocalServer } from "./devServerManager";
-import { GitCore, type GitCoreShape } from "./git/Services/GitCore";
+import { GitCore } from "./git/Services/GitCore";
 import { GitManager } from "./git/Services/GitManager";
+import { GitHubCliError } from "./git/Errors";
 import { GitStatusBroadcaster } from "./git/Services/GitStatusBroadcaster";
 import { TextGeneration } from "./git/Services/TextGeneration";
 import { Keybindings } from "./keybindings";
@@ -67,6 +69,8 @@ import { WorkspaceEntries } from "./workspace/Services/WorkspaceEntries";
 import { WorkspaceFileSystem } from "./workspace/Services/WorkspaceFileSystem";
 import { shouldRejectUntrustedRequestOrigin } from "./trustedOrigins";
 import { bufferLiveUiStream, type LiveUiStreamDropReport } from "./wsStreamBackpressure";
+import { PullRequestService } from "./pullRequests/Services/PullRequestService";
+import { resolveGitHubRepository } from "./pullRequests/repositoryResolution";
 
 const MAX_DIAGNOSTIC_CHILD_PROCESSES = 80;
 const MAX_DIAGNOSTIC_ARGS_CHARS = 500;
@@ -82,108 +86,6 @@ interface ProcessTableRow {
   readonly virtualSizeBytes: number;
   readonly command: string;
   readonly args: string;
-}
-
-// Normalizes supported GitHub remote URL forms into `owner/repo` for browser-panel links.
-function parseGitHubRepositoryNameWithOwnerFromRemoteUrl(url: string | null): string | null {
-  const trimmed = url?.trim() ?? "";
-  if (trimmed.length === 0) {
-    return null;
-  }
-
-  const match =
-    /^(?:git@github\.com:|ssh:\/\/git@github\.com\/|https:\/\/github\.com\/|git:\/\/github\.com\/)([^/\s]+\/[^/\s]+?)(?:\.git)?\/?$/i.exec(
-      trimmed,
-    );
-  const repositoryNameWithOwner = match?.[1]?.trim() ?? "";
-  return repositoryNameWithOwner.length > 0 ? repositoryNameWithOwner : null;
-}
-
-function normalizeGitRemoteName(value: string | null): string | null {
-  const normalized = value?.trim() ?? "";
-  return normalized.length > 0 && normalized !== "." ? normalized : null;
-}
-
-function uniqueRemoteCandidates(candidates: ReadonlyArray<string | null>): string[] {
-  const unique = new Set<string>();
-  for (const candidate of candidates) {
-    const normalized = normalizeGitRemoteName(candidate);
-    if (normalized) {
-      unique.add(normalized);
-    }
-  }
-  return [...unique];
-}
-
-function readGitStdoutOrNull(
-  git: GitCoreShape,
-  cwd: string,
-  operation: string,
-  args: ReadonlyArray<string>,
-) {
-  return git
-    .execute({
-      operation,
-      cwd,
-      args,
-      allowNonZeroExit: true,
-      maxOutputBytes: 16_384,
-    })
-    .pipe(
-      Effect.map((result) => {
-        if (result.code !== 0) {
-          return null;
-        }
-        const trimmed = result.stdout.trim();
-        return trimmed.length > 0 ? trimmed : null;
-      }),
-      Effect.catch(() => Effect.succeed(null)),
-    );
-}
-
-function parseGitRemoteNames(stdout: string | null): string[] {
-  if (!stdout) {
-    return [];
-  }
-  return stdout
-    .split(/\r?\n/g)
-    .map((line) => normalizeGitRemoteName(line))
-    .filter((remoteName): remoteName is string => remoteName !== null);
-}
-
-// Resolves the GitHub repository link from Git config without running the full status path.
-function resolveGitHubRepository(git: GitCoreShape, cwd: string) {
-  return Effect.gen(function* () {
-    const branch = yield* readGitStdoutOrNull(git, cwd, "WsRpc.githubRepository.currentBranch", [
-      "branch",
-      "--show-current",
-    ]);
-    const remoteNames = parseGitRemoteNames(
-      yield* readGitStdoutOrNull(git, cwd, "WsRpc.githubRepository.remotes", ["remote"]),
-    );
-    const branchRemote = branch ? yield* git.readConfigValue(cwd, `branch.${branch}.remote`) : null;
-    const pushDefaultRemote = yield* git.readConfigValue(cwd, "remote.pushDefault");
-
-    for (const remoteName of uniqueRemoteCandidates([
-      branchRemote,
-      pushDefaultRemote,
-      "origin",
-      ...remoteNames,
-    ])) {
-      const remoteUrl = yield* git.readConfigValue(cwd, `remote.${remoteName}.url`);
-      const nameWithOwner = parseGitHubRepositoryNameWithOwnerFromRemoteUrl(remoteUrl);
-      if (nameWithOwner) {
-        return {
-          repository: {
-            nameWithOwner,
-            url: `https://github.com/${nameWithOwner}`,
-          },
-        };
-      }
-    }
-
-    return { repository: null };
-  });
 }
 
 function truncateDiagnosticText(value: string, limit: number): string {
@@ -350,6 +252,7 @@ export const makeWsRpcLayer = () =>
       const open = yield* Open;
       const orchestrationEngine = yield* OrchestrationEngineService;
       const path = yield* Path.Path;
+      const pullRequests = yield* PullRequestService;
       const profileStatsQuery = yield* ProfileStatsQuery;
       const projectionReadModelQuery = yield* ProjectionSnapshotQuery;
       const providerAdapterRegistry = yield* ProviderAdapterRegistry;
@@ -365,6 +268,24 @@ export const makeWsRpcLayer = () =>
       const workspaceEntries = yield* WorkspaceEntries;
       const workspaceFileSystem = yield* WorkspaceFileSystem;
 
+      const isGlobalGitHubCliError = (error: unknown): error is GitHubCliError =>
+        error instanceof GitHubCliError &&
+        (error.reason === "not-installed" || error.reason === "not-authenticated");
+
+      const toPullRequestsRpcError = (cause: unknown, fallbackMessage: string) => {
+        if (isGlobalGitHubCliError(cause)) {
+          return new PullRequestsUnavailableError({
+            reason: cause.reason === "not-installed" ? "gh-not-installed" : "gh-not-authenticated",
+            message: cause.detail,
+          });
+        }
+        return toWsRpcError(cause, fallbackMessage);
+      };
+
+      const pullRequestsEffect = <A, E, R>(
+        effect: Effect.Effect<A, E, R>,
+        fallbackMessage: string,
+      ) => effect.pipe(Effect.mapError((cause) => toPullRequestsRpcError(cause, fallbackMessage)));
       const canonicalizeProjectWorkspaceRoot = Effect.fnUntraced(function* (
         workspaceRoot: string,
         options: { readonly createIfMissing?: boolean } = {},
@@ -874,6 +795,23 @@ export const makeWsRpcLayer = () =>
               .pipe(Effect.tap(() => refreshGitStatus(input.cwd))),
             "Failed to prepare pull request thread",
           ),
+        [WS_METHODS.pullRequestsList]: (input) =>
+          pullRequestsEffect(pullRequests.list(input), "Failed to list pull requests"),
+        [WS_METHODS.pullRequestsReviewRequestCount]: (input) =>
+          pullRequestsEffect(
+            pullRequests.reviewRequestCount(input),
+            "Failed to count pull request review requests",
+          ),
+        [WS_METHODS.pullRequestsDetail]: (input) =>
+          pullRequestsEffect(pullRequests.detail(input), "Failed to load pull request"),
+        [WS_METHODS.pullRequestsDiff]: (input) =>
+          pullRequestsEffect(pullRequests.diff(input), "Failed to load pull request diff"),
+        [WS_METHODS.pullRequestsAction]: (input) =>
+          pullRequestsEffect(pullRequests.action(input), "Pull request action failed"),
+        [WS_METHODS.pullRequestsComment]: (input) =>
+          pullRequestsEffect(pullRequests.comment(input), "Could not post the comment"),
+        [WS_METHODS.pullRequestsSetPinned]: (input) =>
+          rpcEffect(pullRequests.setPinned(input), "Failed to update pull request pin"),
         [WS_METHODS.gitListBranches]: (input) =>
           rpcEffect(git.listBranches(input), "Failed to list branches"),
         [WS_METHODS.gitCreateWorktree]: (input) =>

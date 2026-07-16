@@ -68,6 +68,8 @@ import Migration0049 from "./Migrations/049_ProjectionThreadMessagesDispatchOrig
 import Migration0050 from "./Migrations/050_ProfileStatsArchive.ts";
 import Migration0051 from "./Migrations/051_ProfileStatsDeletedTokensModel.ts";
 import Migration0052 from "./Migrations/052_ProjectionThreadUserMessageSummaryIndex.ts";
+import Migration0053 from "./Migrations/053_BackfillThreadActivitySequence.ts";
+import Migration0054 from "./Migrations/054_ProjectPullRequestPins.ts";
 
 /**
  * Migration loader with all migrations defined inline.
@@ -132,6 +134,8 @@ export const migrationEntries = [
   [50, "ProfileStatsArchive", Migration0050],
   [51, "ProfileStatsDeletedTokensModel", Migration0051],
   [52, "ProjectionThreadUserMessageSummaryIndex", Migration0052],
+  [53, "BackfillThreadActivitySequence", Migration0053],
+  [54, "ProjectPullRequestPins", Migration0054],
 ] as const;
 
 export const makeMigrationLoader = (throughId?: number) =>

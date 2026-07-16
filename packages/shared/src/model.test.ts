@@ -183,12 +183,35 @@ describe("resolveSelectableModel", () => {
 });
 
 describe("getModelCapabilities reasoningEffortLevels", () => {
-  const values = (provider: "codex" | "claudeAgent" | "gemini" | "grok", model: string | null) =>
-    getModelCapabilities(provider, model).reasoningEffortLevels.map((l) => l.value);
+  const values = (
+    provider: "codex" | "claudeAgent" | "gemini" | "grok" | "droid",
+    model: string | null,
+  ) => getModelCapabilities(provider, model).reasoningEffortLevels.map((l) => l.value);
 
   it("returns codex reasoning options for codex", () => {
     expect(values("codex", "gpt-5.5")).toEqual([...CODEX_REASONING_EFFORT_OPTIONS]);
     expect(values("codex", "gpt-5.4")).toEqual([...CODEX_REASONING_EFFORT_OPTIONS]);
+  });
+
+  it("matches Droid's GPT-5.5 and GPT-5.6 fallback effort ladders", () => {
+    expect(values("droid", "gpt-5.5")).toEqual(["low", "medium", "high", "xhigh"]);
+    expect(values("droid", "gpt-5.5-pro")).toEqual(["medium", "high", "xhigh"]);
+    expect(values("droid", "gpt-5.6-sol")).toEqual([
+      "none",
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+      "max",
+    ]);
+  });
+
+  it("models Droid fast mode as a separate GPT-5.5 slug, not a GPT-5.6 toggle", () => {
+    const droidSlugs = MODEL_OPTIONS_BY_PROVIDER.droid.map((model) => model.slug);
+
+    expect(droidSlugs).toContain("gpt-5.5-fast");
+    expect(droidSlugs).not.toContain("gpt-5.6-fast");
+    expect(getModelCapabilities("droid", "gpt-5.6-sol").supportsFastMode).toBe(false);
   });
 
   it("returns claude effort options for Opus 4.6", () => {
@@ -300,6 +323,7 @@ describe("getModelCapabilities reasoningEffortLevels", () => {
   it("returns Grok effort options for Grok Build models", () => {
     expect(values("grok", "grok-build-0.1")).toEqual([...GROK_REASONING_EFFORT_OPTIONS]);
     expect(values("grok", "grok-build")).toEqual([...GROK_REASONING_EFFORT_OPTIONS]);
+    expect(values("grok", "grok-4.5")).toEqual([...GROK_REASONING_EFFORT_OPTIONS]);
   });
 
   it("co-locates labels with effort values", () => {
@@ -793,6 +817,9 @@ describe("normalizeGrokModelOptions", () => {
       normalizeGrokModelOptions("grok-build", { reasoningEffort: "xhigh" as never }),
     ).toBeUndefined();
     expect(normalizeGrokModelOptions("grok-build-0.1", { reasoningEffort: "high" })).toEqual({
+      reasoningEffort: "high",
+    });
+    expect(normalizeGrokModelOptions("grok-4.5", { reasoningEffort: "high" })).toEqual({
       reasoningEffort: "high",
     });
   });
