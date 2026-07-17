@@ -10,11 +10,7 @@ interface PapiLabLogoProps extends SVGProps<SVGSVGElement> {
   readonly adaptToDark?: boolean;
 }
 
-export function PapiLabLogo({
-  adaptToDark = true,
-  className,
-  ...props
-}: PapiLabLogoProps) {
+export function PapiLabLogo({ adaptToDark = true, className, ...props }: PapiLabLogoProps) {
   const ariaLabel = props["aria-label"];
 
   return (
@@ -32,8 +28,7 @@ export function PapiLabLogo({
           d={path.d}
           className={cn(
             path.tone === "blue" ? "fill-[#46587E]" : "fill-[#471A1A]",
-            adaptToDark &&
-              (path.tone === "blue" ? "dark:fill-[#AFC2E8]" : "dark:fill-[#E6B8B8]"),
+            adaptToDark && (path.tone === "blue" ? "dark:fill-[#AFC2E8]" : "dark:fill-[#E6B8B8]"),
           )}
         />
       ))}
