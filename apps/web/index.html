@@ -78,12 +78,28 @@
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
         >
-          <path d="M295 105H95V95H295V105Z" fill="#46587E" />
-          <path d="M376 210H201V200H376V210Z" fill="#471A1A" />
-          <path d="M190 200V0H200V200H190Z" fill="#471A1A" />
-          <path d="M95 295V95H105V295H95Z" fill="#46587E" />
-          <path d="M200 200H0V190H200V200Z" fill="#471A1A" />
-          <path d="M200 400V200H210V400H200Z" fill="#471A1A" />
+          <style>
+            .papilab-boot-blue {
+              fill: #46587e;
+            }
+            .papilab-boot-brown {
+              fill: #471a1a;
+            }
+            @media (prefers-color-scheme: dark) {
+              .papilab-boot-blue {
+                fill: #afc2e8;
+              }
+              .papilab-boot-brown {
+                fill: #e6b8b8;
+              }
+            }
+          </style>
+          <path d="M295 105H95V95H295V105Z" class="papilab-boot-blue" />
+          <path d="M376 210H201V200H376V210Z" class="papilab-boot-brown" />
+          <path d="M190 200V0H200V200H190Z" class="papilab-boot-brown" />
+          <path d="M95 295V95H105V295H95Z" class="papilab-boot-blue" />
+          <path d="M200 200H0V190H200V200Z" class="papilab-boot-brown" />
+          <path d="M200 400V200H210V400H200Z" class="papilab-boot-brown" />
         </svg>
       </div>
     </div>
