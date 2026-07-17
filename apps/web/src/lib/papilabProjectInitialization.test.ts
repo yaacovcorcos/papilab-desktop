@@ -1,7 +1,10 @@
 import type { NativeApi, PapiLabProjectInitializationPreviewResult } from "@synara/contracts";
 import { describe, expect, it, vi } from "vitest";
 
-import { preparePapiLabProjectForOpening } from "./papilabProjectInitialization";
+import {
+  papiLabProjectFolderName,
+  preparePapiLabProjectForOpening,
+} from "./papilabProjectInitialization";
 
 function preview(
   overrides: Partial<PapiLabProjectInitializationPreviewResult> = {},
@@ -66,6 +69,19 @@ function apiWith(input: {
     },
   };
 }
+
+describe("papiLabProjectFolderName", () => {
+  it("uses the selected folder name in the project-opening title", () => {
+    expect(papiLabProjectFolderName("/research/immune-response-study")).toBe(
+      "immune-response-study",
+    );
+    expect(papiLabProjectFolderName("C:\\research\\protein-folding")).toBe("protein-folding");
+  });
+
+  it("ignores trailing path separators", () => {
+    expect(papiLabProjectFolderName("/research/quantum-materials/")).toBe("quantum-materials");
+  });
+});
 
 describe("preparePapiLabProjectForOpening", () => {
   it("applies only the opaque server preview ID before opening", async () => {

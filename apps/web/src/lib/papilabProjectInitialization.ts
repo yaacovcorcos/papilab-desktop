@@ -17,7 +17,7 @@ export type PapiLabProjectInitializationCompletion =
   | { readonly kind: "recovered"; readonly result: PapiLabProjectInitializationApplyResult }
   | { readonly kind: "rolled-back"; readonly result: PapiLabProjectInitializationRollbackResult };
 
-function projectTitleFromRoot(root: string): string {
+export function papiLabProjectFolderName(root: string): string {
   return root.split(/[/\\]/).findLast((segment) => segment.length > 0) ?? root;
 }
 
@@ -34,7 +34,7 @@ export async function preparePapiLabProjectForOpening(input: {
   for (;;) {
     const preview = await input.api.papilabProjectInitialization.preview({
       root: input.root,
-      request: { title: projectTitleFromRoot(input.root) },
+      request: { title: papiLabProjectFolderName(input.root) },
     });
     if (preview.status === "already-initialized") return "already-initialized";
 

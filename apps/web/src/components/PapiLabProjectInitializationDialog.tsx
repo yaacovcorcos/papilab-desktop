@@ -1,6 +1,11 @@
 import type { PapiLabProjectInitializationPreviewResult } from "@synara/contracts";
+import { IconFolder, IconInfoCircle, IconSparkles } from "@tabler/icons-react";
+import { useState } from "react";
 
-import type { PapiLabProjectInitializationDecision } from "../lib/papilabProjectInitialization";
+import {
+  papiLabProjectFolderName,
+  type PapiLabProjectInitializationDecision,
+} from "../lib/papilabProjectInitialization";
 
 import { Button } from "./ui/button";
 import {
@@ -20,8 +25,224 @@ const OPERATION_LABELS = {
   conflict: "Needs attention",
 } as const;
 
-function folderName(root: string): string {
-  return root.split(/[/\\]/).findLast((segment) => segment.length > 0) ?? root;
+const SCIENT_PROJECT_FILES = [
+  {
+    path: "PROJECT.md",
+    description: "The project's purpose and objective.",
+  },
+  {
+    path: "AGENTS.md",
+    description: "Shared guidance for agents working in the project.",
+  },
+  {
+    path: ".papilab/project.json",
+    description: "A portable PapiLab project identity.",
+  },
+] as const;
+
+function InitializationError({ error }: { readonly error: string | null }) {
+  if (!error) return null;
+
+  return (
+    <div
+      role="alert"
+      className="rounded-lg border border-destructive/30 bg-destructive/6 px-3 py-2 text-sm text-destructive"
+    >
+      {error}
+    </div>
+  );
+}
+
+function ReadyProjectChoice(props: {
+  readonly preview: PapiLabProjectInitializationPreviewResult;
+  readonly error: string | null;
+  readonly onDecision: (decision: PapiLabProjectInitializationDecision) => void;
+}) {
+  const [showInformation, setShowInformation] = useState(false);
+  const name = papiLabProjectFolderName(props.preview.root);
+
+  if (showInformation) {
+    return (
+      <>
+        <DialogHeader className="pr-10">
+          <DialogTitle className="text-xl">What is a Scient project?</DialogTitle>
+          <DialogDescription>
+            A Scient project adds a few portable files so PapiLab and your agents can understand and
+            continue the work.
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogPanel className="space-y-3">
+          <div className="divide-y divide-[color:var(--color-border)] overflow-hidden rounded-xl border border-[color:var(--color-border)] bg-[var(--color-background-elevated-primary-opaque)]">
+            {SCIENT_PROJECT_FILES.map((file) => (
+              <div key={file.path} className="px-3.5 py-3">
+                <div className="font-mono text-xs font-medium text-foreground">{file.path}</div>
+                <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  {file.description}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Existing files are never overwritten.
+          </p>
+        </DialogPanel>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowInformation(false)}>
+            Back
+          </Button>
+          <Button onClick={() => props.onDecision("apply")}>Set up a Scient project</Button>
+        </DialogFooter>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <DialogHeader className="pr-10">
+        <DialogTitle className="text-xl sm:text-2xl">Open “{name}”</DialogTitle>
+        <DialogDescription>Choose how you want to use this folder in PapiLab.</DialogDescription>
+      </DialogHeader>
+
+      <DialogPanel className="space-y-3 pt-1">
+        <InitializationError error={props.error} />
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            disabled={!props.preview.canApply}
+            onClick={() => props.onDecision("apply")}
+            className="group flex min-h-32 items-center gap-3.5 rounded-xl border border-[color:var(--color-border)] bg-[var(--color-background-elevated-primary-opaque)] p-4 text-left outline-none transition-colors hover:bg-[var(--color-background-elevated-secondary)] focus-visible:ring-1 focus-visible:ring-ring/60 focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50"
+          >
+            <span className="relative flex size-12 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground">
+              <IconFolder aria-hidden className="size-7" stroke={1.7} />
+              <IconSparkles
+                aria-hidden
+                className="absolute top-[55%] left-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2"
+                stroke={1.8}
+              />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-foreground">
+                Set up a Scient project
+              </span>
+              <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground">
+                Add a small portable foundation for your agents.
+              </span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => props.onDecision("open-only")}
+            className="group flex min-h-32 items-center gap-3.5 rounded-xl border border-[color:var(--color-border)] bg-[var(--color-background-elevated-primary-opaque)] p-4 text-left outline-none transition-colors hover:bg-[var(--color-background-elevated-secondary)] focus-visible:ring-1 focus-visible:ring-ring/60 focus-visible:ring-offset-1 focus-visible:ring-offset-background"
+          >
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground">
+              <IconFolder aria-hidden className="size-7" stroke={1.7} />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-foreground">
+                Open an empty project
+              </span>
+              <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground">
+                Write your own agent instructions later.
+              </span>
+            </span>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowInformation(true)}
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-1 text-xs text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:ring-1 focus-visible:ring-ring/60"
+        >
+          <IconInfoCircle aria-hidden className="size-4" stroke={1.7} />
+          What is a Scient project?
+        </button>
+      </DialogPanel>
+    </>
+  );
+}
+
+function ExceptionalProjectInitialization(props: {
+  readonly preview: PapiLabProjectInitializationPreviewResult;
+  readonly error: string | null;
+  readonly onDecision: (decision: PapiLabProjectInitializationDecision) => void;
+}) {
+  const recoveryRequired = props.preview.status === "recovery-required";
+  const unavailable = props.preview.folderState === "unavailable";
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>
+          {recoveryRequired
+            ? "Finish setting up this Scient project?"
+            : "This folder needs attention"}
+        </DialogTitle>
+        <DialogDescription>
+          <span className="font-medium text-foreground">
+            {papiLabProjectFolderName(props.preview.root)}
+          </span>
+          {recoveryRequired
+            ? " contains an interrupted Scient project setup. You can safely resume it or roll back only unchanged files from that attempt."
+            : unavailable
+              ? " is not currently available for inspection. You can still try opening or creating it without Scient project setup."
+              : " can still be opened without modification, but PapiLab cannot set it up safely yet."}
+        </DialogDescription>
+      </DialogHeader>
+
+      <DialogPanel className="space-y-3">
+        <InitializationError error={props.error} />
+
+        {props.preview.issues.map((issue) => (
+          <div
+            key={`${issue.code}:${issue.path}`}
+            className="rounded-lg border border-amber-500/25 bg-amber-500/6 px-3 py-2"
+          >
+            <div className="font-mono text-xs text-foreground">{issue.path}</div>
+            <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {issue.message}
+            </div>
+          </div>
+        ))}
+
+        {props.preview.operations.map((operation) => (
+          <section
+            key={`${operation.kind}:${operation.path}`}
+            className="overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-[var(--color-background-elevated-primary-opaque)]"
+          >
+            <div className="flex items-start justify-between gap-3 px-3 py-2">
+              <div className="min-w-0">
+                <div className="truncate font-mono text-xs text-foreground">{operation.path}</div>
+                <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  {operation.reason}
+                </div>
+              </div>
+              <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground">
+                {OPERATION_LABELS[operation.kind]}
+              </span>
+            </div>
+          </section>
+        ))}
+      </DialogPanel>
+
+      <DialogFooter className="sm:flex-wrap">
+        {recoveryRequired ? (
+          <Button variant="destructive-outline" onClick={() => props.onDecision("rollback")}>
+            Roll back attempt
+          </Button>
+        ) : null}
+        <Button variant="outline" onClick={() => props.onDecision("open-only")}>
+          {unavailable ? "Continue without setup" : "Open without setup"}
+        </Button>
+        {props.preview.canRecover ? (
+          <Button onClick={() => props.onDecision("recover")}>Resume and open</Button>
+        ) : null}
+      </DialogFooter>
+    </>
+  );
 }
 
 export function PapiLabProjectInitializationDialog(props: {
@@ -30,9 +251,7 @@ export function PapiLabProjectInitializationDialog(props: {
   readonly onDecision: (decision: PapiLabProjectInitializationDecision) => void;
 }) {
   const preview = props.preview;
-  const recoveryRequired = preview?.status === "recovery-required";
-  const blocked = preview?.status === "blocked";
-  const unavailable = preview?.folderState === "unavailable";
+  const ready = preview?.status === "ready";
 
   return (
     <Dialog
@@ -42,100 +261,22 @@ export function PapiLabProjectInitializationDialog(props: {
       }}
     >
       <DialogPopup surface="solid" className="max-w-2xl" showCloseButton>
-        <DialogHeader>
-          <DialogTitle>
-            {recoveryRequired
-              ? "Finish setting up this PapiLab project?"
-              : blocked
-                ? "This folder needs attention"
-                : "Set up this folder as a PapiLab project?"}
-          </DialogTitle>
-          <DialogDescription>
-            {preview ? (
-              <>
-                <span className="font-medium text-foreground">{folderName(preview.root)}</span>
-                {recoveryRequired
-                  ? " contains an interrupted PapiLab initialization. You can safely resume it or roll back only unchanged files from that attempt."
-                  : blocked
-                    ? unavailable
-                      ? " is not currently available for inspection. You can still try opening or creating it without PapiLab setup."
-                      : " can still be opened without modification, but PapiLab cannot initialize it safely yet."
-                    : " can be opened unchanged, or PapiLab can add its small portable project foundation."}
-              </>
-            ) : null}
-          </DialogDescription>
-        </DialogHeader>
-
-        <DialogPanel className="space-y-3">
-          {props.error ? (
-            <div
-              role="alert"
-              className="rounded-lg border border-destructive/30 bg-destructive/6 px-3 py-2 text-sm text-destructive"
-            >
-              {props.error}
-            </div>
-          ) : null}
-
-          {preview?.issues.map((issue) => (
-            <div
-              key={`${issue.code}:${issue.path}`}
-              className="rounded-lg border border-amber-500/25 bg-amber-500/6 px-3 py-2"
-            >
-              <div className="font-mono text-xs text-foreground">{issue.path}</div>
-              <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                {issue.message}
-              </div>
-            </div>
-          ))}
-
-          {preview?.operations.map((operation) => (
-            <section
-              key={`${operation.kind}:${operation.path}`}
-              className="overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-[var(--color-background-elevated-primary-opaque)]"
-            >
-              <div className="flex items-start justify-between gap-3 px-3 py-2">
-                <div className="min-w-0">
-                  <div className="truncate font-mono text-xs text-foreground">{operation.path}</div>
-                  <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                    {operation.reason}
-                  </div>
-                </div>
-                <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground">
-                  {OPERATION_LABELS[operation.kind]}
-                </span>
-              </div>
-              {operation.contents !== undefined ? (
-                <pre className="max-h-48 overflow-auto border-t border-[color:var(--color-border)] bg-background/60 px-3 py-2 text-[11px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                  {operation.contents}
-                </pre>
-              ) : null}
-            </section>
-          ))}
-
-          {!recoveryRequired && !blocked ? (
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Existing files are never overwritten. Any suggested AGENTS.md update remains a
-              proposal and is not applied during initialization.
-            </p>
-          ) : null}
-        </DialogPanel>
-
-        <DialogFooter className="sm:flex-wrap">
-          {recoveryRequired ? (
-            <Button variant="destructive-outline" onClick={() => props.onDecision("rollback")}>
-              Roll back attempt
-            </Button>
-          ) : null}
-          <Button variant="outline" onClick={() => props.onDecision("open-only")}>
-            {unavailable ? "Continue without setup" : "Open without setup"}
-          </Button>
-          {preview?.canApply ? (
-            <Button onClick={() => props.onDecision("apply")}>Initialize and open</Button>
-          ) : null}
-          {preview?.canRecover ? (
-            <Button onClick={() => props.onDecision("recover")}>Resume and open</Button>
-          ) : null}
-        </DialogFooter>
+        {preview ? (
+          ready ? (
+            <ReadyProjectChoice
+              key={`${preview.previewId}:${preview.root}`}
+              preview={preview}
+              error={props.error}
+              onDecision={props.onDecision}
+            />
+          ) : (
+            <ExceptionalProjectInitialization
+              preview={preview}
+              error={props.error}
+              onDecision={props.onDecision}
+            />
+          )
+        ) : null}
       </DialogPopup>
     </Dialog>
   );
