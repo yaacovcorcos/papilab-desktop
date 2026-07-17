@@ -45,12 +45,12 @@ import { autoUpdater, BaseUpdater, CancellationToken } from "electron-updater";
 import type { ContextMenuItem } from "@synara/contracts";
 import { getMacTrafficLightPosition } from "@synara/shared/desktopChrome";
 import {
-  PAPILAB_APP_NAME,
-  PAPILAB_DESKTOP_ENTRY_URL,
-  PAPILAB_DESKTOP_SCHEME,
-  PAPILAB_DESKTOP_UPDATE_CHANNEL,
-  PAPILAB_DESKTOP_UPDATES_ENABLED,
-  papilabBundleId,
+  SCIENT_APP_NAME,
+  SCIENT_DESKTOP_ENTRY_URL,
+  SCIENT_DESKTOP_SCHEME,
+  SCIENT_DESKTOP_UPDATE_CHANNEL,
+  SCIENT_DESKTOP_UPDATES_ENABLED,
+  scientBundleId,
 } from "@synara/shared/desktopIdentity";
 import { NetService } from "@synara/shared/Net";
 import { RotatingFileSink } from "@synara/shared/logging";
@@ -147,7 +147,14 @@ import {
   normalizeDesktopWsUrl,
   resolveDesktopWsUrlFromEnv,
 } from "./desktopWsBridge";
-import { resolveDesktopAppDataBase, resolveDesktopUserDataPath } from "./desktopUserDataProfile";
+import {
+  resolveDesktopAppDataBase,
+  resolveDesktopUserDataPath,
+  resolvePapiLabDesktopUserDataPath,
+  repairBrowserProfileFromBridgeManifest,
+  seedDesktopUserDataProfileFromPapiLab,
+} from "./desktopUserDataProfile";
+import { seedScientHomeFromPapiLab } from "./legacyPapiLabHomeMigration";
 import { isBrokenPipeError } from "./desktopProcessErrors";
 import {
   readDesktopWindowState,
@@ -155,9 +162,10 @@ import {
   writeDesktopWindowState,
 } from "./windowState";
 import {
-  acknowledgeSynaraStorageSnapshot,
-  readSynaraStorageSnapshot,
-  resolveSynaraStorageSnapshotPath,
+  acknowledgeScientStorageSnapshot,
+  readScientStorageSnapshot,
+  resolveScientStorageSnapshotPath,
+  saveScientStorageSnapshot,
   STORAGE_MIGRATION_IPC_CHANNELS,
 } from "./desktopStorageMigration";
 import { DesktopAppSnapManager } from "./appSnapManager";
@@ -199,14 +207,36 @@ const UPDATE_DOWNLOAD_CHANNEL = "desktop:update-download";
 const UPDATE_INSTALL_CHANNEL = "desktop:update-install";
 const NOTIFICATIONS_IS_SUPPORTED_CHANNEL = "desktop:notifications-is-supported";
 const NOTIFICATIONS_SHOW_CHANNEL = "desktop:notifications-show";
-const BASE_DIR = process.env.PAPILAB_HOME?.trim() || Path.join(OS.homedir(), ".papilab");
+const configuredScientHome = process.env.SCIENT_HOME?.trim();
+const configuredLegacyPapiLabHome = process.env.PAPILAB_HOME?.trim();
+const defaultScientHome = Path.join(OS.homedir(), ".scient");
+const resolvedScientHome =
+  configuredScientHome ||
+  (configuredLegacyPapiLabHome
+    ? Path.join(Path.dirname(Path.resolve(configuredLegacyPapiLabHome)), ".scient")
+    : defaultScientHome);
+const legacyPapiLabHome =
+  configuredLegacyPapiLabHome ||
+  (!configuredScientHome ? Path.join(OS.homedir(), ".papilab") : null);
+if (legacyPapiLabHome) {
+  const migration = seedScientHomeFromPapiLab({
+    sourcePath: legacyPapiLabHome,
+    targetPath: resolvedScientHome,
+  });
+  if (migration.status === "seed-failed") {
+    console.warn("[desktop] Failed to seed Scient home from PapiLab", migration.error);
+  }
+}
+const BASE_DIR = resolvedScientHome;
 const STATE_DIR = Path.join(BASE_DIR, "userdata");
 const DESKTOP_WINDOW_STATE_PATH = Path.join(STATE_DIR, "desktop-window-state.json");
-const DESKTOP_SCHEME = PAPILAB_DESKTOP_SCHEME;
+const DESKTOP_SCHEME = SCIENT_DESKTOP_SCHEME;
+const LEGACY_PAPILAB_DESKTOP_SCHEME = "papilab";
+const LEGACY_PAPILAB_STORAGE_EXPORT_PATH = "/__scient_storage_migration__.html";
 const ROOT_DIR = Path.resolve(__dirname, "../../..");
 const isDevelopment = Boolean(process.env.VITE_DEV_SERVER_URL);
-const APP_DISPLAY_NAME = isDevelopment ? `${PAPILAB_APP_NAME} (Dev)` : PAPILAB_APP_NAME;
-const APP_USER_MODEL_ID = papilabBundleId(isDevelopment);
+const APP_DISPLAY_NAME = isDevelopment ? `${SCIENT_APP_NAME} (Dev)` : SCIENT_APP_NAME;
+const APP_USER_MODEL_ID = scientBundleId(isDevelopment);
 const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
 const COMMIT_HASH_DISPLAY_LENGTH = 12;
 const LOG_DIR = Path.join(STATE_DIR, "logs");
@@ -238,7 +268,7 @@ const BROWSER_PERF_SAMPLE_INTERVAL_MS = 5_000;
 const DESKTOP_MENU_ZOOM_FACTOR_STEP = 1.1;
 const DESKTOP_MENU_MIN_ZOOM_FACTOR = 0.25;
 const DESKTOP_MENU_MAX_ZOOM_FACTOR = 5;
-const SYNARA_BROWSER_LABEL = "PapiLab browser";
+const SYNARA_BROWSER_LABEL = "Scient browser";
 const browserPerfLoggingEnabled = process.env.SYNARA_BROWSER_PERF === "1";
 
 type DesktopUpdateErrorContext = DesktopUpdateState["errorContext"];
@@ -787,6 +817,15 @@ protocol.registerSchemesAsPrivileged([
       corsEnabled: true,
     },
   },
+  {
+    scheme: LEGACY_PAPILAB_DESKTOP_SCHEME,
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: false,
+      corsEnabled: false,
+    },
+  },
 ]);
 
 function resolveAppRoot(): string {
@@ -849,8 +888,8 @@ function resolveEmbeddedCommitHash(): string | null {
 
   try {
     const raw = FS.readFileSync(packageJsonPath, "utf8");
-    const parsed = JSON.parse(raw) as { synaraCommitHash?: unknown };
-    return normalizeCommitHash(parsed.synaraCommitHash);
+    const parsed = JSON.parse(raw) as { scientCommitHash?: unknown };
+    return normalizeCommitHash(parsed.scientCommitHash);
   } catch {
     return null;
   }
@@ -940,7 +979,7 @@ let servedStaticRootCache: ServedStaticRoot | null | undefined;
 // being replaced beneath the running app (Electron caches the header per process,
 // so every later read returns bytes from the wrong offsets). Extract the client
 // to a per-archive snapshot on real disk and serve that instead — both for the
-// papilab:// protocol here and, via SYNARA_STATIC_DIR, for the backend's HTTP static
+// scient:// protocol here and, via SYNARA_STATIC_DIR, for the backend's HTTP static
 // route. Memoized so one app run serves one coherent asset generation.
 function resolveServedStaticRoot(): ServedStaticRoot | null {
   if (servedStaticRootCache === undefined) {
@@ -1064,7 +1103,7 @@ function handleFatalStartupError(stage: string, error: unknown): void {
   if (!isQuitting) {
     isQuitting = true;
     dialog.showErrorBox(
-      `${PAPILAB_APP_NAME} failed to start`,
+      `${SCIENT_APP_NAME} failed to start`,
       `Stage: ${stage}\n${message}${detail}`,
     );
   }
@@ -1096,31 +1135,90 @@ function registerDesktopProtocol(): void {
   const staticRootResolved = Path.resolve(staticRoot);
   const staticRootPrefix = `${staticRootResolved}${Path.sep}`;
   const fallbackIndex = Path.join(staticRootResolved, "index.html");
+  const legacyMigrationHtmlPath = Path.join(app.getPath("userData"), "papilab-storage-export.html");
+  FS.writeFileSync(legacyMigrationHtmlPath, '<!doctype html><meta charset="utf-8">', {
+    encoding: "utf8",
+    mode: 0o600,
+  });
 
-  protocol.registerFileProtocol(DESKTOP_SCHEME, (request, callback) => {
-    try {
-      const candidate = resolveDesktopStaticPath(staticRootResolved, request.url);
-      const resolvedCandidate = Path.resolve(candidate);
-      const isInRoot =
-        resolvedCandidate === fallbackIndex || resolvedCandidate.startsWith(staticRootPrefix);
-      const isAssetRequest = isStaticAssetRequest(request.url);
+  const registerStaticProtocol = (scheme: string) => {
+    protocol.registerFileProtocol(scheme, (request, callback) => {
+      try {
+        const requestUrl = new URL(request.url);
+        if (scheme === LEGACY_PAPILAB_DESKTOP_SCHEME) {
+          if (requestUrl.pathname === LEGACY_PAPILAB_STORAGE_EXPORT_PATH) {
+            callback({ path: legacyMigrationHtmlPath });
+            return;
+          }
+          callback({ error: -6 });
+          return;
+        }
+        const candidate = resolveDesktopStaticPath(staticRootResolved, request.url);
+        const resolvedCandidate = Path.resolve(candidate);
+        const isInRoot =
+          resolvedCandidate === fallbackIndex || resolvedCandidate.startsWith(staticRootPrefix);
+        const isAssetRequest = isStaticAssetRequest(request.url);
 
-      if (!isInRoot || !FS.existsSync(resolvedCandidate)) {
-        if (isAssetRequest) {
+        if (!isInRoot || !FS.existsSync(resolvedCandidate)) {
+          if (isAssetRequest) {
+            callback({ error: -6 });
+            return;
+          }
+          callback({ path: fallbackIndex });
+          return;
+        }
+
+        callback({ path: resolvedCandidate });
+      } catch {
+        if (scheme === LEGACY_PAPILAB_DESKTOP_SCHEME) {
           callback({ error: -6 });
           return;
         }
         callback({ path: fallbackIndex });
-        return;
       }
-
-      callback({ path: resolvedCandidate });
-    } catch {
-      callback({ path: fallbackIndex });
-    }
-  });
+    });
+  };
+  registerStaticProtocol(DESKTOP_SCHEME);
+  registerStaticProtocol(LEGACY_PAPILAB_DESKTOP_SCHEME);
 
   desktopProtocolRegistered = true;
+}
+
+async function exportLegacyPapiLabStorageSnapshot(): Promise<void> {
+  if (isDevelopment) return;
+  const snapshotPath = resolveScientStorageSnapshotPath(app.getPath("userData"));
+  if (readScientStorageSnapshot(snapshotPath)) return;
+  const legacyProfilePath = resolvePapiLabDesktopUserDataPath({
+    appDataBase: resolveDesktopAppDataBase(),
+    isDevelopment,
+  });
+  if (!FS.existsSync(legacyProfilePath)) return;
+
+  const migrationWindow = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+  try {
+    await migrationWindow.loadURL(
+      `${LEGACY_PAPILAB_DESKTOP_SCHEME}://app${LEGACY_PAPILAB_STORAGE_EXPORT_PATH}`,
+    );
+    const entries = (await migrationWindow.webContents.executeJavaScript(
+      `Object.fromEntries(Object.entries(localStorage).filter(([key]) => key.startsWith("papilab:") || key.startsWith("papilab.")))`,
+      true,
+    )) as Record<string, string>;
+    if (Object.keys(entries).length === 0) return;
+    await saveScientStorageSnapshot(snapshotPath, {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      entries,
+    });
+  } finally {
+    if (!migrationWindow.isDestroyed()) migrationWindow.destroy();
+  }
 }
 
 function dispatchMenuAction(action: string): void {
@@ -1180,12 +1278,12 @@ function adjustWindowZoomFromMenu(multiplier: number): void {
 // A configured app-update.yml (or the mock-updates flag) is the prerequisite for any
 // auto-update activity; centralized so the menu and the enable check stay in lockstep.
 function hasConfiguredUpdateFeed(): boolean {
-  return readAppUpdateYml() !== null || Boolean(process.env.SYNARA_DESKTOP_MOCK_UPDATES);
+  return readAppUpdateYml() !== null || Boolean(process.env.SCIENT_DESKTOP_MOCK_UPDATES);
 }
 
 function resolveAutoUpdateDisabledReason(): string | null {
-  if (!PAPILAB_DESKTOP_UPDATES_ENABLED) {
-    return "Updates are disabled until client update support is explicitly enabled and a PapiLab-owned release feed is approved.";
+  if (!SCIENT_DESKTOP_UPDATES_ENABLED) {
+    return "Updates are disabled until client update support is explicitly enabled and a Scient-owned release feed is approved.";
   }
   return getAutoUpdateDisabledReason({
     isDevelopment,
@@ -1224,14 +1322,14 @@ async function checkForUpdatesFromMenu(): Promise<void> {
     void dialog.showMessageBox({
       type: "info",
       title: "You're up to date!",
-      message: `${PAPILAB_APP_NAME} ${updateState.currentVersion} is currently the newest version available.`,
+      message: `${SCIENT_APP_NAME} ${updateState.currentVersion} is currently the newest version available.`,
       buttons: ["OK"],
     });
   } else if (updateState.status === "downloading" || updateState.status === "available") {
     void dialog.showMessageBox({
       type: "info",
       title: "Update found",
-      message: `${PAPILAB_APP_NAME} is preparing the update in the background.`,
+      message: `${SCIENT_APP_NAME} is preparing the update in the background.`,
       buttons: ["OK"],
     });
   } else if (updateState.status === "downloaded") {
@@ -1401,16 +1499,16 @@ function resolveNotificationIconPath(): string | null {
     return null;
   }
   if (process.platform === "win32") {
-    return resolveResourcePath("papilab.png") ?? resolveIconPath("ico");
+    return resolveResourcePath("scient.png") ?? resolveIconPath("ico");
   }
-  return resolveResourcePath("papilab.png") ?? resolveIconPath("png");
+  return resolveResourcePath("scient.png") ?? resolveIconPath("png");
 }
 
 function resolveAppSnapHelperPath(): string {
   if (app.isPackaged) {
-    return Path.resolve(process.resourcesPath, "..", "Helpers", "synara-appsnap-helper");
+    return Path.resolve(process.resourcesPath, "..", "Helpers", "scient-appsnap-helper");
   }
-  return Path.resolve(__dirname, "..", ".electron-runtime", "appsnap", "synara-appsnap-helper");
+  return Path.resolve(__dirname, "..", ".electron-runtime", "appsnap", "scient-appsnap-helper");
 }
 
 function ensureMainWindowForAppSnap(): BrowserWindow | null {
@@ -1572,11 +1670,24 @@ function showDesktopNotification(input: {
  * Resolve the Electron userData directory path.
  *
  * Electron derives the default userData path from `productName` in
- * package.json. We override it to PapiLab's isolated lowercase profile name.
+ * package.json. We override it to Scient's isolated lowercase profile name.
  */
 function resolveUserDataPath(): string {
   const appDataBase = resolveDesktopAppDataBase();
-  return resolveDesktopUserDataPath({ appDataBase, isDevelopment });
+  const targetPath = resolveDesktopUserDataPath({ appDataBase, isDevelopment });
+  const sourcePath = resolvePapiLabDesktopUserDataPath({ appDataBase, isDevelopment });
+  const migration = seedDesktopUserDataProfileFromPapiLab({ sourcePath, targetPath });
+  if (migration.status === "seed-failed") {
+    console.warn("[desktop] Failed to seed Scient profile from PapiLab", migration.error);
+  }
+  const browserRepair = repairBrowserProfileFromBridgeManifest(targetPath);
+  if (browserRepair.status === "repair-failed") {
+    console.warn(
+      "[desktop] Failed to migrate PapiLab browser state into Scient",
+      browserRepair.error,
+    );
+  }
+  return targetPath;
 }
 
 function configureAppIdentity(): void {
@@ -1586,7 +1697,7 @@ function configureAppIdentity(): void {
     applicationName: APP_DISPLAY_NAME,
     applicationVersion: app.getVersion(),
     version: commitHash ?? "unknown",
-    copyright: `© ${new Date().getFullYear()} PapiLab contributors`,
+    copyright: `© ${new Date().getFullYear()} Scient contributors`,
   });
 
   if (process.platform === "win32") {
@@ -1727,14 +1838,14 @@ function restartAfterStartupBundleSwap(error: BundleChangedDuringStartupError): 
   void dialog
     .showMessageBox({
       type: "warning",
-      title: `${PAPILAB_APP_NAME} needs to restart`,
-      message: `${PAPILAB_APP_NAME} changed while it was opening.`,
-      detail: `The current process cannot safely read the replaced application bundle. Restart ${PAPILAB_APP_NAME} to finish opening with one consistent version.`,
-      buttons: [`Restart ${PAPILAB_APP_NAME}`],
+      title: `${SCIENT_APP_NAME} needs to restart`,
+      message: `${SCIENT_APP_NAME} changed while it was opening.`,
+      detail: `The current process cannot safely read the replaced application bundle. Restart ${SCIENT_APP_NAME} to finish opening with one consistent version.`,
+      buttons: [`Restart ${SCIENT_APP_NAME}`],
       defaultId: 0,
     })
     .catch(() => undefined)
-    .then(() => {
+    .then(async () => {
       app.relaunch();
       requestGracefulAppQuit("startup-bundle-swap");
     });
@@ -1742,7 +1853,7 @@ function restartAfterStartupBundleSwap(error: BundleChangedDuringStartupError): 
 
 // Electron caches the asar header per process, so once app.asar changes on disk
 // (updater retry racing a relaunch, a reinstall, a build copied over the bundle)
-// every archive read in this process — the papilab:// protocol, the backend's static
+// every archive read in this process — the scient:// protocol, the backend's static
 // files, lazily-loaded renderer chunks — resolves to stale offsets and silently
 // returns the wrong bytes. Detect the swap and offer a restart; continuing is
 // never safe.
@@ -1782,8 +1893,8 @@ function startBundleSwapWatcher(): void {
     void dialog
       .showMessageBox({
         type: "warning",
-        title: `${PAPILAB_APP_NAME} was replaced on disk`,
-        message: `The installed ${PAPILAB_APP_NAME} app changed while it was running.`,
+        title: `${SCIENT_APP_NAME} was replaced on disk`,
+        message: `The installed ${SCIENT_APP_NAME} app changed while it was running.`,
         detail:
           "The interface keeps running from a safeguarded copy, but parts of the app loaded later can still read the replaced file. Restart now to pick up the new version safely.",
         buttons: ["Restart Now", "Later"],
@@ -1950,7 +2061,7 @@ function processInstallMarkerOnStartup(): void {
   }
 
   automaticUpdateActivitySuppressed = true;
-  const message = `${PAPILAB_APP_NAME} restarted, but update ${marker.toVersion} was not installed. Try again.`;
+  const message = `${SCIENT_APP_NAME} restarted, but update ${marker.toVersion} was not installed. Try again.`;
   setUpdateState(
     reduceDesktopUpdateStateOnInstallRestartFailure(
       updateState,
@@ -2371,9 +2482,9 @@ function configureAutoUpdater(): void {
 
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = false;
-  // This channel is inert until PAPILAB_DESKTOP_UPDATES_ENABLED is deliberately
-  // enabled alongside a tested, PapiLab-owned release feed.
-  autoUpdater.channel = PAPILAB_DESKTOP_UPDATE_CHANNEL;
+  // This channel is inert until SCIENT_DESKTOP_UPDATES_ENABLED is deliberately
+  // enabled alongside a tested, Scient-owned release feed.
+  autoUpdater.channel = SCIENT_DESKTOP_UPDATE_CHANNEL;
   autoUpdater.allowPrerelease = DESKTOP_UPDATE_ALLOW_PRERELEASE;
   autoUpdater.allowDowngrade = false;
   // Match electron-updater's native GitHub provider path; the packaged
@@ -2535,14 +2646,14 @@ function backendEnv(): NodeJS.ProcessEnv {
   return {
     ...process.env,
     // Point the backend's HTTP static route at the same swap-immune snapshot the
-    // papilab:// protocol serves, so both surfaces survive app.asar being replaced.
+    // scient:// protocol serves, so both surfaces survive app.asar being replaced.
     ...(servedStaticRoot?.snapshotted ? { SYNARA_STATIC_DIR: servedStaticRoot.dir } : {}),
     SYNARA_MODE: "desktop",
     SYNARA_NO_BROWSER: "1",
     SYNARA_PORT: String(backendPort),
-    PAPILAB_HOME: BASE_DIR,
+    SCIENT_HOME: BASE_DIR,
     // The inherited server still consumes this internal compatibility variable.
-    // Its value is always PapiLab's isolated base directory, never Synara's home.
+    // Its value is always Scient's isolated base directory, never Synara's home.
     SYNARA_HOME: BASE_DIR,
     SYNARA_AUTH_TOKEN: backendAuthToken,
     [SYNARA_BROWSER_USE_PIPE_ENV]: SYNARA_BROWSER_USE_PIPE_PATH,
@@ -2790,16 +2901,16 @@ function requestGracefulAppQuit(reason: string): void {
 }
 
 function registerIpcHandlers(): void {
-  const storageSnapshotPath = resolveSynaraStorageSnapshotPath(app.getPath("userData"));
+  const storageSnapshotPath = resolveScientStorageSnapshotPath(app.getPath("userData"));
 
   ipcMain.removeAllListeners(STORAGE_MIGRATION_IPC_CHANNELS.read);
   ipcMain.on(STORAGE_MIGRATION_IPC_CHANNELS.read, (event: IpcMainEvent) => {
-    event.returnValue = readSynaraStorageSnapshot(storageSnapshotPath);
+    event.returnValue = readScientStorageSnapshot(storageSnapshotPath);
   });
 
   ipcMain.removeHandler(STORAGE_MIGRATION_IPC_CHANNELS.acknowledge);
   ipcMain.handle(STORAGE_MIGRATION_IPC_CHANNELS.acknowledge, async () => {
-    await acknowledgeSynaraStorageSnapshot(storageSnapshotPath);
+    await acknowledgeScientStorageSnapshot(storageSnapshotPath);
   });
 
   ipcMain.removeAllListeners(DESKTOP_WS_URL_CHANNEL);
@@ -3103,7 +3214,7 @@ function registerIpcHandlers(): void {
   registerDesktopVoiceTranscriptionHandler();
   startBrowserPerformanceLogging();
   void ensureBrowserUsePipeServer().catch((error) => {
-    console.warn("[PapiLab browser] Failed to start browser-use native pipe", error);
+    console.warn("[Scient browser] Failed to start browser-use native pipe", error);
   });
 
   registerBrowserIpcHandlers(ipcMain, browserManager);
@@ -3279,7 +3390,7 @@ function createWindow(): BrowserWindow {
     void window.loadURL(process.env.VITE_DEV_SERVER_URL as string);
     window.webContents.openDevTools({ mode: "detach" });
   } else {
-    void window.loadURL(PAPILAB_DESKTOP_ENTRY_URL);
+    void window.loadURL(SCIENT_DESKTOP_ENTRY_URL);
   }
 
   window.on("closed", () => {
@@ -3422,7 +3533,7 @@ app.on("before-quit", (event) => {
 if (hasSingleInstanceLock) {
   app
     .whenReady()
-    .then(() => {
+    .then(async () => {
       writeDesktopLogHeader("app ready");
       configureAppIdentity();
       applyLegacyMacDockIcon();
@@ -3439,6 +3550,7 @@ if (hasSingleInstanceLock) {
         }
         throw error;
       }
+      await exportLegacyPapiLabStorageSnapshot();
       startBundleSwapWatcher();
       configureAutoUpdater();
       void bootstrap().catch((error) => {

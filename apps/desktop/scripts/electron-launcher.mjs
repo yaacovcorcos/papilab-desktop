@@ -1,4 +1,4 @@
-// This file mostly exists because we want dev mode to use PapiLab's own app identity.
+// This file mostly exists because we want dev mode to use Scient's own app identity.
 
 import { spawnSync } from "node:child_process";
 import {
@@ -13,16 +13,16 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createRequire } from "node:module";
-import { papilabBundleId } from "@synara/shared/desktopIdentity";
+import { scientBundleId } from "@synara/shared/desktopIdentity";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const isDevelopment = Boolean(process.env.VITE_DEV_SERVER_URL);
-const APP_DISPLAY_NAME = isDevelopment ? "PapiLab (Dev)" : "PapiLab";
-const APP_BUNDLE_ID = papilabBundleId(isDevelopment);
+const APP_DISPLAY_NAME = isDevelopment ? "Scient (Dev)" : "Scient";
+const APP_BUNDLE_ID = scientBundleId(isDevelopment);
 const LAUNCHER_VERSION = 2;
 const MICROPHONE_USAGE_DESCRIPTION =
-  "PapiLab needs microphone access so you can record voice notes and transcribe them into the chat composer.";
+  "Scient needs microphone access so you can record voice notes and transcribe them into the chat composer.";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const desktopDir = resolve(__dirname, "..");

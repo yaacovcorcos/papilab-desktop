@@ -19,37 +19,37 @@ describe("Codex home paths", () => {
     assert.ok(resolveBaseCodexHomePath({}).endsWith(`${path.sep}.codex`));
   });
 
-  it("anchors the overlay under PAPILAB_HOME", () => {
+  it("anchors the overlay under SCIENT_HOME", () => {
     assert.equal(
-      resolveSynaraCodexHomeOverlayPath({ PAPILAB_HOME: "/papilab/runtime" }, "/users/me/.codex"),
-      path.join("/papilab/runtime", "codex-home-overlay"),
+      resolveSynaraCodexHomeOverlayPath({ SCIENT_HOME: "/scient/runtime" }, "/users/me/.codex"),
+      path.join("/scient/runtime", "codex-home-overlay"),
     );
   });
 
   it("derives a default overlay beside the source home", () => {
     assert.equal(
       resolveSynaraCodexHomeOverlayPath({}, "/users/me/.codex"),
-      path.join("/users/me", ".papilab", "runtime", "codex-home-overlay"),
+      path.join("/users/me", ".scient", "runtime", "codex-home-overlay"),
     );
   });
 
   it("uses the isolated overlay as Codex's write home", () => {
     assert.equal(
       resolveActiveCodexHomeWritePath({
-        env: { PAPILAB_HOME: "/papilab/runtime" },
+        env: { SCIENT_HOME: "/scient/runtime" },
         homePath: "/users/me/.codex",
       }),
-      path.join("/papilab/runtime", "codex-home-overlay"),
+      path.join("/scient/runtime", "codex-home-overlay"),
     );
   });
 
   it("allowlists source and overlay homes when distinct", () => {
     assert.deepEqual(
       resolveCodexHomeAllowlistCandidates({
-        env: { PAPILAB_HOME: "/papilab/runtime" },
+        env: { SCIENT_HOME: "/scient/runtime" },
         homePath: "/users/me/.codex",
       }),
-      ["/users/me/.codex", path.join("/papilab/runtime", "codex-home-overlay")],
+      ["/users/me/.codex", path.join("/scient/runtime", "codex-home-overlay")],
     );
   });
 });

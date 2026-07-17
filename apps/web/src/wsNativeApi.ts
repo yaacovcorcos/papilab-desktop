@@ -505,12 +505,11 @@ export function createWsNativeApi(): NativeApi {
         };
       },
     },
-    papilabProjectInitialization: {
-      preview: (input) => transport.request(WS_METHODS.papilabProjectInitializationPreview, input),
-      apply: (input) => transport.request(WS_METHODS.papilabProjectInitializationApply, input),
-      recover: (input) => transport.request(WS_METHODS.papilabProjectInitializationRecover, input),
-      rollback: (input) =>
-        transport.request(WS_METHODS.papilabProjectInitializationRollback, input),
+    scientProjectInitialization: {
+      preview: (input) => transport.request(WS_METHODS.scientProjectInitializationPreview, input),
+      apply: (input) => transport.request(WS_METHODS.scientProjectInitializationApply, input),
+      recover: (input) => transport.request(WS_METHODS.scientProjectInitializationRecover, input),
+      rollback: (input) => transport.request(WS_METHODS.scientProjectInitializationRollback, input),
     },
     filesystem: {
       browse: (input) => transport.request(WS_METHODS.filesystemBrowse, input),

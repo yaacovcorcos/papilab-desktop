@@ -380,7 +380,7 @@ const makeOpenCodeCompatibleTextGeneration = (config: OpenCodeCompatibleTextGene
               cliSpec: config.cliSpec,
             });
             const sessionCreateInput = {
-              title: `PapiLab ${input.operation}`,
+              title: `Scient ${input.operation}`,
               model: {
                 providerID: providerId,
                 id: modelId,

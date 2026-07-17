@@ -84,7 +84,7 @@ function commandMenuTitle(
     case "subagents":
       return "Subagents";
     case "feedback":
-      return "Feedback PapiLab";
+      return "Feedback Scient";
     default:
       return humanizeProviderCommandName(item.command);
   }

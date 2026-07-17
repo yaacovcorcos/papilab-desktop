@@ -1,7 +1,7 @@
-// FILE: papilabLogoPaths.ts
-// Purpose: Shared geometry and colors for the current PapiLab mark.
+// FILE: scientLogoPaths.ts
+// Purpose: Shared geometry and colors for the current Scient mark.
 
-export const PAPILAB_LOGO_PATHS = [
+export const SCIENT_LOGO_PATHS = [
   { d: "M295 105H95V95H295V105Z", tone: "blue" },
   { d: "M376 210H201V200H376V210Z", tone: "brown" },
   { d: "M190 200V0H200V200H190Z", tone: "brown" },

@@ -38,7 +38,7 @@ describe("planProjectInitialization", () => {
     expect(plan.operations.map((operation) => [operation.kind, operation.path])).toEqual([
       ["create", "PROJECT.md"],
       ["create", "AGENTS.md"],
-      ["create", ".papilab/project.json"],
+      ["create", ".scient/project.json"],
     ]);
     const identity = plan.operations.at(-1);
     expect(identity?.kind).toBe("create");
@@ -63,7 +63,7 @@ describe("planProjectInitialization", () => {
     expect(plan.operations.map((operation) => [operation.kind, operation.path])).toEqual([
       ["preserve", "PROJECT.md"],
       ["propose", "AGENTS.md"],
-      ["create", ".papilab/project.json"],
+      ["create", ".scient/project.json"],
     ]);
     const proposal = plan.operations.find((operation) => operation.kind === "propose");
     expect(proposal?.kind === "propose" ? proposal.contents : "").toContain("# Human instructions");
@@ -101,6 +101,37 @@ describe("planProjectInitialization", () => {
     );
   });
 
+  it("replaces one legacy PapiLab managed block instead of appending a duplicate", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    await writeFile(
+      path.join(fixture.root, "AGENTS.md"),
+      [
+        "# Human Rules",
+        "",
+        "<!-- papilab-managed:start template=1 -->",
+        "",
+        "## PapiLab Baseline",
+        "",
+        "- Legacy instruction.",
+        "",
+        "<!-- papilab-managed:end -->",
+        "",
+        "Keep this human text.",
+        "",
+      ].join("\n"),
+    );
+
+    const plan = await deterministicPlan(fixture.root);
+    const proposal = plan.operations.find((operation) => operation.kind === "propose");
+
+    expect(proposal?.kind).toBe("propose");
+    if (proposal?.kind !== "propose") throw new Error("Expected AGENTS.md proposal.");
+    expect(proposal.contents).toContain("<!-- scient-managed:start template=1 -->");
+    expect(proposal.contents).not.toContain("papilab-managed");
+    expect(proposal.contents).toContain("Keep this human text.");
+  });
+
   it("blocks top-level file symlink conflicts", async () => {
     const fixture = await makeTemporaryProject();
     const outside = await makeTemporaryProject();
@@ -119,7 +150,7 @@ describe("planProjectInitialization", () => {
   it("allows retry planning for an empty partial metadata directory", async () => {
     const fixture = await makeTemporaryProject();
     cleanups.push(fixture.cleanup);
-    await mkdir(path.join(fixture.root, ".papilab"));
+    await mkdir(path.join(fixture.root, ".scient"));
 
     const plan = await deterministicPlan(fixture.root);
 
@@ -129,11 +160,11 @@ describe("planProjectInitialization", () => {
   it("returns the existing identity without planning writes", async () => {
     const fixture = await makeTemporaryProject();
     cleanups.push(fixture.cleanup);
-    await mkdir(path.join(fixture.root, ".papilab"));
+    await mkdir(path.join(fixture.root, ".scient"));
     await writeFile(path.join(fixture.root, "PROJECT.md"), "# Existing\n");
     await writeFile(path.join(fixture.root, "AGENTS.md"), "# Existing\n");
     await writeFile(
-      path.join(fixture.root, ".papilab/project.json"),
+      path.join(fixture.root, ".scient/project.json"),
       `${JSON.stringify({
         projectId: TEST_IDENTITY.projectId,
         formatVersion: 1,
@@ -196,7 +227,7 @@ describe("planProjectInitialization", () => {
       "/absolute.md",
       "PROJECT.md",
       "project.md",
-      ".PAPILAB/secret",
+      ".SCIENT/secret",
       "notes/CON.txt",
       "notes/trailing. ",
       "notes/question?.md",

@@ -77,7 +77,7 @@ describe("localServerMonitor", () => {
     );
   });
 
-  it("keeps dev servers and ignores Electron/PapiLab-style application listeners", () => {
+  it("keeps dev servers and ignores Electron/Scient-style application listeners", () => {
     expect(
       isLikelyDevServerProcess({
         command: "node",
@@ -88,14 +88,14 @@ describe("localServerMonitor", () => {
     expect(
       isIgnoredLocalServerProcess({
         command: "Electron",
-        args: "/Applications/PapiLab.app/Contents/MacOS/PapiLab",
+        args: "/Applications/Scient.app/Contents/MacOS/Scient",
         ports: [61449],
       }),
     ).toBe(true);
     expect(
       isIgnoredLocalServerProcess({
-        command: "PapiLab",
-        args: "/Applications/PapiLab.app/Contents/MacOS/PapiLab",
+        command: "Scient",
+        args: "/Applications/Scient.app/Contents/MacOS/Scient",
         ports: [61449],
       }),
     ).toBe(true);

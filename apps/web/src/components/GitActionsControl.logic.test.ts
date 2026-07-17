@@ -1340,32 +1340,32 @@ describe("resolveAutoFeatureBranchName", () => {
 });
 
 describe("resolveDefaultCreateBranchName", () => {
-  it("uses PapiLab as the default namespace", () => {
+  it("uses Scient as the default namespace", () => {
     const branch = resolveDefaultCreateBranchName(["main"], "fix toast copy");
-    assert.equal(branch, "papilab/fix-toast-copy");
+    assert.equal(branch, "scient/fix-toast-copy");
   });
 
-  it("normalizes an existing legacy PapiLab namespace", () => {
-    const branch = resolveDefaultCreateBranchName(["main"], "papilab/refine-toolbar-actions");
-    assert.equal(branch, "papilab/refine-toolbar-actions");
+  it("normalizes an existing legacy Scient namespace", () => {
+    const branch = resolveDefaultCreateBranchName(["main"], "scient/refine-toolbar-actions");
+    assert.equal(branch, "scient/refine-toolbar-actions");
   });
 
-  it("preserves nested namespaces under PapiLab", () => {
+  it("preserves nested namespaces under Scient", () => {
     const branch = resolveDefaultCreateBranchName(["main"], "feature/refine-toolbar-actions");
-    assert.equal(branch, "papilab/feature/refine-toolbar-actions");
+    assert.equal(branch, "scient/feature/refine-toolbar-actions");
   });
 
-  it("increments suffix when the PapiLab branch already exists", () => {
+  it("increments suffix when the Scient branch already exists", () => {
     const branch = resolveDefaultCreateBranchName(
-      ["main", "papilab/fix-toast-copy", "papilab/fix-toast-copy-2"],
+      ["main", "scient/fix-toast-copy", "scient/fix-toast-copy-2"],
       "fix toast copy",
     );
-    assert.equal(branch, "papilab/fix-toast-copy-3");
+    assert.equal(branch, "scient/fix-toast-copy-3");
   });
 
-  it("falls back to papilab/update when no preferred name is provided", () => {
+  it("falls back to scient/update when no preferred name is provided", () => {
     const branch = resolveDefaultCreateBranchName(["main"]);
-    assert.equal(branch, "papilab/update");
+    assert.equal(branch, "scient/update");
   });
 });
 
@@ -1373,7 +1373,7 @@ describe("resolveLiveThreadBranchUpdate", () => {
   it("does not regress a semantic thread branch back to a temporary worktree branch", () => {
     const update = resolveLiveThreadBranchUpdate({
       threadBranch: "feature/semantic-branch",
-      gitStatus: status({ branch: "papilab/deadbeef" }),
+      gitStatus: status({ branch: "scient/deadbeef" }),
     });
 
     assert.equal(update, null);
@@ -1390,7 +1390,7 @@ describe("resolveLiveThreadBranchUpdate", () => {
 });
 
 describe("shouldOfferCreateBranchPrompt", () => {
-  const temporaryBranch = "papilab/deadbeef";
+  const temporaryBranch = "scient/deadbeef";
 
   it("shows the create-branch prompt for temporary worktree branches without upstream", () => {
     assert.isTrue(

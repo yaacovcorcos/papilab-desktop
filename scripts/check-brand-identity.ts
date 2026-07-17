@@ -11,6 +11,7 @@ const retiredFirstName = `${retiredShortName}${characters(99, 111, 100, 101)}`;
 const retiredCompanyName = `${retiredShortName}${characters(116, 111, 111, 108, 115)}`;
 const retiredSecondName = characters(100, 112, 99, 111, 100, 101);
 const retiredPredecessorName = characters(99, 111, 100, 101, 116, 104, 105, 110, 103);
+const retiredPapiLabName = characters(112, 97, 112, 105, 108, 97, 98);
 const incorrectBundleDomain = characters(99, 111, 109, 46, 115, 121, 110, 97, 114, 97);
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -34,6 +35,7 @@ const forbiddenPatterns = [
     "i",
   ),
   new RegExp(escapeRegExp(retiredPredecessorName), "i"),
+  new RegExp(escapeRegExp(retiredPapiLabName), "i"),
   new RegExp(`@${escapeRegExp(retiredCompanyName)}`, "i"),
   new RegExp(
     `(?:^|[\\s"'\\x60./:@_-])${escapeRegExp(retiredShortName)}(?:$|[\\s"'\\x60./:@_-])`,
@@ -72,52 +74,69 @@ export interface BrandIdentityBinaryFile {
   readonly contents: Uint8Array;
 }
 
-const requiredPapiLabIdentityText = new Map<string, readonly string[]>([
-  ["README.md", ["# PapiLab Desktop", "yaacovcorcos/papilab-desktop"]],
-  ["KEYBINDINGS.md", ["# PapiLab Keybindings", "~/.papilab/userdata/keybindings.json"]],
-  ["apps/desktop/package.json", ['"productName": "PapiLab"']],
+const requiredScientIdentityText = new Map<string, readonly string[]>([
+  ["README.md", ["# Scient Desktop", "ScientFactory/scient-desktop"]],
+  ["KEYBINDINGS.md", ["# Scient Keybindings", "~/.scient/userdata/keybindings.json"]],
+  ["apps/desktop/package.json", ['"productName": "Scient"']],
+  [
+    "apps/server/package.json",
+    [
+      '"name": "@scientfactory/cli"',
+      '"url": "https://github.com/ScientFactory/scient-desktop"',
+      '"scient": "./dist/index.mjs"',
+    ],
+  ],
   [
     "packages/shared/src/desktopIdentity.ts",
     [
-      'PAPILAB_APP_NAME = "PapiLab"',
-      'PAPILAB_DESKTOP_SCHEME = "papilab"',
-      'PAPILAB_PRODUCTION_BUNDLE_ID = "com.yaacovcorcos.papilab"',
-      "PAPILAB_DESKTOP_UPDATES_ENABLED = false",
+      'SCIENT_APP_NAME = "Scient"',
+      'SCIENT_DESKTOP_SCHEME = "scient"',
+      'SCIENT_PRODUCTION_BUNDLE_ID = "com.scientfactory.scient"',
+      "SCIENT_DESKTOP_UPDATES_ENABLED = false",
     ],
   ],
-  ["apps/web/src/branding.ts", ['APP_BASE_NAME = "PapiLab"']],
+  ["apps/web/src/branding.ts", ['APP_BASE_NAME = "Scient"']],
   [
     "scripts/build-desktop-artifact.ts",
-    ['name: "papilab-desktop"', 'description: "PapiLab desktop build"', 'author: "Yaacov Corcos"'],
+    ['name: "scient-desktop"', 'description: "Scient desktop build"', 'author: "Yaacov Corcos"'],
   ],
   [
     "apps/desktop/native/appsnap/WindowCapture.swift",
-    ['message: "PapiLab cannot capture its own window."'],
+    ['message: "Scient cannot capture its own window."'],
   ],
   [
     "scripts/lib/desktop-platform-build-config.ts",
     [
-      '"PapiLab needs microphone access so you can record voice notes and transcribe them into the chat composer."',
+      '"Scient needs microphone access so you can record voice notes and transcribe them into the chat composer."',
     ],
   ],
-  ["scripts/release-smoke.ts", ["PapiLab-9.9.9-smoke.0-arm64.zip"]],
+  ["scripts/release-smoke.ts", ["Scient-9.9.9-smoke.0-arm64.zip"]],
+  ["scripts/release-update-policy.json", ['"channel": "scient"']],
+  [
+    ".github/workflows/release.yml",
+    [
+      "SCIENT_DESKTOP_RELEASES_ENABLED",
+      "SCIENT_DESKTOP_UPDATE_REPOSITORY",
+      "name: Scient v${{ needs.preflight.outputs.version }}",
+    ],
+  ],
   [
     "apps/web/src/whatsNew/entries.ts",
     ["export const WHATS_NEW_ENTRIES: readonly WhatsNewEntry[] = [];"],
   ],
   [
     "apps/marketing/src/lib/releases.ts",
-    ["yaacovcorcos/papilab-desktop", '"papilab-latest-release"'],
+    ["ScientFactory/scient-desktop", '"scient-latest-release"'],
   ],
-  ["apps/marketing/src/pages/index.astro", ["PapiLab is a scientific workspace"]],
-  ["apps/marketing/src/pages/download.astro", ["Download — PapiLab"]],
-  ["apps/marketing/src/layouts/Layout.astro", ["PapiLab — A local-first scientific workspace"]],
+  ["apps/marketing/src/pages/index.astro", ["Scient is a scientific workspace"]],
+  ["apps/marketing/src/pages/download.astro", ["Download — Scient"]],
+  ["apps/marketing/src/layouts/Layout.astro", ["Scient — A local-first scientific workspace"]],
 ]);
 
-// These files render, export, or transmit PapiLab-owned product copy. Internal
+// These files render, export, or transmit Scient-owned product copy. Internal
 // Synara package/type names remain intentionally outside this list so the fork
 // can preserve upstream structure without leaking predecessor branding to users.
-const papiLabOnlySurfacePaths = new Set([
+const scientOnlySurfacePaths = new Set([
   "README.md",
   "CONTRIBUTING.md",
   "KEYBINDINGS.md",
@@ -178,9 +197,9 @@ const papiLabOnlySurfacePaths = new Set([
   "scripts/lib/release-update-policy.ts",
 ]);
 
-export function findPapiLabSurfaceIdentityViolations(
+export function findScientSurfaceIdentityViolations(
   files: readonly BrandIdentityFile[],
-  surfacePaths: ReadonlySet<string> = papiLabOnlySurfacePaths,
+  surfacePaths: ReadonlySet<string> = scientOnlySurfacePaths,
 ): BrandIdentityViolation[] {
   const violations: BrandIdentityViolation[] = [];
   for (const file of files) {
@@ -198,16 +217,54 @@ function containsForbiddenIdentity(value: string): boolean {
   return forbiddenPatterns.some((pattern) => pattern.test(value));
 }
 
+const legacyPapiLabCompatibilityPaths = new Set([
+  "apps/desktop/src/desktopStorageMigration.ts",
+  "apps/desktop/src/desktopStorageMigration.test.ts",
+  "apps/desktop/src/desktopUserDataProfile.ts",
+  "apps/desktop/src/desktopUserDataProfile.test.ts",
+  "apps/desktop/src/legacyPapiLabHomeMigration.ts",
+  "apps/desktop/src/legacyPapiLabHomeMigration.test.ts",
+  "apps/web/src/storageOriginMigration.ts",
+  "apps/web/src/storageOriginMigration.test.ts",
+  "apps/web/src/components/ScientProjectInitializationDialog.tsx",
+  "apps/web/src/components/chat/workspaceExplorer.tsx",
+  "packages/contracts/src/scientProjectInitialization.ts",
+  "packages/scient-project-init/src/apply.test.ts",
+  "packages/scient-project-init/src/index.ts",
+  "packages/scient-project-init/src/inspect.ts",
+  "packages/scient-project-init/src/inspect.test.ts",
+  "packages/scient-project-init/src/plan.ts",
+  "packages/scient-project-init/src/plan.test.ts",
+  "packages/scient-project-init/src/templates.ts",
+  "packages/scient-project-init/src/types.ts",
+  "packages/scient-project-init/src/validation.ts",
+  "scripts/check-brand-identity.ts",
+  "scripts/check-brand-identity.test.ts",
+]);
+
+function isAllowedLegacyPapiLabReference(path: string, value: string): boolean {
+  if (!new RegExp(escapeRegExp(retiredPapiLabName), "i").test(value)) return false;
+  if (legacyPapiLabCompatibilityPaths.has(path)) return true;
+  if (path !== "apps/desktop/src/main.ts") return false;
+  return /(?:seedDesktopUserDataProfileFromPapiLab|seedScientHomeFromPapiLab|PAPILAB_HOME|LegacyPapiLab|PapiLab(?:Home|Desktop|Storage|Profile)|LEGACY_PAPILAB|papilab[:./-]|\.papilab|Failed to (?:seed Scient (?:home|profile) from PapiLab|migrate PapiLab browser state into Scient))/i.test(
+    value,
+  );
+}
+
 export function findBrandIdentityViolations(
   files: readonly BrandIdentityFile[],
 ): BrandIdentityViolation[] {
   const violations: BrandIdentityViolation[] = [];
   for (const file of files) {
-    if (containsForbiddenIdentity(file.path)) {
+    if (
+      containsForbiddenIdentity(file.path) &&
+      !isAllowedLegacyPapiLabReference(file.path, file.path)
+    ) {
       violations.push({ path: file.path, line: null, text: file.path });
     }
     for (const [index, line] of file.contents.split(/\r?\n/).entries()) {
       if (!containsForbiddenIdentity(line)) continue;
+      if (isAllowedLegacyPapiLabReference(file.path, line)) continue;
       violations.push({ path: file.path, line: index + 1, text: line.trim() });
     }
   }
@@ -242,16 +299,16 @@ export function findVisualBrandAssetViolations(
   return violations;
 }
 
-export function findPapiLabIdentityViolations(
+export function findScientIdentityViolations(
   files: readonly BrandIdentityFile[],
-  requirements: ReadonlyMap<string, readonly string[]> = requiredPapiLabIdentityText,
+  requirements: ReadonlyMap<string, readonly string[]> = requiredScientIdentityText,
 ): BrandIdentityViolation[] {
   const filesByPath = new Map(files.map((file) => [file.path, file.contents]));
   const violations: BrandIdentityViolation[] = [];
   for (const [path, requiredText] of requirements) {
     const contents = filesByPath.get(path);
     if (contents === undefined) {
-      violations.push({ path, line: null, text: "Required PapiLab identity source is missing." });
+      violations.push({ path, line: null, text: "Required Scient identity source is missing." });
       continue;
     }
     for (const text of requiredText) {
@@ -259,7 +316,7 @@ export function findPapiLabIdentityViolations(
         violations.push({
           path,
           line: null,
-          text: `Required PapiLab identity is missing: ${text}`,
+          text: `Required Scient identity is missing: ${text}`,
         });
       }
     }
@@ -282,12 +339,12 @@ function main(): void {
   }));
   const violations = [
     ...findBrandIdentityViolations(searchableFiles),
-    ...findPapiLabIdentityViolations(searchableFiles),
-    ...findPapiLabSurfaceIdentityViolations(searchableFiles),
+    ...findScientIdentityViolations(searchableFiles),
+    ...findScientSurfaceIdentityViolations(searchableFiles),
     ...findVisualBrandAssetViolations(trackedFiles),
   ];
   if (violations.length === 0) {
-    console.log("PapiLab identity check passed.");
+    console.log("Scient identity check passed.");
     return;
   }
 

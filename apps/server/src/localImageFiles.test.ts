@@ -62,10 +62,10 @@ describe("resolveAllowedLocalPreviewFile", () => {
     }
   });
 
-  it("allows images written to the PAPILAB_HOME codex-home-overlay generated_images root", async () => {
-    // Codex app-server is launched with CODEX_HOME pointing at a PapiLab overlay
+  it("allows images written to the SCIENT_HOME codex-home-overlay generated_images root", async () => {
+    // Codex app-server is launched with CODEX_HOME pointing at a Scient overlay
     // directory (see resolveSynaraCodexHomeOverlayPath). Generated images therefore
-    // live under <PAPILAB_HOME>/codex-home-overlay/generated_images/<thread>/<call>.png,
+    // live under <SCIENT_HOME>/codex-home-overlay/generated_images/<thread>/<call>.png,
     // which sits outside both the user's `~/.codex` source home and any workspace
     // root. The allowlist must still serve them.
     //
@@ -74,9 +74,9 @@ describe("resolveAllowedLocalPreviewFile", () => {
     // way only the overlay candidate can satisfy the allowlist.
     const fakeRoot = path.join(process.cwd(), `.test-codex-overlay-${process.pid}-${Date.now()}`);
     const sourceHome = path.join(fakeRoot, "source", ".codex");
-    const papilabHome = path.join(fakeRoot, "papilab", "runtime");
+    const scientHome = path.join(fakeRoot, "scient", "runtime");
     const overlayImageDir = path.join(
-      papilabHome,
+      scientHome,
       "codex-home-overlay",
       "generated_images",
       "thread-overlay",
@@ -85,8 +85,8 @@ describe("resolveAllowedLocalPreviewFile", () => {
     mkdirSync(overlayImageDir, { recursive: true });
     writeFileSync(imagePath, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
 
-    const previousLitrevHome = process.env.PAPILAB_HOME;
-    process.env.PAPILAB_HOME = papilabHome;
+    const previousScientHome = process.env.SCIENT_HOME;
+    process.env.SCIENT_HOME = scientHome;
     try {
       const result = await resolveAllowedLocalPreviewFile({
         requestedPath: imagePath,
@@ -96,10 +96,10 @@ describe("resolveAllowedLocalPreviewFile", () => {
 
       assert.equal(result?.path, realpathSync(imagePath));
     } finally {
-      if (previousLitrevHome === undefined) {
-        delete process.env.PAPILAB_HOME;
+      if (previousScientHome === undefined) {
+        delete process.env.SCIENT_HOME;
       } else {
-        process.env.PAPILAB_HOME = previousLitrevHome;
+        process.env.SCIENT_HOME = previousScientHome;
       }
       rmSync(fakeRoot, { recursive: true, force: true });
     }

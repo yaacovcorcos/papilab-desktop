@@ -475,7 +475,7 @@ describe("buildCodexProcessEnv", () => {
       );
 
       const env = buildCodexProcessEnv({
-        env: { PAPILAB_HOME: runtimeHome },
+        env: { SCIENT_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -512,7 +512,7 @@ describe("buildCodexProcessEnv", () => {
 
       const overlayHome = path.join(runtimeHome, "codex-home-overlay");
       const env = buildCodexProcessEnv({
-        env: { PAPILAB_HOME: runtimeHome },
+        env: { SCIENT_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -552,7 +552,7 @@ describe("buildCodexProcessEnv", () => {
       );
 
       const env = buildCodexProcessEnv({
-        env: { PAPILAB_HOME: runtimeHome },
+        env: { SCIENT_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -587,7 +587,7 @@ describe("buildCodexProcessEnv", () => {
       writeFileSync(overlayMemoryPath, "stale-overlay-db", "utf8");
 
       const env = buildCodexProcessEnv({
-        env: { PAPILAB_HOME: runtimeHome },
+        env: { SCIENT_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -615,7 +615,7 @@ describe("buildCodexProcessEnv", () => {
       writeFileSync(overlayAuthPath, '{"tokens":{"access_token":"stale"}}', "utf8");
 
       const env = buildCodexProcessEnv({
-        env: { PAPILAB_HOME: runtimeHome },
+        env: { SCIENT_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -646,7 +646,7 @@ describe("buildCodexProcessEnv", () => {
       writeFileSync(overlayImagePath, "overlay-image", "utf8");
 
       const env = buildCodexProcessEnv({
-        env: { PAPILAB_HOME: runtimeHome },
+        env: { SCIENT_HOME: runtimeHome },
         homePath: tempDir,
         platform: "darwin",
       });
@@ -837,8 +837,8 @@ describe("startSession", () => {
   it("enables Codex experimental api capabilities during initialize", () => {
     expect(buildCodexInitializeParams()).toEqual({
       clientInfo: {
-        name: "papilab_desktop",
-        title: "PapiLab Desktop",
+        name: "scient_desktop",
+        title: "Scient Desktop",
         version: "0.1.0",
       },
       capabilities: {

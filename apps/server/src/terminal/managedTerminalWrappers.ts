@@ -182,7 +182,7 @@ function buildCodexWrapperScript(input: {
     "  export CODEX_TUI_RECORD_SESSION=1",
     '  if [ -z "${CODEX_TUI_SESSION_LOG_PATH:-}" ]; then',
     '    _synara_codex_ts="$(date +%s 2>/dev/null || echo "$$")"',
-    '    export CODEX_TUI_SESSION_LOG_PATH="${TMPDIR:-/tmp}/papilab-codex-session-$$_${_synara_codex_ts}.jsonl"',
+    '    export CODEX_TUI_SESSION_LOG_PATH="${TMPDIR:-/tmp}/scient-codex-session-$$_${_synara_codex_ts}.jsonl"',
     "  fi",
     "  (",
     '    _synara_log="$CODEX_TUI_SESSION_LOG_PATH"',
@@ -272,7 +272,7 @@ function buildWrapperScript(input: {
       : buildCodexWrapperScript({ codexHomeDir, notifyHookPath, targetPath });
   return [
     "#!/bin/sh",
-    `# Managed ${commandName} wrapper injected by PapiLab terminal sessions.`,
+    `# Managed ${commandName} wrapper injected by Scient terminal sessions.`,
     `printf '\\033]0;%s\\007' ${shellQuote(title)}`,
     `export ${SYNARA_TERMINAL_CLI_KIND_ENV_KEY}=${shellQuote(cliKind)}`,
     commandBody,
@@ -293,7 +293,7 @@ function writeFileIfChanged(filePath: string, content: string, mode: number): vo
 }
 
 function buildManagedZshRc(quotedZshDir: string): string {
-  return `# PapiLab zsh rc wrapper
+  return `# Scient zsh rc wrapper
 _synara_home="\${SYNARA_ORIGINAL_ZDOTDIR:-$HOME}"
 export ZDOTDIR="$_synara_home"
 [[ -f "$_synara_home/.zshrc" ]] && source "$_synara_home/.zshrc"
@@ -338,7 +338,7 @@ function ensureManagedZshWrappers(zshDir: string): void {
   const quotedZshDir = shellQuote(zshDir);
   writeFileIfChanged(
     path.join(zshDir, ".zshenv"),
-    `# PapiLab zsh env wrapper
+    `# Scient zsh env wrapper
 _synara_home="\${SYNARA_ORIGINAL_ZDOTDIR:-$HOME}"
 export ZDOTDIR="$_synara_home"
 [[ -f "$_synara_home/.zshenv" ]] && source "$_synara_home/.zshenv"
@@ -348,7 +348,7 @@ export ZDOTDIR=${quotedZshDir}
   );
   writeFileIfChanged(
     path.join(zshDir, ".zprofile"),
-    `# PapiLab zsh profile wrapper
+    `# Scient zsh profile wrapper
 _synara_home="\${SYNARA_ORIGINAL_ZDOTDIR:-$HOME}"
 export ZDOTDIR="$_synara_home"
 [[ -f "$_synara_home/.zprofile" ]] && source "$_synara_home/.zprofile"

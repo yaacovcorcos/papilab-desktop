@@ -66,7 +66,7 @@ func selectFrontmostWindow(excludedBundleIdentifier: String) -> Result<SelectedW
         return .failure(
             AppSnapFailure(
                 code: "excluded_frontmost_application",
-                message: "PapiLab cannot capture its own window."
+                message: "Scient cannot capture its own window."
             )
         )
     }

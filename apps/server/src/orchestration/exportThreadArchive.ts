@@ -133,7 +133,7 @@ const MESSAGE_ROLE_HEADING: Record<string, string> = {
 
 // One chunk for the header, then one chunk per message; nothing accumulates.
 function* transcriptMarkdownChunks(thread: OrchestrationThread): Generator<string> {
-  yield `# ${thread.title}\n\n> Exported from PapiLab.\n`;
+  yield `# ${thread.title}\n\n> Exported from Scient.\n`;
   for (const message of thread.messages) {
     const heading = MESSAGE_ROLE_HEADING[message.role] ?? "Message";
     yield `\n## ${heading} \`${message.createdAt}\`\n\n${message.text}\n`;
@@ -253,5 +253,5 @@ export function threadArchiveFileName(input: {
   readonly isoTimestamp: string;
 }): string {
   const dateBucket = input.isoTimestamp.slice(0, 10).replaceAll("-", "");
-  return `papilab-thread-${slugifyTitle(input.title)}-${dateBucket}.zip`;
+  return `scient-thread-${slugifyTitle(input.title)}-${dateBucket}.zip`;
 }

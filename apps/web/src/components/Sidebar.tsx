@@ -77,7 +77,7 @@ import {
   MAX_PINNED_PROJECTS,
   type DesktopUpdateState,
   type OrchestrationShellSnapshot,
-  type PapiLabProjectInitializationPreviewResult,
+  type ScientProjectInitializationPreviewResult,
   PROVIDER_DISPLAY_NAMES,
   ProjectId,
   type ProviderKind,
@@ -201,7 +201,7 @@ import { ThreadPinToggleButton } from "./ThreadPinToggleButton";
 import { ThreadRunningSpinner } from "./ThreadRunningSpinner";
 import { RenameDialog } from "./RenameDialog";
 import { RenameThreadDialog } from "./RenameThreadDialog";
-import { PapiLabProjectInitializationDialog } from "./PapiLabProjectInitializationDialog";
+import { ScientProjectInitializationDialog } from "./ScientProjectInitializationDialog";
 import { terminalRuntimeRegistry } from "./terminal/terminalRuntimeRegistry";
 import {
   SidebarSearchPalette,
@@ -383,10 +383,10 @@ import {
   PROJECT_CREATE_EXISTING_SYNC_ERROR,
 } from "../lib/projectCreation";
 import {
-  preparePapiLabProjectForOpening,
-  type PapiLabProjectInitializationCompletion,
-  type PapiLabProjectInitializationDecision,
-} from "../lib/papilabProjectInitialization";
+  prepareScientProjectForOpening,
+  type ScientProjectInitializationCompletion,
+  type ScientProjectInitializationDecision,
+} from "../lib/scientProjectInitialization";
 
 const EMPTY_KEYBINDINGS: ResolvedKeybindingsConfig = [];
 const THREAD_PREVIEW_LIMIT = 5;
@@ -435,7 +435,7 @@ type ProjectContextMenuId =
   | "start-dev"
   | "stop-dev"
   | "open-dev-server"
-  | "papilab-project-setup"
+  | "scient-project-setup"
   | "rename"
   | "toggle-pin"
   | "archive-threads"
@@ -1590,10 +1590,10 @@ export default function Sidebar() {
   const isAddingProjectRef = useRef(false);
   const [addProjectError, setAddProjectError] = useState<string | null>(null);
   const [projectInitializationPreview, setProjectInitializationPreview] =
-    useState<PapiLabProjectInitializationPreviewResult | null>(null);
+    useState<ScientProjectInitializationPreviewResult | null>(null);
   const [projectInitializationError, setProjectInitializationError] = useState<string | null>(null);
   const projectInitializationDecisionRef = useRef<
-    ((decision: PapiLabProjectInitializationDecision) => void) | null
+    ((decision: ScientProjectInitializationDecision) => void) | null
   >(null);
   const addProjectErrorMeaning = useMemo(
     () => (addProjectError ? describeAddProjectError(addProjectError) : null),
@@ -2639,9 +2639,9 @@ export default function Sidebar() {
 
   const requestProjectInitializationDecision = useCallback(
     (
-      preview: PapiLabProjectInitializationPreviewResult,
+      preview: ScientProjectInitializationPreviewResult,
       error: string | null,
-    ): Promise<PapiLabProjectInitializationDecision> =>
+    ): Promise<ScientProjectInitializationDecision> =>
       new Promise((resolve) => {
         projectInitializationDecisionRef.current?.("cancel");
         projectInitializationDecisionRef.current = resolve;
@@ -2652,7 +2652,7 @@ export default function Sidebar() {
   );
 
   const resolveProjectInitializationDecision = useCallback(
-    (decision: PapiLabProjectInitializationDecision) => {
+    (decision: ScientProjectInitializationDecision) => {
       const resolve = projectInitializationDecisionRef.current;
       if (!resolve) return;
       projectInitializationDecisionRef.current = null;
@@ -2672,7 +2672,7 @@ export default function Sidebar() {
   );
 
   const notifyProjectInitializationCompletion = useCallback(
-    (completion: PapiLabProjectInitializationCompletion) => {
+    (completion: ScientProjectInitializationCompletion) => {
       if (completion.kind === "rolled-back") {
         toastManager.add({
           type: completion.result.complete ? "info" : "warning",
@@ -2689,8 +2689,8 @@ export default function Sidebar() {
         type: "success",
         title:
           completion.kind === "recovered"
-            ? "PapiLab project recovered"
-            : "PapiLab project initialized",
+            ? "Scient project recovered"
+            : "Scient project initialized",
         description: "The portable project foundation is ready.",
       });
     },
@@ -2714,7 +2714,7 @@ export default function Sidebar() {
       };
 
       try {
-        const preparation = await preparePapiLabProjectForOpening({
+        const preparation = await prepareScientProjectForOpening({
           api,
           root: cwd,
           requestDecision: requestProjectInitializationDecision,
@@ -4201,9 +4201,9 @@ export default function Sidebar() {
         await handleOpenProjectRunServer(projectId);
         return;
       }
-      if (clicked === "papilab-project-setup") {
+      if (clicked === "scient-project-setup") {
         try {
-          const result = await preparePapiLabProjectForOpening({
+          const result = await prepareScientProjectForOpening({
             api,
             root: project.cwd,
             requestDecision: requestProjectInitializationDecision,
@@ -4212,14 +4212,14 @@ export default function Sidebar() {
           if (result === "already-initialized") {
             toastManager.add({
               type: "info",
-              title: "PapiLab project is ready",
-              description: "This folder already has a compatible PapiLab project foundation.",
+              title: "Scient project is ready",
+              description: "This folder already has a compatible Scient project foundation.",
             });
           }
         } catch (error) {
           toastManager.add({
             type: "error",
-            title: "Unable to inspect PapiLab project setup",
+            title: "Unable to inspect Scient project setup",
             description: error instanceof Error ? error.message : "The setup check failed.",
           });
         }
@@ -6546,9 +6546,9 @@ export default function Sidebar() {
       },
       {
         id: "feedback",
-        label: "Feedback PapiLab",
-        description: "Send feedback or report an issue to the PapiLab team.",
-        keywords: ["feedback", "bug", "issue", "problem", "report", "support", "papilab"],
+        label: "Feedback Scient",
+        description: "Send feedback or report an issue to the Scient team.",
+        keywords: ["feedback", "bug", "issue", "problem", "report", "support", "scient"],
       },
       {
         id: "settings",
@@ -6589,7 +6589,7 @@ export default function Sidebar() {
             toastManager.add({
               type: "info",
               title: "Preparing update",
-              description: `PapiLab is preparing version ${nextState.availableVersion ?? "available"} in the background.`,
+              description: `Scient is preparing version ${nextState.availableVersion ?? "available"} in the background.`,
             });
             return;
           }
@@ -6598,7 +6598,7 @@ export default function Sidebar() {
             toastManager.add({
               type: "info",
               title: "Preparing update",
-              description: "PapiLab is downloading the update in the background.",
+              description: "Scient is downloading the update in the background.",
             });
             return;
           }
@@ -6616,7 +6616,7 @@ export default function Sidebar() {
             toastManager.add({
               type: "info",
               title: "You're up to date",
-              description: `PapiLab ${nextState.currentVersion} is already the newest version.`,
+              description: `Scient ${nextState.currentVersion} is already the newest version.`,
             });
             return;
           }
@@ -7590,12 +7590,12 @@ export default function Sidebar() {
                 onClick={() =>
                   void handleProjectContextMenuAction(
                     projectContextMenuState.projectId,
-                    "papilab-project-setup",
+                    "scient-project-setup",
                   )
                 }
               >
                 <ProjectContextMenuIcon icon={CheckCircle2Icon} />
-                <span>PapiLab project setup</span>
+                <span>Scient project setup</span>
               </MenuItem>
               <MenuSeparator />
               <MenuItem
@@ -7729,7 +7729,7 @@ export default function Sidebar() {
         </DialogPopup>
       </Dialog>
 
-      <PapiLabProjectInitializationDialog
+      <ScientProjectInitializationDialog
         preview={projectInitializationPreview}
         error={projectInitializationError}
         onDecision={resolveProjectInitializationDecision}

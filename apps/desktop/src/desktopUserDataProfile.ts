@@ -1,14 +1,19 @@
 // FILE: desktopUserDataProfile.ts
-// Purpose: Resolves PapiLab's isolated Electron userData paths and legacy bridge repair utilities.
+// Purpose: Resolves Scient's isolated Electron userData paths and legacy bridge repair utilities.
 
 import * as FS from "node:fs";
 import * as OS from "node:os";
 import * as Path from "node:path";
 
-const DEV_USER_DATA_DIR_NAME = "papilab-dev";
-const PROD_USER_DATA_DIR_NAME = "papilab";
-const BRIDGE_PROFILE_MANIFEST_FILE_NAME = "synara-profile-seed.json";
-const CANONICAL_BROWSER_PARTITION_NAME = "papilab-browser";
+const DEV_USER_DATA_DIR_NAME = "scient-dev";
+const PROD_USER_DATA_DIR_NAME = "scient";
+const PAPILAB_PROFILE_DIR_NAME = "papilab";
+const PAPILAB_DEV_PROFILE_DIR_NAME = "papilab-dev";
+const BRIDGE_PROFILE_MANIFEST_FILE_NAMES = [
+  "papilab-profile-seed.json",
+  "synara-profile-seed.json",
+] as const;
+const CANONICAL_BROWSER_PARTITION_NAME = "scient-browser";
 const BROWSER_PARTITION_SEED_ENTRY_GROUPS = [
   ["Cookies", "Cookies-journal", "Cookies-wal", "Cookies-shm"],
   ["Local Storage"],
@@ -24,6 +29,15 @@ const BROWSER_PARTITION_SEED_ENTRY_GROUPS = [
   ["shared_proto_db"],
 ] as const;
 const BROWSER_PARTITION_SEED_ENTRY_NAMES = BROWSER_PARTITION_SEED_ENTRY_GROUPS.flat();
+const PROFILE_SEED_ENTRY_NAMES = BROWSER_PARTITION_SEED_ENTRY_NAMES;
+
+export interface DesktopUserDataProfileSeedResult {
+  readonly status: "seeded" | "target-exists" | "legacy-missing" | "seed-failed";
+  readonly sourcePath: string;
+  readonly targetPath: string;
+  readonly copiedEntries: readonly string[];
+  readonly error?: unknown;
+}
 
 export interface BrowserProfileBridgeRepairResult {
   readonly status: "repaired" | "not-needed" | "bridge-unavailable" | "repair-failed";
@@ -61,9 +75,74 @@ export function resolveDesktopUserDataPath(input: {
   );
 }
 
+export function resolvePapiLabDesktopUserDataPath(input: {
+  readonly appDataBase: string;
+  readonly isDevelopment: boolean;
+}): string {
+  return Path.join(
+    input.appDataBase,
+    input.isDevelopment ? PAPILAB_DEV_PROFILE_DIR_NAME : PAPILAB_PROFILE_DIR_NAME,
+  );
+}
+
+/**
+ * Seeds Scient's new Electron profile from the exact sibling PapiLab profile.
+ *
+ * The copy is staged and renamed atomically. Existing Scient data always wins,
+ * and only known Chromium state surfaces are copied. The source remains intact
+ * for rollback.
+ */
+export function seedDesktopUserDataProfileFromPapiLab(input: {
+  readonly sourcePath: string;
+  readonly targetPath: string;
+}): DesktopUserDataProfileSeedResult {
+  const sourcePath = Path.resolve(input.sourcePath);
+  const targetPath = Path.resolve(input.targetPath);
+  const copiedEntries: string[] = [];
+  if (FS.existsSync(targetPath)) {
+    return { status: "target-exists", sourcePath, targetPath, copiedEntries };
+  }
+  if (
+    sourcePath === targetPath ||
+    Path.dirname(sourcePath) !== Path.dirname(targetPath) ||
+    !FS.existsSync(sourcePath) ||
+    !FS.statSync(sourcePath).isDirectory()
+  ) {
+    return { status: "legacy-missing", sourcePath, targetPath, copiedEntries };
+  }
+
+  const parentPath = Path.dirname(targetPath);
+  const stagedPath = FS.mkdtempSync(Path.join(parentPath, ".scient-profile-seed-"));
+  try {
+    for (const entryName of PROFILE_SEED_ENTRY_NAMES) {
+      const sourceEntryPath = Path.join(sourcePath, entryName);
+      if (!FS.existsSync(sourceEntryPath)) continue;
+      FS.cpSync(sourceEntryPath, Path.join(stagedPath, entryName), {
+        recursive: true,
+        dereference: false,
+        errorOnExist: true,
+        force: false,
+      });
+      copiedEntries.push(entryName);
+    }
+    FS.writeFileSync(
+      Path.join(stagedPath, "papilab-profile-seed.json"),
+      `${JSON.stringify({ sourcePath, seededAt: new Date().toISOString(), entries: copiedEntries }, null, 2)}\n`,
+      { encoding: "utf8", mode: 0o600 },
+    );
+    FS.renameSync(stagedPath, targetPath);
+    return { status: "seeded", sourcePath, targetPath, copiedEntries };
+  } catch (error) {
+    FS.rmSync(stagedPath, { recursive: true, force: true });
+    return { status: "seed-failed", sourcePath, targetPath, copiedEntries, error };
+  }
+}
+
 function readBridgeProfileSourcePath(targetPath: string): string | null {
-  const manifestPath = Path.join(targetPath, BRIDGE_PROFILE_MANIFEST_FILE_NAME);
-  if (!FS.existsSync(manifestPath)) return null;
+  const manifestPath = BRIDGE_PROFILE_MANIFEST_FILE_NAMES.map((fileName) =>
+    Path.join(targetPath, fileName),
+  ).find((candidate) => FS.existsSync(candidate));
+  if (!manifestPath) return null;
 
   let parsed: { readonly sourcePath?: unknown };
   try {

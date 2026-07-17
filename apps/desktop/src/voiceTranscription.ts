@@ -184,8 +184,8 @@ async function resolveDesktopVoiceAuth(
         method: "initialize",
         params: {
           clientInfo: {
-            name: "papilab-desktop",
-            title: "PapiLab Desktop",
+            name: "scient-desktop",
+            title: "Scient Desktop",
             version: app.getVersion(),
           },
           capabilities: { experimentalApi: true },
@@ -207,7 +207,7 @@ async function requestDesktopVoiceTranscription(input: {
   readonly token: string;
   readonly transcriptionUrl: string;
 }): Promise<{ statusCode: number; body: string }> {
-  const boundary = `PapiLabVoice-${Crypto.randomUUID()}`;
+  const boundary = `ScientVoice-${Crypto.randomUUID()}`;
   const preamble = Buffer.from(
     `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="voice.wav"\r\nContent-Type: ${input.mimeType}\r\n\r\n`,
     "utf8",

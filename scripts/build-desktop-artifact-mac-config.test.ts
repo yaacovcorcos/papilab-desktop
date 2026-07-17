@@ -29,19 +29,19 @@ describe("createDesktopPlatformBuildConfig", () => {
     assert.equal(mac.hardenedRuntime, true);
     assert.equal(mac.entitlements, MAC_ENTITLEMENTS_PATH);
     assert.equal(mac.entitlementsInherit, MAC_INHERITED_ENTITLEMENTS_PATH);
-    assert.equal(MAC_APPSNAP_HELPER_BUNDLE_PATH, "Contents/Helpers/synara-appsnap-helper");
-    assert.deepStrictEqual(mac.binaries, ["Contents/Helpers/synara-appsnap-helper"]);
-    assert.equal(mac.x64ArchFiles, "Contents/Helpers/synara-appsnap-helper");
+    assert.equal(MAC_APPSNAP_HELPER_BUNDLE_PATH, "Contents/Helpers/scient-appsnap-helper");
+    assert.deepStrictEqual(mac.binaries, ["Contents/Helpers/scient-appsnap-helper"]);
+    assert.equal(mac.x64ArchFiles, "Contents/Helpers/scient-appsnap-helper");
     assert.equal(
       MAC_APPSNAP_HELPER_STAGE_PATH,
-      "apps/desktop/native/appsnap/build/synara-appsnap-helper",
+      "apps/desktop/native/appsnap/build/scient-appsnap-helper",
     );
     assert.equal(MAC_APPSNAP_HELPER_ASAR_EXCLUSION, "!apps/desktop/native/appsnap/build/**");
     assert.deepStrictEqual(config.files, ["**/*", MAC_APPSNAP_HELPER_ASAR_EXCLUSION]);
     assert.deepStrictEqual(config.extraFiles, [
       {
-        from: "apps/desktop/native/appsnap/build/synara-appsnap-helper",
-        to: "Helpers/synara-appsnap-helper",
+        from: "apps/desktop/native/appsnap/build/scient-appsnap-helper",
+        to: "Helpers/scient-appsnap-helper",
       },
     ]);
     assert.equal(extendInfo.NSMicrophoneUsageDescription, MICROPHONE_USAGE_DESCRIPTION);
@@ -174,10 +174,10 @@ describe("createDesktopPlatformBuildConfig", () => {
   });
 
   it("keeps separate macOS sources for solid and rounded icons", () => {
-    assert.equal(BRAND_ASSET_PATHS.productionMacIconPng, "assets/prod/papilab-macos-1024.png");
+    assert.equal(BRAND_ASSET_PATHS.productionMacIconPng, "assets/prod/scient-macos-1024.png");
     assert.equal(
       BRAND_ASSET_PATHS.productionMacLegacyIconPng,
-      "assets/prod/papilab-macos-legacy-1024.png",
+      "assets/prod/scient-macos-legacy-1024.png",
     );
   });
 });

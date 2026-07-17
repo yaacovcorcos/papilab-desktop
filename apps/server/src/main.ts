@@ -46,7 +46,7 @@ interface CliInput {
   readonly mode: Option.Option<RuntimeMode>;
   readonly port: Option.Option<number>;
   readonly host: Option.Option<string>;
-  readonly synaraHome: Option.Option<string>;
+  readonly scientHome: Option.Option<string>;
   readonly devUrl: Option.Option<URL>;
   readonly noBrowser: Option.Option<boolean>;
   readonly authToken: Option.Option<string>;
@@ -79,7 +79,7 @@ export interface CliConfigShape {
  * CliConfig - Service tag for startup CLI/runtime helpers.
  */
 export class CliConfig extends ServiceMap.Service<CliConfig, CliConfigShape>()(
-  "papilab/main/CliConfig",
+  "scient/main/CliConfig",
 ) {
   static readonly layer = Layer.effect(
     CliConfig,
@@ -110,7 +110,7 @@ const CliEnvConfig = Config.all({
   ),
   port: Config.port("SYNARA_PORT").pipe(Config.option, Config.map(Option.getOrUndefined)),
   host: Config.string("SYNARA_HOST").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  synaraHome: Config.string("PAPILAB_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  scientHome: Config.string("SCIENT_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
   devUrl: Config.url("VITE_DEV_SERVER_URL").pipe(Config.option, Config.map(Option.getOrUndefined)),
   noBrowser: Config.boolean("SYNARA_NO_BROWSER").pipe(
     Config.option,
@@ -166,7 +166,7 @@ const ServerConfigLive = (input: CliInput) =>
       });
 
       const devUrl = Option.getOrElse(input.devUrl, () => env.devUrl);
-      const configuredHome = Option.getOrUndefined(input.synaraHome) ?? env.synaraHome;
+      const configuredHome = Option.getOrUndefined(input.scientHome) ?? env.scientHome;
       const baseDir = yield* resolveBaseDir(configuredHome);
       const userHomeDir = OS.homedir();
       const derivedPaths = yield* deriveServerPaths(baseDir, devUrl);
@@ -321,7 +321,7 @@ const makeServerProgram = (input: CliInput) =>
         ? `http://${formatHostForUrl(config.host)}:${config.port}`
         : localUrl;
     const { authToken, devUrl, ...safeConfig } = config;
-    yield* Effect.logInfo("PapiLab running", {
+    yield* Effect.logInfo("Scient running", {
       ...safeConfig,
       devUrl: devUrl?.toString(),
       authEnabled: Boolean(authToken),
@@ -358,8 +358,8 @@ const hostFlag = Flag.string("host").pipe(
   Flag.withDescription("Host/interface to bind (for example 127.0.0.1, 0.0.0.0, or a Tailnet IP)."),
   Flag.optional,
 );
-const synaraHomeFlag = Flag.string("home-dir").pipe(
-  Flag.withDescription("Base directory for all PapiLab data (equivalent to PAPILAB_HOME)."),
+const scientHomeFlag = Flag.string("home-dir").pipe(
+  Flag.withDescription("Base directory for all Scient data (equivalent to SCIENT_HOME)."),
   Flag.optional,
 );
 const devUrlFlag = Flag.string("dev-url").pipe(
@@ -396,11 +396,11 @@ const logWebSocketEventsFlag = Flag.boolean("log-websocket-events").pipe(
   Flag.optional,
 );
 
-export const synaraCli = Command.make("papilab", {
+export const scientCli = Command.make("scient", {
   mode: modeFlag,
   port: portFlag,
   host: hostFlag,
-  synaraHome: synaraHomeFlag,
+  scientHome: scientHomeFlag,
   devUrl: devUrlFlag,
   noBrowser: noBrowserFlag,
   authToken: authTokenFlag,
@@ -408,6 +408,6 @@ export const synaraCli = Command.make("papilab", {
   logProviderEvents: logProviderEventsFlag,
   logWebSocketEvents: logWebSocketEventsFlag,
 }).pipe(
-  Command.withDescription("Run the PapiLab server."),
+  Command.withDescription("Run the Scient server."),
   Command.withHandler((input) => Effect.scoped(makeServerProgram(input))),
 );

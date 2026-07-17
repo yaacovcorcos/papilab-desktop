@@ -10,9 +10,9 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  PAPILAB_DESKTOP_UPDATES_ENABLED,
-  PAPILAB_DESKTOP_UPDATE_CHANNEL,
-  PAPILAB_PRODUCTION_BUNDLE_ID,
+  SCIENT_DESKTOP_UPDATES_ENABLED,
+  SCIENT_DESKTOP_UPDATE_CHANNEL,
+  SCIENT_PRODUCTION_BUNDLE_ID,
 } from "@synara/shared/desktopIdentity";
 
 import { DESKTOP_STAGE_DEPENDENCY_OVERRIDES } from "./lib/desktop-stage-dependency-overrides.ts";
@@ -32,7 +32,7 @@ const workspaceFiles = [
   "apps/marketing/package.json",
   "packages/contracts/package.json",
   "packages/effect-acp/package.json",
-  "packages/papilab-project-init/package.json",
+  "packages/scient-project-init/package.json",
   "packages/shared/package.json",
   "scripts/package.json",
 ] as const;
@@ -58,13 +58,13 @@ function writeMacManifestFixtures(targetRoot: string): { arm64Path: string; x64P
     arm64Path,
     `version: 9.9.9-smoke.0
 files:
-  - url: PapiLab-9.9.9-smoke.0-arm64.zip
+  - url: Scient-9.9.9-smoke.0-arm64.zip
     sha512: arm64zip
     size: 125621344
-  - url: PapiLab-9.9.9-smoke.0-arm64.dmg
+  - url: Scient-9.9.9-smoke.0-arm64.dmg
     sha512: arm64dmg
     size: 131754935
-path: PapiLab-9.9.9-smoke.0-arm64.zip
+path: Scient-9.9.9-smoke.0-arm64.zip
 sha512: arm64zip
 releaseDate: '2026-03-08T10:32:14.587Z'
 `,
@@ -74,13 +74,13 @@ releaseDate: '2026-03-08T10:32:14.587Z'
     x64Path,
     `version: 9.9.9-smoke.0
 files:
-  - url: PapiLab-9.9.9-smoke.0-x64.zip
+  - url: Scient-9.9.9-smoke.0-x64.zip
     sha512: x64zip
     size: 132000112
-  - url: PapiLab-9.9.9-smoke.0-x64.dmg
+  - url: Scient-9.9.9-smoke.0-x64.dmg
     sha512: x64dmg
     size: 138148807
-path: PapiLab-9.9.9-smoke.0-x64.zip
+path: Scient-9.9.9-smoke.0-x64.zip
 sha512: x64zip
 releaseDate: '2026-03-08T10:36:07.540Z'
 `,
@@ -103,22 +103,24 @@ function verifyCanonicalIdentity(): void {
   const serverPackage = JSON.parse(
     readFileSync(resolve(repoRoot, "apps/server/package.json"), "utf8"),
   ) as { name?: string; bin?: Record<string, string> };
-  if (serverPackage.name !== "@synara/cli") {
-    throw new Error(`Expected CLI package @synara/cli, got ${serverPackage.name ?? "<missing>"}.`);
+  if (serverPackage.name !== "@scientfactory/cli") {
+    throw new Error(
+      `Expected CLI package @scientfactory/cli, got ${serverPackage.name ?? "<missing>"}.`,
+    );
   }
   if (
     Object.keys(serverPackage.bin ?? {}).length !== 1 ||
-    serverPackage.bin?.synara !== "./dist/index.mjs"
+    serverPackage.bin?.scient !== "./dist/index.mjs"
   ) {
-    throw new Error("Expected the CLI to expose only the synara binary.");
+    throw new Error("Expected the CLI to expose only the scient binary.");
   }
-  if (PAPILAB_PRODUCTION_BUNDLE_ID !== "com.yaacovcorcos.papilab") {
-    throw new Error(`Unexpected production bundle ID: ${PAPILAB_PRODUCTION_BUNDLE_ID}.`);
+  if (SCIENT_PRODUCTION_BUNDLE_ID !== "com.scientfactory.scient") {
+    throw new Error(`Unexpected production bundle ID: ${SCIENT_PRODUCTION_BUNDLE_ID}.`);
   }
-  if (PAPILAB_DESKTOP_UPDATE_CHANNEL !== "papilab") {
-    throw new Error(`Unexpected desktop update channel: ${PAPILAB_DESKTOP_UPDATE_CHANNEL}.`);
+  if (SCIENT_DESKTOP_UPDATE_CHANNEL !== "scient") {
+    throw new Error(`Unexpected desktop update channel: ${SCIENT_DESKTOP_UPDATE_CHANNEL}.`);
   }
-  if (PAPILAB_DESKTOP_UPDATES_ENABLED) {
+  if (SCIENT_DESKTOP_UPDATES_ENABLED) {
     throw new Error(
       "Release publication must not implicitly enable desktop clients; a reviewed code change is required.",
     );
@@ -131,7 +133,7 @@ function verifyCanonicalIdentity(): void {
     !resolvedPolicy.makeLatest ||
     resolvedPolicy.mirrorToStableChannel
   ) {
-    throw new Error("Expected stable clean PapiLab releases to publish on GitHub Latest.");
+    throw new Error("Expected stable clean Scient releases to publish on GitHub Latest.");
   }
 }
 
@@ -139,17 +141,17 @@ function verifyReleaseWorkflowSafety(): void {
   const workflow = readFileSync(resolve(repoRoot, ".github/workflows/release.yml"), "utf8");
   assertContains(
     workflow,
-    "if: ${{ vars.PAPILAB_DESKTOP_RELEASES_ENABLED == 'true' }}",
-    "Expected desktop release jobs to remain gated until PapiLab releases are explicitly enabled.",
+    "if: ${{ vars.SCIENT_DESKTOP_RELEASES_ENABLED == 'true' }}",
+    "Expected desktop release jobs to remain gated until Scient releases are explicitly enabled.",
   );
   assertContains(
     workflow,
-    "UPDATE_REPOSITORY: ${{ vars.PAPILAB_DESKTOP_UPDATE_REPOSITORY }}",
+    "UPDATE_REPOSITORY: ${{ vars.SCIENT_DESKTOP_UPDATE_REPOSITORY }}",
     "Expected release preflight to require the owned updater repository.",
   );
   assertContains(
     workflow,
-    "PAPILAB_DESKTOP_UPDATE_REPOSITORY: ${{ needs.preflight.outputs.update_repository }}",
+    "SCIENT_DESKTOP_UPDATE_REPOSITORY: ${{ needs.preflight.outputs.update_repository }}",
     "Expected artifact builds to receive the verified owned updater repository.",
   );
   assertContains(
@@ -174,12 +176,12 @@ function verifyReleaseWorkflowSafety(): void {
   );
   assertContains(
     workflow,
-    "needs.preflight.outputs.publish_release == 'true' && vars.SYNARA_PUBLISH_CLI == '1'",
+    "needs.preflight.outputs.publish_release == 'true' && vars.SCIENT_PUBLISH_CLI == '1'",
     "Expected CLI publication to require explicit publication mode.",
   );
   assertContains(
     workflow,
-    "needs.preflight.outputs.publish_release == 'true' && vars.SYNARA_FINALIZE_RELEASE == '1'",
+    "needs.preflight.outputs.publish_release == 'true' && vars.SCIENT_FINALIZE_RELEASE == '1'",
     "Expected release finalization to require explicit publication mode.",
   );
   assertContains(
@@ -220,7 +222,7 @@ function verifyDesktopStageProductionInstall(targetRoot: string): void {
   }
 }
 
-const tempRoot = mkdtempSync(join(tmpdir(), "synara-release-smoke-"));
+const tempRoot = mkdtempSync(join(tmpdir(), "scient-release-smoke-"));
 
 try {
   verifyCanonicalIdentity();
@@ -266,12 +268,12 @@ try {
   const mergedManifest = readFileSync(arm64Path, "utf8");
   assertContains(
     mergedManifest,
-    "PapiLab-9.9.9-smoke.0-arm64.zip",
+    "Scient-9.9.9-smoke.0-arm64.zip",
     "Merged manifest is missing the arm64 asset.",
   );
   assertContains(
     mergedManifest,
-    "PapiLab-9.9.9-smoke.0-x64.zip",
+    "Scient-9.9.9-smoke.0-x64.zip",
     "Merged manifest is missing the x64 asset.",
   );
 

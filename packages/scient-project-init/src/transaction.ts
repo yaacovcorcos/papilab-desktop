@@ -1,8 +1,8 @@
 import { readUtf8FileBounded, MAX_TRANSACTION_BYTES } from "./filesystem.ts";
 import {
-  PAPILAB_AGENTS_FILE,
-  PAPILAB_IDENTITY_FILE,
-  PAPILAB_PROJECT_FILE,
+  SCIENT_AGENTS_FILE,
+  SCIENT_IDENTITY_FILE,
+  SCIENT_PROJECT_FILE,
   ProjectInitializationError,
   type CreateOperation,
   type InitializationTransaction,
@@ -27,9 +27,9 @@ function validateOperationPath(value: unknown): string {
     throw new ProjectInitializationError("INVALID_TRANSACTION", "Transaction path must be text.");
   }
   if (
-    value === PAPILAB_PROJECT_FILE ||
-    value === PAPILAB_AGENTS_FILE ||
-    value === PAPILAB_IDENTITY_FILE
+    value === SCIENT_PROJECT_FILE ||
+    value === SCIENT_AGENTS_FILE ||
+    value === SCIENT_IDENTITY_FILE
   ) {
     return value;
   }
@@ -196,12 +196,12 @@ export function validateInitializationTransaction(value: unknown): Initializatio
   const createdAt = assertIsoTimestamp(candidate.createdAt);
   const identityOperations = operations.filter(
     (operation): operation is CreateOperation =>
-      operation.kind === "create" && operation.path === PAPILAB_IDENTITY_FILE,
+      operation.kind === "create" && operation.path === SCIENT_IDENTITY_FILE,
   );
   if (identityOperations.length !== 1) {
     throw new ProjectInitializationError(
       "INVALID_TRANSACTION",
-      "Transaction must contain exactly one PapiLab identity creation.",
+      "Transaction must contain exactly one Scient identity creation.",
     );
   }
   const identityOperation = identityOperations[0];
@@ -217,7 +217,7 @@ export function validateInitializationTransaction(value: unknown): Initializatio
   } catch (error) {
     throw new ProjectInitializationError(
       "INVALID_TRANSACTION",
-      "Transaction contains an invalid PapiLab project identity.",
+      "Transaction contains an invalid Scient project identity.",
       { cause: error },
     );
   }

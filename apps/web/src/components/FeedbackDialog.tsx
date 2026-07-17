@@ -1,5 +1,5 @@
 // FILE: FeedbackDialog.tsx
-// Purpose: Collects categorized PapiLab feedback with privacy-safe diagnostics.
+// Purpose: Collects categorized Scient feedback with privacy-safe diagnostics.
 // Layer: Shared UI component
 // Depends on: Feedback delivery logic and the shared dialog primitives.
 
@@ -49,7 +49,7 @@ export function FeedbackDialog({ open, context, onOpenChange }: FeedbackDialogPr
       toastManager.add({
         type: "success",
         title: "Feedback sent",
-        description: "Thanks for helping make PapiLab better.",
+        description: "Thanks for helping make Scient better.",
       });
     } catch (error) {
       setIsSending(false);

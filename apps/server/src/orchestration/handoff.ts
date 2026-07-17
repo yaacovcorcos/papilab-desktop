@@ -175,7 +175,7 @@ export function buildPriorTranscriptBootstrapText(
     thread,
     importedMessages: priorMessages,
     intro:
-      "This provider session may have been restarted without native conversation state. Use this prior PapiLab transcript as context for the latest user message.",
+      "This provider session may have been restarted without native conversation state. Use this prior Scient transcript as context for the latest user message.",
     maxChars,
   });
 }

@@ -81,9 +81,9 @@ import {
   ProjectWriteFileInput,
 } from "./project";
 import {
-  PapiLabProjectInitializationActionInput,
-  PapiLabProjectInitializationPreviewInput,
-} from "./papilabProjectInitialization";
+  ScientProjectInitializationActionInput,
+  ScientProjectInitializationPreviewInput,
+} from "./scientProjectInitialization";
 import { StudioListThreadOutputsInput } from "./studio";
 import { FilesystemBrowseInput } from "./filesystem";
 import { OpenInEditorInput } from "./editor";
@@ -141,11 +141,11 @@ export const WS_METHODS = {
   projectsListDevServers: "projects.listDevServers",
   subscribeProjectDevServerEvents: "projects.subscribeDevServerEvents",
 
-  // PapiLab-owned project initiation
-  papilabProjectInitializationPreview: "papilab.projectInitialization.preview",
-  papilabProjectInitializationApply: "papilab.projectInitialization.apply",
-  papilabProjectInitializationRecover: "papilab.projectInitialization.recover",
-  papilabProjectInitializationRollback: "papilab.projectInitialization.rollback",
+  // Scient-owned project initiation
+  scientProjectInitializationPreview: "scient.projectInitialization.preview",
+  scientProjectInitializationApply: "scient.projectInitialization.apply",
+  scientProjectInitializationRecover: "scient.projectInitialization.recover",
+  scientProjectInitializationRollback: "scient.projectInitialization.rollback",
 
   // Studio methods
   studioListThreadOutputs: "studio.listThreadOutputs",
@@ -311,20 +311,20 @@ const WebSocketRequestBody = Schema.Union([
   tagRequestBody(WS_METHODS.projectsListDevServers, Schema.Struct({})),
   tagRequestBody(WS_METHODS.subscribeProjectDevServerEvents, Schema.Struct({})),
   tagRequestBody(
-    WS_METHODS.papilabProjectInitializationPreview,
-    PapiLabProjectInitializationPreviewInput,
+    WS_METHODS.scientProjectInitializationPreview,
+    ScientProjectInitializationPreviewInput,
   ),
   tagRequestBody(
-    WS_METHODS.papilabProjectInitializationApply,
-    PapiLabProjectInitializationActionInput,
+    WS_METHODS.scientProjectInitializationApply,
+    ScientProjectInitializationActionInput,
   ),
   tagRequestBody(
-    WS_METHODS.papilabProjectInitializationRecover,
-    PapiLabProjectInitializationActionInput,
+    WS_METHODS.scientProjectInitializationRecover,
+    ScientProjectInitializationActionInput,
   ),
   tagRequestBody(
-    WS_METHODS.papilabProjectInitializationRollback,
-    PapiLabProjectInitializationActionInput,
+    WS_METHODS.scientProjectInitializationRollback,
+    ScientProjectInitializationActionInput,
   ),
 
   // Filesystem browse

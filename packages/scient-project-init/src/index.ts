@@ -6,8 +6,8 @@ export {
 export { inspectProjectFolder } from "./inspect.ts";
 export { planProjectInitialization } from "./plan.ts";
 export {
-  PAPILAB_MANAGED_END,
-  PAPILAB_MANAGED_START,
+  SCIENT_MANAGED_END,
+  SCIENT_MANAGED_START,
   proposeManagedAgentsContents,
   renderAgentsMarkdown,
   renderManagedAgentsBlock,
@@ -21,12 +21,14 @@ export {
   validateProjectIdentity,
 } from "./validation.ts";
 export {
-  PAPILAB_AGENTS_FILE,
-  PAPILAB_FORMAT_VERSION,
-  PAPILAB_IDENTITY_FILE,
-  PAPILAB_METADATA_DIRECTORY,
-  PAPILAB_PROJECT_FILE,
-  PAPILAB_TRANSACTION_FILE,
+  LEGACY_PAPILAB_IDENTITY_FILE,
+  LEGACY_PAPILAB_METADATA_DIRECTORY,
+  SCIENT_AGENTS_FILE,
+  SCIENT_FORMAT_VERSION,
+  SCIENT_IDENTITY_FILE,
+  SCIENT_METADATA_DIRECTORY,
+  SCIENT_PROJECT_FILE,
+  SCIENT_TRANSACTION_FILE,
   ProjectInitializationError,
 } from "./types.ts";
 export type {
@@ -40,7 +42,7 @@ export type {
   InitializationPlanOperation,
   InitializationRequest,
   InspectionIssue,
-  PapiLabProjectIdentity,
+  ScientProjectIdentity,
   NormalizedInitializationRequest,
   PathSnapshot,
   PreserveOperation,

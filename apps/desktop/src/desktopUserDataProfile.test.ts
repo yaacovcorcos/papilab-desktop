@@ -7,6 +7,8 @@ import {
   repairBrowserProfileFromBridgeManifest,
   resolveDesktopAppDataBase,
   resolveDesktopUserDataPath,
+  resolvePapiLabDesktopUserDataPath,
+  seedDesktopUserDataProfileFromPapiLab,
 } from "./desktopUserDataProfile";
 
 const tempDirs = new Set<string>();
@@ -25,14 +27,68 @@ afterEach(() => {
 });
 
 describe("desktopUserDataProfile", () => {
-  it("resolves the canonical Synara profile names", () => {
+  it("resolves the canonical Scient profile names", () => {
     const appDataBase = "/Users/tester/Library/Application Support";
     expect(resolveDesktopUserDataPath({ appDataBase, isDevelopment: true })).toBe(
-      "/Users/tester/Library/Application Support/papilab-dev",
+      "/Users/tester/Library/Application Support/scient-dev",
     );
     expect(resolveDesktopUserDataPath({ appDataBase, isDevelopment: false })).toBe(
+      "/Users/tester/Library/Application Support/scient",
+    );
+  });
+
+  it("resolves the exact sibling PapiLab profile used for upgrade migration", () => {
+    const appDataBase = "/Users/tester/Library/Application Support";
+    expect(resolvePapiLabDesktopUserDataPath({ appDataBase, isDevelopment: false })).toBe(
       "/Users/tester/Library/Application Support/papilab",
     );
+    expect(resolvePapiLabDesktopUserDataPath({ appDataBase, isDevelopment: true })).toBe(
+      "/Users/tester/Library/Application Support/papilab-dev",
+    );
+  });
+
+  it("atomically seeds known browser state from PapiLab without deleting the source", () => {
+    const appDataBase = makeTempDir();
+    const sourcePath = Path.join(appDataBase, "papilab");
+    const targetPath = Path.join(appDataBase, "scient");
+    FS.mkdirSync(Path.join(sourcePath, "Local Storage"), { recursive: true });
+    FS.mkdirSync(Path.join(sourcePath, "Partitions", "papilab-browser"), { recursive: true });
+    FS.writeFileSync(Path.join(sourcePath, "Cookies"), "cookie");
+    FS.writeFileSync(Path.join(sourcePath, "Local Storage", "state"), "state");
+    FS.writeFileSync(
+      Path.join(sourcePath, "Partitions", "papilab-browser", "Cookies"),
+      "browser-cookie",
+    );
+
+    expect(seedDesktopUserDataProfileFromPapiLab({ sourcePath, targetPath })).toMatchObject({
+      status: "seeded",
+      sourcePath,
+      targetPath,
+      copiedEntries: ["Cookies", "Local Storage"],
+    });
+    expect(repairBrowserProfileFromBridgeManifest(targetPath).status).toBe("repaired");
+    expect(FS.readFileSync(Path.join(targetPath, "Cookies"), "utf8")).toBe("cookie");
+    expect(FS.readFileSync(Path.join(sourcePath, "Cookies"), "utf8")).toBe("cookie");
+    expect(FS.existsSync(Path.join(targetPath, "Partitions", "scient-browser"))).toBe(true);
+    expect(
+      FS.readFileSync(Path.join(targetPath, "Partitions", "scient-browser", "Cookies"), "utf8"),
+    ).toBe("browser-cookie");
+    expect(FS.existsSync(Path.join(targetPath, "Partitions", "papilab-browser"))).toBe(false);
+    expect(FS.existsSync(Path.join(targetPath, "papilab-profile-seed.json"))).toBe(true);
+  });
+
+  it("never overwrites an existing Scient profile", () => {
+    const appDataBase = makeTempDir();
+    const sourcePath = Path.join(appDataBase, "papilab");
+    const targetPath = Path.join(appDataBase, "scient");
+    FS.mkdirSync(sourcePath);
+    FS.mkdirSync(targetPath);
+    FS.writeFileSync(Path.join(targetPath, "Preferences"), "current");
+
+    expect(seedDesktopUserDataProfileFromPapiLab({ sourcePath, targetPath }).status).toBe(
+      "target-exists",
+    );
+    expect(FS.readFileSync(Path.join(targetPath, "Preferences"), "utf8")).toBe("current");
   });
 
   it("uses XDG_CONFIG_HOME on Linux when available", () => {
@@ -47,10 +103,10 @@ describe("desktopUserDataProfile", () => {
 
   it("repairs missing browser data from the profile recorded by the bridge", () => {
     const appDataBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "papilab");
+    const targetPath = Path.join(appDataBase, "scient");
     const sourcePath = Path.join(appDataBase, "previous-profile");
     const sourcePartitionPath = Path.join(sourcePath, "Partitions", "previous-browser");
-    const targetPartitionPath = Path.join(targetPath, "Partitions", "papilab-browser");
+    const targetPartitionPath = Path.join(targetPath, "Partitions", "scient-browser");
     FS.mkdirSync(Path.join(sourcePartitionPath, "Local Storage"), { recursive: true });
     FS.writeFileSync(Path.join(sourcePartitionPath, "Cookies"), "bridge-cookie");
     FS.writeFileSync(Path.join(sourcePartitionPath, "Cookies-journal"), "bridge-journal");
@@ -84,7 +140,7 @@ describe("desktopUserDataProfile", () => {
   it("rejects bridge manifests that point outside the Synara profile parent", () => {
     const appDataBase = makeTempDir();
     const unrelatedBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "papilab");
+    const targetPath = Path.join(appDataBase, "scient");
     FS.mkdirSync(targetPath, { recursive: true });
     FS.writeFileSync(
       Path.join(targetPath, "synara-profile-seed.json"),
@@ -98,12 +154,12 @@ describe("desktopUserDataProfile", () => {
     });
   });
 
-  it("never adds a foreign SQLite sidecar beside an existing Synara database", () => {
+  it("never adds a foreign SQLite sidecar beside an existing Scient database", () => {
     const appDataBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "papilab");
+    const targetPath = Path.join(appDataBase, "scient");
     const sourcePath = Path.join(appDataBase, "previous-profile");
     const sourcePartitionPath = Path.join(sourcePath, "Partitions", "previous-browser");
-    const targetPartitionPath = Path.join(targetPath, "Partitions", "papilab-browser");
+    const targetPartitionPath = Path.join(targetPath, "Partitions", "scient-browser");
     FS.mkdirSync(sourcePartitionPath, { recursive: true });
     FS.mkdirSync(targetPartitionPath, { recursive: true });
     FS.writeFileSync(Path.join(sourcePartitionPath, "Cookies"), "bridge-cookie");
@@ -126,10 +182,10 @@ describe("desktopUserDataProfile", () => {
 
   it("replaces an orphaned target sidecar with one from the repaired database generation", () => {
     const appDataBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "papilab");
+    const targetPath = Path.join(appDataBase, "scient");
     const sourcePath = Path.join(appDataBase, "previous-profile");
     const sourcePartitionPath = Path.join(sourcePath, "Partitions", "previous-browser");
-    const targetPartitionPath = Path.join(targetPath, "Partitions", "papilab-browser");
+    const targetPartitionPath = Path.join(targetPath, "Partitions", "scient-browser");
     FS.mkdirSync(sourcePartitionPath, { recursive: true });
     FS.mkdirSync(targetPartitionPath, { recursive: true });
     FS.writeFileSync(Path.join(sourcePartitionPath, "Cookies"), "bridge-cookie");
@@ -169,7 +225,7 @@ describe("desktopUserDataProfile", () => {
 
   it("copies from only the newest browser partition recorded under the bridge profile", () => {
     const appDataBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "papilab");
+    const targetPath = Path.join(appDataBase, "scient");
     const sourcePath = Path.join(appDataBase, "previous-profile");
     const olderPartitionPath = Path.join(sourcePath, "Partitions", "older-browser");
     const newerPartitionPath = Path.join(sourcePath, "Partitions", "newer-browser");
@@ -187,7 +243,7 @@ describe("desktopUserDataProfile", () => {
     );
 
     const result = repairBrowserProfileFromBridgeManifest(targetPath);
-    const targetPartitionPath = Path.join(targetPath, "Partitions", "papilab-browser");
+    const targetPartitionPath = Path.join(targetPath, "Partitions", "scient-browser");
 
     expect(result).toMatchObject({ status: "repaired", copiedEntries: ["Cookies"] });
     expect(FS.readFileSync(Path.join(targetPartitionPath, "Cookies"), "utf8")).toBe("newer-cookie");
@@ -196,7 +252,7 @@ describe("desktopUserDataProfile", () => {
 
   it("ignores a malformed bridge manifest without attempting a repair", () => {
     const appDataBase = makeTempDir();
-    const targetPath = Path.join(appDataBase, "papilab");
+    const targetPath = Path.join(appDataBase, "scient");
     FS.mkdirSync(targetPath, { recursive: true });
     FS.writeFileSync(Path.join(targetPath, "synara-profile-seed.json"), "{");
 

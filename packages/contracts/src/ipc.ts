@@ -106,12 +106,12 @@ import type {
   ProjectWriteFileResult,
 } from "./project";
 import type {
-  PapiLabProjectInitializationActionInput,
-  PapiLabProjectInitializationApplyResult,
-  PapiLabProjectInitializationPreviewInput,
-  PapiLabProjectInitializationPreviewResult,
-  PapiLabProjectInitializationRollbackResult,
-} from "./papilabProjectInitialization";
+  ScientProjectInitializationActionInput,
+  ScientProjectInitializationApplyResult,
+  ScientProjectInitializationPreviewInput,
+  ScientProjectInitializationPreviewResult,
+  ScientProjectInitializationRollbackResult,
+} from "./scientProjectInitialization";
 import type { FilesystemBrowseInput, FilesystemBrowseResult } from "./filesystem";
 import type { StudioListThreadOutputsInput, StudioListThreadOutputsResult } from "./studio";
 import type {
@@ -395,7 +395,7 @@ export interface DesktopWindowState {
   isFullscreen: boolean;
 }
 
-export interface SynaraStorageSnapshot {
+export interface ScientStorageSnapshot {
   readonly version: 1;
   readonly exportedAt: string;
   readonly entries: Readonly<Record<string, string>>;
@@ -459,7 +459,7 @@ export interface DesktopBridge {
     onState: (listener: (state: DesktopAppSnapState) => void) => () => void;
   };
   storageMigration: {
-    readSnapshot: () => SynaraStorageSnapshot | null;
+    readSnapshot: () => ScientStorageSnapshot | null;
     acknowledgeSnapshot: () => Promise<void>;
   };
   server?: {
@@ -530,19 +530,19 @@ export interface NativeApi {
     listDevServers: () => Promise<ProjectListDevServersResult>;
     onDevServerEvent: (callback: (event: ProjectDevServerEvent) => void) => () => void;
   };
-  papilabProjectInitialization: {
+  scientProjectInitialization: {
     preview: (
-      input: PapiLabProjectInitializationPreviewInput,
-    ) => Promise<PapiLabProjectInitializationPreviewResult>;
+      input: ScientProjectInitializationPreviewInput,
+    ) => Promise<ScientProjectInitializationPreviewResult>;
     apply: (
-      input: PapiLabProjectInitializationActionInput,
-    ) => Promise<PapiLabProjectInitializationApplyResult>;
+      input: ScientProjectInitializationActionInput,
+    ) => Promise<ScientProjectInitializationApplyResult>;
     recover: (
-      input: PapiLabProjectInitializationActionInput,
-    ) => Promise<PapiLabProjectInitializationApplyResult>;
+      input: ScientProjectInitializationActionInput,
+    ) => Promise<ScientProjectInitializationApplyResult>;
     rollback: (
-      input: PapiLabProjectInitializationActionInput,
-    ) => Promise<PapiLabProjectInitializationRollbackResult>;
+      input: ScientProjectInitializationActionInput,
+    ) => Promise<ScientProjectInitializationRollbackResult>;
   };
   filesystem: {
     browse: (input: FilesystemBrowseInput) => Promise<FilesystemBrowseResult>;

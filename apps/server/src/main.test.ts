@@ -26,7 +26,7 @@ vi.mock("./threadRetention", async () => {
   };
 });
 
-import { CliConfig, recordStartupHeartbeat, synaraCli, type CliConfigShape } from "./main";
+import { CliConfig, recordStartupHeartbeat, scientCli, type CliConfigShape } from "./main";
 
 const start = vi.fn(() => undefined);
 const stop = vi.fn(() => undefined);
@@ -40,10 +40,10 @@ const serverStart = Effect.acquireRelease(
   () => Effect.sync(() => stop()),
 );
 const findAvailablePort = vi.fn((preferred: number) => Effect.succeed(preferred));
-let defaultSynaraHome = "";
+let defaultScientHome = "";
 const tempHomes = new Set<string>();
 
-function makeTempHome(prefix = "synara-main-test-"): string {
+function makeTempHome(prefix = "scient-main-test-"): string {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
   tempHomes.add(directory);
   return directory;
@@ -52,7 +52,7 @@ function makeTempHome(prefix = "synara-main-test-"): string {
 // Shared service layer used by this CLI test suite.
 const testLayer = Layer.mergeAll(
   Layer.succeed(CliConfig, {
-    cwd: "/tmp/synara-test-workspace",
+    cwd: "/tmp/scient-test-workspace",
     fixPath: Effect.void,
     resolveStaticDir: Effect.undefined,
   } satisfies CliConfigShape),
@@ -76,12 +76,12 @@ const testLayer = Layer.mergeAll(
 );
 
 const runCli = (args: ReadonlyArray<string>, env: Record<string, string> = {}) => {
-  const program = Command.runWith(synaraCli, { version: "0.0.0-test" })(args).pipe(
+  const program = Command.runWith(scientCli, { version: "0.0.0-test" })(args).pipe(
     Effect.provide(
       ConfigProvider.layer(
         ConfigProvider.fromEnv({
           env: {
-            PAPILAB_HOME: defaultSynaraHome,
+            SCIENT_HOME: defaultScientHome,
             SYNARA_NO_BROWSER: "true",
             ...env,
           },
@@ -94,7 +94,7 @@ const runCli = (args: ReadonlyArray<string>, env: Record<string, string> = {}) =
 
 beforeEach(() => {
   vi.clearAllMocks();
-  defaultSynaraHome = makeTempHome();
+  defaultScientHome = makeTempHome();
   resolvedConfig = null;
   start.mockImplementation(() => undefined);
   stop.mockImplementation(() => undefined);
@@ -162,7 +162,7 @@ it.layer(testLayer)("server CLI command", (it) => {
         SYNARA_MODE: "desktop",
         SYNARA_PORT: "4999",
         SYNARA_HOST: "100.88.10.4",
-        PAPILAB_HOME: envHome,
+        SCIENT_HOME: envHome,
         VITE_DEV_SERVER_URL: "http://localhost:5173",
         SYNARA_NO_BROWSER: "true",
         SYNARA_AUTH_TOKEN: "env-token",

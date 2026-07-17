@@ -1,14 +1,14 @@
-import type { NativeApi, PapiLabProjectInitializationPreviewResult } from "@synara/contracts";
+import type { NativeApi, ScientProjectInitializationPreviewResult } from "@synara/contracts";
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  papiLabProjectFolderName,
-  preparePapiLabProjectForOpening,
-} from "./papilabProjectInitialization";
+  scientProjectFolderName,
+  prepareScientProjectForOpening,
+} from "./scientProjectInitialization";
 
 function preview(
-  overrides: Partial<PapiLabProjectInitializationPreviewResult> = {},
-): PapiLabProjectInitializationPreviewResult {
+  overrides: Partial<ScientProjectInitializationPreviewResult> = {},
+): ScientProjectInitializationPreviewResult {
   return {
     previewId: "opaque-preview",
     expiresAt: "2026-07-17T10:00:00.000Z",
@@ -26,13 +26,13 @@ function preview(
 }
 
 function apiWith(input: {
-  previews: PapiLabProjectInitializationPreviewResult[];
-  apply?: NativeApi["papilabProjectInitialization"]["apply"];
-  recover?: NativeApi["papilabProjectInitialization"]["recover"];
-  rollback?: NativeApi["papilabProjectInitialization"]["rollback"];
-}): Pick<NativeApi, "papilabProjectInitialization"> {
+  previews: ScientProjectInitializationPreviewResult[];
+  apply?: NativeApi["scientProjectInitialization"]["apply"];
+  recover?: NativeApi["scientProjectInitialization"]["recover"];
+  rollback?: NativeApi["scientProjectInitialization"]["rollback"];
+}): Pick<NativeApi, "scientProjectInitialization"> {
   return {
-    papilabProjectInitialization: {
+    scientProjectInitialization: {
       preview: vi.fn(async () => {
         const next = input.previews.shift();
         if (!next) throw new Error("No preview configured.");
@@ -70,20 +70,20 @@ function apiWith(input: {
   };
 }
 
-describe("papiLabProjectFolderName", () => {
+describe("scientProjectFolderName", () => {
   it("uses the selected folder name in the project-opening title", () => {
-    expect(papiLabProjectFolderName("/research/immune-response-study")).toBe(
+    expect(scientProjectFolderName("/research/immune-response-study")).toBe(
       "immune-response-study",
     );
-    expect(papiLabProjectFolderName("C:\\research\\protein-folding")).toBe("protein-folding");
+    expect(scientProjectFolderName("C:\\research\\protein-folding")).toBe("protein-folding");
   });
 
   it("ignores trailing path separators", () => {
-    expect(papiLabProjectFolderName("/research/quantum-materials/")).toBe("quantum-materials");
+    expect(scientProjectFolderName("/research/quantum-materials/")).toBe("quantum-materials");
   });
 });
 
-describe("preparePapiLabProjectForOpening", () => {
+describe("prepareScientProjectForOpening", () => {
   it("applies only the opaque server preview ID before opening", async () => {
     const apply = vi.fn(async () => ({
       root: "/research/example",
@@ -96,7 +96,7 @@ describe("preparePapiLabProjectForOpening", () => {
     const api = apiWith({ previews: [preview()], apply });
 
     await expect(
-      preparePapiLabProjectForOpening({
+      prepareScientProjectForOpening({
         api,
         root: "/research/example",
         requestDecision: async () => "apply",
@@ -109,13 +109,13 @@ describe("preparePapiLabProjectForOpening", () => {
     const api = apiWith({ previews: [preview()] });
 
     await expect(
-      preparePapiLabProjectForOpening({
+      prepareScientProjectForOpening({
         api,
         root: "/research/example",
         requestDecision: async () => "open-only",
       }),
     ).resolves.toBe("open");
-    expect(api.papilabProjectInitialization.apply).not.toHaveBeenCalled();
+    expect(api.scientProjectInitialization.apply).not.toHaveBeenCalled();
   });
 
   it("recognizes an initialized project without asking for another decision", async () => {
@@ -133,7 +133,7 @@ describe("preparePapiLabProjectForOpening", () => {
     const requestDecision = vi.fn(async () => "cancel" as const);
 
     await expect(
-      preparePapiLabProjectForOpening({
+      prepareScientProjectForOpening({
         api,
         root: "/research/example",
         requestDecision,
@@ -155,16 +155,16 @@ describe("preparePapiLabProjectForOpening", () => {
     const decisions: Array<"rollback" | "open-only"> = ["rollback", "open-only"];
 
     await expect(
-      preparePapiLabProjectForOpening({
+      prepareScientProjectForOpening({
         api,
         root: "/research/example",
         requestDecision: async () => decisions.shift() ?? "cancel",
       }),
     ).resolves.toBe("open");
-    expect(api.papilabProjectInitialization.rollback).toHaveBeenCalledWith({
+    expect(api.scientProjectInitialization.rollback).toHaveBeenCalledWith({
       previewId: "opaque-preview",
     });
-    expect(api.papilabProjectInitialization.preview).toHaveBeenCalledTimes(2);
+    expect(api.scientProjectInitialization.preview).toHaveBeenCalledTimes(2);
   });
 
   it("shows action errors on a fresh preview rather than replaying a consumed plan", async () => {
@@ -178,7 +178,7 @@ describe("preparePapiLabProjectForOpening", () => {
     const decisions: Array<"apply" | "cancel"> = ["apply", "cancel"];
 
     await expect(
-      preparePapiLabProjectForOpening({
+      prepareScientProjectForOpening({
         api,
         root: "/research/example",
         requestDecision: async (_preview, error) => {
@@ -188,6 +188,6 @@ describe("preparePapiLabProjectForOpening", () => {
       }),
     ).resolves.toBe("cancel");
     expect(errors).toEqual([null, "Folder changed after preview."]);
-    expect(api.papilabProjectInitialization.preview).toHaveBeenCalledTimes(2);
+    expect(api.scientProjectInitialization.preview).toHaveBeenCalledTimes(2);
   });
 });

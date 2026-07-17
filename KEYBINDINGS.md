@@ -1,8 +1,8 @@
-# PapiLab Keybindings
+# Scient Keybindings
 
-PapiLab reads keybindings from:
+Scient reads keybindings from:
 
-- `~/.papilab/userdata/keybindings.json`
+- `~/.scient/userdata/keybindings.json`
 
 The file must be a JSON array of rules:
 

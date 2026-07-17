@@ -6,8 +6,8 @@
 import type { ProjectId, ProviderKind, ThreadId } from "@synara/contracts";
 import { isProviderKind } from "./providerOrdering";
 
-const EDITOR_VIEW_STATE_STORAGE_KEY = "papilab.editor.viewStateByThreadId";
-const EDITOR_RAIL_CHAT_TABS_STORAGE_KEY = "papilab.editor.railChatTabsByProjectId";
+const EDITOR_VIEW_STATE_STORAGE_KEY = "scient.editor.viewStateByThreadId";
+const EDITOR_RAIL_CHAT_TABS_STORAGE_KEY = "scient.editor.railChatTabsByProjectId";
 const MAX_PERSISTED_THREADS = 50;
 const MAX_EDITOR_RAIL_CHAT_TABS = 8;
 

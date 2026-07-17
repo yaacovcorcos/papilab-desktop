@@ -6,7 +6,7 @@ export async function makeTemporaryProject(): Promise<{
   readonly root: string;
   readonly cleanup: () => Promise<void>;
 }> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "papilab-project-init-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "scient-project-init-"));
   return {
     root,
     cleanup: () => rm(root, { recursive: true, force: true }),

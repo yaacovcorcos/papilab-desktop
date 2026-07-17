@@ -4,21 +4,21 @@ import {
   assertCurrentUpstream,
   githubRepositoryFromRemote,
   shouldFetchUpstream,
-} from "./papilab-upstream-check.ts";
+} from "./scient-upstream-check.ts";
 
-describe("papilab upstream source check", () => {
+describe("scient upstream source check", () => {
   it("accepts equivalent GitHub SSH and HTTPS remote forms", () => {
     assert.equal(
-      githubRepositoryFromRemote("git@github.com:yaacovcorcos/synara.git"),
-      "yaacovcorcos/synara",
+      githubRepositoryFromRemote("git@github.com:ScientFactory/scient-desktop.git"),
+      "scientfactory/scient-desktop",
     );
     assert.equal(
-      githubRepositoryFromRemote("https://github.com/yaacovcorcos/synara.git"),
-      "yaacovcorcos/synara",
+      githubRepositoryFromRemote("https://github.com/ScientFactory/scient-desktop.git"),
+      "scientfactory/scient-desktop",
     );
     assert.equal(
-      githubRepositoryFromRemote("ssh://git@github.com/yaacovcorcos/synara"),
-      "yaacovcorcos/synara",
+      githubRepositoryFromRemote("ssh://git@github.com/ScientFactory/scient-desktop"),
+      "scientfactory/scient-desktop",
     );
   });
 

@@ -1,13 +1,16 @@
-export const PAPILAB_FORMAT_VERSION = 1;
-export const PAPILAB_PROJECT_FILE = "PROJECT.md";
-export const PAPILAB_AGENTS_FILE = "AGENTS.md";
-export const PAPILAB_METADATA_DIRECTORY = ".papilab";
-export const PAPILAB_IDENTITY_FILE = ".papilab/project.json";
-export const PAPILAB_TRANSACTION_FILE = ".papilab/init-transaction.json";
+export const SCIENT_FORMAT_VERSION = 1;
+export const SCIENT_PROJECT_FILE = "PROJECT.md";
+export const SCIENT_AGENTS_FILE = "AGENTS.md";
+export const SCIENT_METADATA_DIRECTORY = ".scient";
+export const SCIENT_IDENTITY_FILE = ".scient/project.json";
+export const SCIENT_TRANSACTION_FILE = ".scient/init-transaction.json";
+export const LEGACY_PAPILAB_METADATA_DIRECTORY = ".papilab";
+export const LEGACY_PAPILAB_IDENTITY_FILE = ".papilab/project.json";
 
 export type ProjectFolderState =
   | "empty-uninitialized"
   | "existing-uninitialized"
+  | "legacy-papilab-compatible"
   | "initialized-compatible"
   | "partially-initialized"
   | "invalid-or-conflicting";
@@ -19,9 +22,9 @@ export type PathSnapshot =
   | { readonly kind: "symlink"; readonly target: string }
   | { readonly kind: "other" };
 
-export interface PapiLabProjectIdentity {
+export interface ScientProjectIdentity {
   readonly projectId: string;
-  readonly formatVersion: typeof PAPILAB_FORMAT_VERSION;
+  readonly formatVersion: typeof SCIENT_FORMAT_VERSION;
   readonly createdAt: string;
 }
 
@@ -48,7 +51,10 @@ export interface ProjectFolderInspection {
   readonly metadataDirectory: PathSnapshot;
   readonly identityFile: PathSnapshot;
   readonly transactionFile: PathSnapshot;
-  readonly identity: PapiLabProjectIdentity | null;
+  readonly legacyPapiLabMetadataDirectory: PathSnapshot;
+  readonly legacyPapiLabIdentityFile: PathSnapshot;
+  readonly legacyPapiLabIdentity: ScientProjectIdentity | null;
+  readonly identity: ScientProjectIdentity | null;
   readonly issues: readonly InspectionIssue[];
 }
 

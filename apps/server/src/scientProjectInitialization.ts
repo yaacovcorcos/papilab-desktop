@@ -9,13 +9,13 @@ import {
   rollbackProjectInitialization,
   type InitializationPlan,
   type InitializationRequest,
-} from "@papilab/project-init";
+} from "@scientfactory/project-init";
 import type {
-  PapiLabProjectInitializationApplyResult,
-  PapiLabProjectInitializationOperation,
-  PapiLabProjectInitializationPreviewInput,
-  PapiLabProjectInitializationPreviewResult,
-  PapiLabProjectInitializationRollbackResult,
+  ScientProjectInitializationApplyResult,
+  ScientProjectInitializationOperation,
+  ScientProjectInitializationPreviewInput,
+  ScientProjectInitializationPreviewResult,
+  ScientProjectInitializationRollbackResult,
 } from "@synara/contracts";
 
 const DEFAULT_PREVIEW_TTL_MS = 10 * 60 * 1000;
@@ -32,7 +32,7 @@ interface StoredPreview {
   readonly plan: InitializationPlan | null;
 }
 
-export interface PapiLabProjectInitializationServiceOptions {
+export interface ScientProjectInitializationServiceOptions {
   readonly now?: () => number;
   readonly createPreviewId?: () => string;
   readonly previewTtlMs?: number;
@@ -41,7 +41,7 @@ export interface PapiLabProjectInitializationServiceOptions {
 
 function toPreviewOperation(
   operation: InitializationPlan["operations"][number],
-): PapiLabProjectInitializationOperation {
+): ScientProjectInitializationOperation {
   switch (operation.kind) {
     case "create":
     case "propose":
@@ -68,7 +68,7 @@ function toPreviewOperation(
 }
 
 function toInitializationRequest(
-  input: PapiLabProjectInitializationPreviewInput,
+  input: ScientProjectInitializationPreviewInput,
 ): InitializationRequest {
   const request = input.request;
   if (!request) return {};
@@ -83,7 +83,7 @@ function toInitializationRequest(
 
 function toPreviewIssues(
   issues: Awaited<ReturnType<typeof inspectProjectFolder>>["issues"],
-): PapiLabProjectInitializationPreviewResult["issues"] {
+): ScientProjectInitializationPreviewResult["issues"] {
   return issues.map((issue) => ({
     code: issue.code,
     path: issue.path,
@@ -91,14 +91,14 @@ function toPreviewIssues(
   }));
 }
 
-export class PapiLabProjectInitializationService {
+export class ScientProjectInitializationService {
   readonly #now: () => number;
   readonly #createPreviewId: () => string;
   readonly #previewTtlMs: number;
   readonly #maxPreviews: number;
   readonly #previews = new Map<string, StoredPreview>();
 
-  constructor(options: PapiLabProjectInitializationServiceOptions = {}) {
+  constructor(options: ScientProjectInitializationServiceOptions = {}) {
     this.#now = options.now ?? Date.now;
     this.#createPreviewId = options.createPreviewId ?? randomUUID;
     this.#previewTtlMs = options.previewTtlMs ?? DEFAULT_PREVIEW_TTL_MS;
@@ -112,8 +112,8 @@ export class PapiLabProjectInitializationService {
   }
 
   async preview(
-    input: PapiLabProjectInitializationPreviewInput,
-  ): Promise<PapiLabProjectInitializationPreviewResult> {
+    input: ScientProjectInitializationPreviewInput,
+  ): Promise<ScientProjectInitializationPreviewResult> {
     this.#prune();
     let inspection: Awaited<ReturnType<typeof inspectProjectFolder>>;
     try {
@@ -193,7 +193,7 @@ export class PapiLabProjectInitializationService {
     };
   }
 
-  async apply(previewId: string): Promise<PapiLabProjectInitializationApplyResult> {
+  async apply(previewId: string): Promise<ScientProjectInitializationApplyResult> {
     const preview = this.#take(previewId, "apply");
     if (!preview.plan) {
       throw new Error("Project initialization preview does not contain an applicable plan.");
@@ -202,13 +202,13 @@ export class PapiLabProjectInitializationService {
     return { root: preview.root, ...result };
   }
 
-  async recover(previewId: string): Promise<PapiLabProjectInitializationApplyResult> {
+  async recover(previewId: string): Promise<ScientProjectInitializationApplyResult> {
     const preview = this.#take(previewId, "recover");
     const result = await recoverProjectInitialization(preview.root);
     return { root: preview.root, ...result };
   }
 
-  async rollback(previewId: string): Promise<PapiLabProjectInitializationRollbackResult> {
+  async rollback(previewId: string): Promise<ScientProjectInitializationRollbackResult> {
     const preview = this.#take(previewId, "rollback");
     const result = await rollbackProjectInitialization(preview.root);
     return { root: preview.root, ...result };

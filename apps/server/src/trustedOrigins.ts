@@ -5,12 +5,12 @@
 // Exports: normalizeCorsOrigin, isTrustedAppOrigin,
 //          shouldRejectUntrustedRequestOrigin
 
-import { PAPILAB_DESKTOP_ORIGIN } from "@synara/shared/desktopIdentity";
+import { SCIENT_DESKTOP_ORIGIN } from "@synara/shared/desktopIdentity";
 
 import type { ServerConfigShape } from "./config";
 import { isLoopbackHost, isWildcardHost } from "./startupAccess";
 
-export const DESKTOP_APP_CORS_ORIGIN = PAPILAB_DESKTOP_ORIGIN;
+export const DESKTOP_APP_CORS_ORIGIN = SCIENT_DESKTOP_ORIGIN;
 
 export function normalizeCorsOrigin(rawOrigin: string | ReadonlyArray<string> | undefined) {
   const value = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;
