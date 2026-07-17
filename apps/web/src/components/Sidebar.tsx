@@ -2721,7 +2721,6 @@ export default function Sidebar() {
           onCompletion: notifyProjectInitializationCompletion,
         });
         if (preparation === "cancel") {
-          setIsAddingProject(false);
           return;
         }
 
@@ -2777,7 +2776,6 @@ export default function Sidebar() {
             finishAddingProject();
             return;
           }
-          setIsAddingProject(false);
           throw new Error(PROJECT_CREATE_EXISTING_SYNC_ERROR);
         }
 

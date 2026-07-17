@@ -20,6 +20,7 @@ import type {
 
 const DEFAULT_PREVIEW_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_MAX_PREVIEWS = 64;
+const MAX_PREVIEW_ID_GENERATION_ATTEMPTS = 100;
 
 type PreviewCapability = "apply" | "recover" | "rollback";
 
@@ -224,8 +225,17 @@ export class PapiLabProjectInitializationService {
       if (typeof oldestPreviewId !== "string") break;
       this.#previews.delete(oldestPreviewId);
     }
-    let previewId = this.#createPreviewId();
-    while (this.#previews.has(previewId)) previewId = this.#createPreviewId();
+    let previewId: string | null = null;
+    for (let attempt = 0; attempt < MAX_PREVIEW_ID_GENERATION_ATTEMPTS; attempt += 1) {
+      const candidate = this.#createPreviewId();
+      if (!this.#previews.has(candidate)) {
+        previewId = candidate;
+        break;
+      }
+    }
+    if (previewId === null) {
+      throw new Error("Unable to generate a unique project initialization preview ID.");
+    }
     const stored: StoredPreview = {
       previewId,
       root: input.root,

@@ -58,6 +58,20 @@ describe("PapiLabProjectInitializationService", () => {
     await expect(service.apply("preview-1")).rejects.toThrow("expired");
   });
 
+  it("fails safely when preview ID generation keeps colliding", async () => {
+    const firstRoot = await makeProjectFolder();
+    const secondRoot = await makeProjectFolder();
+    const service = new PapiLabProjectInitializationService({
+      createPreviewId: () => "repeated-preview-id",
+    });
+
+    await service.preview({ root: firstRoot });
+
+    await expect(service.preview({ root: secondRoot })).rejects.toThrow(
+      "Unable to generate a unique project initialization preview ID.",
+    );
+  });
+
   it("expires previews before they can write", async () => {
     const root = await makeProjectFolder();
     let now = 1_000;
