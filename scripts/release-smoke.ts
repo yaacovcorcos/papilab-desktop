@@ -32,6 +32,7 @@ const workspaceFiles = [
   "apps/marketing/package.json",
   "packages/contracts/package.json",
   "packages/effect-acp/package.json",
+  "packages/papilab-project-init/package.json",
   "packages/shared/package.json",
   "scripts/package.json",
 ] as const;
