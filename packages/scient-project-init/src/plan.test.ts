@@ -97,7 +97,11 @@ describe("planProjectInitialization", () => {
     const plan = await deterministicPlan(fixture.root);
 
     expect(plan.operations).toContainEqual(
-      expect.objectContaining({ kind: "preserve", path: "AGENTS.md" }),
+      expect.objectContaining({
+        kind: "preserve",
+        path: "AGENTS.md",
+        reason: "Keep the existing compatible AGENTS.md unchanged.",
+      }),
     );
   });
 

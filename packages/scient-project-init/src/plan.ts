@@ -128,7 +128,7 @@ async function planAgentsFile(
       return preserveOperation(
         SCIENT_AGENTS_FILE,
         snapshot,
-        "Preserve the existing compatible portable project agent guidance.",
+        "Keep the existing compatible AGENTS.md unchanged.",
       );
     }
     const proposal: ProposeOperation = {
