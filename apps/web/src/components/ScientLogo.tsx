@@ -1,16 +1,16 @@
-// FILE: PapiLabLogo.tsx
-// Purpose: Render the current two-color PapiLab mark as an inline SVG.
+// FILE: ScientLogo.tsx
+// Purpose: Render the current two-color Scient mark as an inline SVG.
 // Layer: Shared app branding primitive
 
 import type { SVGProps } from "react";
-import { PAPILAB_LOGO_PATHS } from "~/assets/papilabLogoPaths";
+import { SCIENT_LOGO_PATHS } from "~/assets/scientLogoPaths";
 import { cn } from "~/lib/utils";
 
-interface PapiLabLogoProps extends SVGProps<SVGSVGElement> {
+interface ScientLogoProps extends SVGProps<SVGSVGElement> {
   readonly adaptToDark?: boolean;
 }
 
-export function PapiLabLogo({ adaptToDark = true, className, ...props }: PapiLabLogoProps) {
+export function ScientLogo({ adaptToDark = true, className, ...props }: ScientLogoProps) {
   const ariaLabel = props["aria-label"];
 
   return (
@@ -22,7 +22,7 @@ export function PapiLabLogo({ adaptToDark = true, className, ...props }: PapiLab
       {...props}
       className={cn("shrink-0", className)}
     >
-      {PAPILAB_LOGO_PATHS.map((path) => (
+      {SCIENT_LOGO_PATHS.map((path) => (
         <path
           key={path.d}
           d={path.d}

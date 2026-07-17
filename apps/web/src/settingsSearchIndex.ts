@@ -142,7 +142,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
     id: "appearance:theme",
     section: "appearance",
     title: "Theme",
-    keywords: "Choose how PapiLab looks across the app. dark light system color",
+    keywords: "Choose how Scient looks across the app. dark light system color",
   },
   {
     id: "appearance:ui-density",
@@ -277,7 +277,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
     section: "shortcuts",
     title: "Keyboard Shortcuts",
     keywords:
-      "Every keyboard shortcut available in PapiLab, grouped by context. keybindings hotkeys key combo cmd ctrl reference",
+      "Every keyboard shortcut available in Scient, grouped by context. keybindings hotkeys key combo cmd ctrl reference",
     target: null,
   },
 
@@ -286,7 +286,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
     id: "worktrees:managed-worktrees",
     section: "worktrees",
     title: "Managed worktrees",
-    keywords: "Review and clean up the worktrees created by PapiLab. git branch remove",
+    keywords: "Review and clean up the worktrees created by Scient. git branch remove",
     target: null,
   },
 
@@ -332,7 +332,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
     id: "providers:provider-updates",
     section: "providers",
     title: "Provider updates",
-    keywords: "Update installed provider tools that PapiLab can safely update. upgrade cli",
+    keywords: "Update installed provider tools that Scient can safely update. upgrade cli",
   },
   {
     id: "providers:installed-clis",

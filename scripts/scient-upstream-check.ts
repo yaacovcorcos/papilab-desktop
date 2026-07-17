@@ -1,17 +1,17 @@
 #!/usr/bin/env bun
-// FILE: papilab-upstream-check.ts
-// Purpose: Verifies the owned Synara fork topology and current deterministic source baseline.
+// FILE: scient-upstream-check.ts
+// Purpose: Verifies the Scient desktop fork topology and current deterministic source baseline.
 // Layer: Maintainer verification script
 
 import { execFileSync } from "node:child_process";
 
 import {
-  PAPILAB_APP_NAME,
-  PAPILAB_DESKTOP_ORIGIN,
-  PAPILAB_DESKTOP_UPDATES_ENABLED,
+  SCIENT_APP_NAME,
+  SCIENT_DESKTOP_ORIGIN,
+  SCIENT_DESKTOP_UPDATES_ENABLED,
 } from "@synara/shared/desktopIdentity";
 
-const EXPECTED_ORIGIN_REPOSITORY = "yaacovcorcos/papilab-desktop";
+const EXPECTED_ORIGIN_REPOSITORY = "ScientFactory/scient-desktop";
 const EXPECTED_UPSTREAM_REPOSITORY = "emanuele-web04/synara";
 const UPSTREAM_BRANCH = "upstream/main";
 
@@ -70,7 +70,7 @@ export function shouldFetchUpstream(args: readonly string[]): boolean {
 export function assertCurrentUpstream(behind: string, args: readonly string[]): void {
   if (behind === "0" || args.includes("--allow-behind")) return;
   throw new Error(
-    `Owned Synara is ${behind} commit(s) behind ${UPSTREAM_BRANCH}. Reconcile upstream before acceptance, or use --allow-behind only for diagnostics.`,
+    `Scient desktop is ${behind} commit(s) behind ${UPSTREAM_BRANCH}. Reconcile upstream before acceptance, or use --allow-behind only for diagnostics.`,
   );
 }
 
@@ -86,7 +86,7 @@ function assertGitHubRemote(label: string, remote: string, expectedRepository: s
 function main(): void {
   const initialStatus = run("git", ["status", "--porcelain"]);
   if (initialStatus) {
-    throw new Error("Run the Synara source check from a clean worktree.");
+    throw new Error("Run the Scient desktop source check from a clean worktree.");
   }
 
   assertGitHubRemote(
@@ -126,12 +126,12 @@ function main(): void {
   ]).split(/\s+/);
   assertCurrentUpstream(behind, args);
 
-  if (PAPILAB_APP_NAME !== "PapiLab" || PAPILAB_DESKTOP_ORIGIN !== "papilab://app") {
-    throw new Error("PapiLab desktop identity invariant failed.");
+  if (SCIENT_APP_NAME !== "Scient" || SCIENT_DESKTOP_ORIGIN !== "scient://app") {
+    throw new Error("Scient desktop identity invariant failed.");
   }
-  if (PAPILAB_DESKTOP_UPDATES_ENABLED) {
+  if (SCIENT_DESKTOP_UPDATES_ENABLED) {
     throw new Error(
-      "Automatic updates must remain disabled until client update support is explicitly enabled in a reviewed code change and a PapiLab-owned feed is approved.",
+      "Automatic updates must remain disabled until client update support is explicitly enabled in a reviewed code change and a Scient-owned feed is approved.",
     );
   }
 
@@ -164,11 +164,11 @@ function main(): void {
         ahead,
         behind,
         upstreamFetched: fetched,
-        identity: PAPILAB_APP_NAME,
-        origin: PAPILAB_DESKTOP_ORIGIN,
-        automaticUpdatesEnabled: PAPILAB_DESKTOP_UPDATES_ENABLED,
+        identity: SCIENT_APP_NAME,
+        origin: SCIENT_DESKTOP_ORIGIN,
+        automaticUpdatesEnabled: SCIENT_DESKTOP_UPDATES_ENABLED,
         deterministicSourceChecksRun: sourceChecks,
-        crossRepositoryOpenCodeSmokeRun: false,
+        crossRepositoryScientAgentSmokeRun: false,
       },
       null,
       2,

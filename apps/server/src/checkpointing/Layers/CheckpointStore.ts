@@ -117,17 +117,17 @@ const makeCheckpointStore = Effect.gen(function* () {
       }
 
       yield* Effect.acquireUseRelease(
-        fs.makeTempDirectory({ prefix: "papilab-fs-checkpoint-" }),
+        fs.makeTempDirectory({ prefix: "scient-fs-checkpoint-" }),
         (tempDir) =>
           Effect.gen(function* () {
             const tempIndexPath = path.join(tempDir, `index-${randomUUID()}`);
             const commitEnv: NodeJS.ProcessEnv = {
               ...process.env,
               GIT_INDEX_FILE: tempIndexPath,
-              GIT_AUTHOR_NAME: "PapiLab",
-              GIT_AUTHOR_EMAIL: "papilab@users.noreply.github.com",
-              GIT_COMMITTER_NAME: "PapiLab",
-              GIT_COMMITTER_EMAIL: "papilab@users.noreply.github.com",
+              GIT_AUTHOR_NAME: "Scient",
+              GIT_AUTHOR_EMAIL: "scient@users.noreply.github.com",
+              GIT_COMMITTER_NAME: "Scient",
+              GIT_COMMITTER_EMAIL: "scient@users.noreply.github.com",
             };
 
             const headExists = yield* hasHeadCommit(input.cwd);
@@ -163,7 +163,7 @@ const makeCheckpointStore = Effect.gen(function* () {
               });
             }
 
-            const message = `PapiLab checkpoint ref=${input.checkpointRef}`;
+            const message = `Scient checkpoint ref=${input.checkpointRef}`;
             const commitTreeResult = yield* git.execute({
               operation,
               cwd: input.cwd,
@@ -402,7 +402,7 @@ const makeCheckpointStore = Effect.gen(function* () {
       const affectedPaths = changedPaths.stdout.split("\0").filter((entry) => entry.length > 0);
 
       return yield* Effect.acquireUseRelease(
-        fs.makeTempDirectory({ prefix: "papilab-checkpoint-undo-" }),
+        fs.makeTempDirectory({ prefix: "scient-checkpoint-undo-" }),
         (tempDir) =>
           Effect.gen(function* () {
             const patchPath = path.join(tempDir, "turn.patch");

@@ -22,7 +22,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
     for (const name of [
       "SYNARA_MODE",
       "SYNARA_PORT",
-      "PAPILAB_HOME",
+      "SCIENT_HOME",
       "SYNARA_HOME",
       "SYNARA_NO_BROWSER",
       "SYNARA_AUTH_TOKEN",
@@ -70,14 +70,14 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
   });
 
   describe("createDevRunnerEnv", () => {
-    it.effect("defaults PapiLab and compatibility homes to ~/.papilab when not provided", () =>
+    it.effect("defaults Scient and compatibility homes to ~/.scient when not provided", () =>
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          synaraHome: undefined,
+          scientHome: undefined,
           authToken: undefined,
           noBrowser: undefined,
           autoBootstrapProjectFromCwd: undefined,
@@ -87,8 +87,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.PAPILAB_HOME, resolve(homedir(), ".papilab"));
-        assert.equal(env.SYNARA_HOME, resolve(homedir(), ".papilab"));
+        assert.equal(env.SCIENT_HOME, resolve(homedir(), ".scient"));
+        assert.equal(env.SYNARA_HOME, resolve(homedir(), ".scient"));
       }),
     );
 
@@ -99,7 +99,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          synaraHome: "/tmp/custom-synara",
+          scientHome: "/tmp/custom-scient",
           authToken: "secret",
           noBrowser: true,
           autoBootstrapProjectFromCwd: false,
@@ -109,8 +109,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: new URL("http://localhost:7331"),
         });
 
-        assert.equal(env.PAPILAB_HOME, resolve("/tmp/custom-synara"));
-        assert.equal(env.SYNARA_HOME, resolve("/tmp/custom-synara"));
+        assert.equal(env.SCIENT_HOME, resolve("/tmp/custom-scient"));
+        assert.equal(env.SYNARA_HOME, resolve("/tmp/custom-scient"));
         assert.equal(env.SYNARA_PORT, "4222");
         assert.equal(env.VITE_WS_URL, "ws://[::1]:4222");
         assert.equal(env.SYNARA_NO_BROWSER, "1");
@@ -130,7 +130,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           },
           serverOffset: 0,
           webOffset: 0,
-          synaraHome: undefined,
+          scientHome: undefined,
           authToken: undefined,
           noBrowser: undefined,
           autoBootstrapProjectFromCwd: undefined,
@@ -152,7 +152,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          synaraHome: undefined,
+          scientHome: undefined,
           authToken: undefined,
           noBrowser: undefined,
           autoBootstrapProjectFromCwd: undefined,
@@ -166,14 +166,14 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       }),
     );
 
-    it.effect("uses custom synaraHome when provided", () =>
+    it.effect("uses custom scientHome when provided", () =>
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          synaraHome: "/tmp/my-synara",
+          scientHome: "/tmp/my-scient",
           authToken: undefined,
           noBrowser: undefined,
           autoBootstrapProjectFromCwd: undefined,
@@ -183,8 +183,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.PAPILAB_HOME, resolve("/tmp/my-synara"));
-        assert.equal(env.SYNARA_HOME, resolve("/tmp/my-synara"));
+        assert.equal(env.SCIENT_HOME, resolve("/tmp/my-scient"));
+        assert.equal(env.SYNARA_HOME, resolve("/tmp/my-scient"));
       }),
     );
   });

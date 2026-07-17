@@ -21,7 +21,7 @@ describe("inspectProjectFolder", () => {
     expect(inspection.state).toBe("empty-uninitialized");
     expect(inspection.entries).toEqual([]);
     expect(
-      await readFile(path.join(fixture.root, ".papilab/project.json")).catch(() => null),
+      await readFile(path.join(fixture.root, ".scient/project.json")).catch(() => null),
     ).toBeNull();
   });
 
@@ -40,11 +40,11 @@ describe("inspectProjectFolder", () => {
   it("recognizes a compatible path-independent identity", async () => {
     const fixture = await makeTemporaryProject();
     cleanups.push(fixture.cleanup);
-    await mkdir(path.join(fixture.root, ".papilab"));
+    await mkdir(path.join(fixture.root, ".scient"));
     await writeFile(path.join(fixture.root, "PROJECT.md"), "# Existing\n");
     await writeFile(path.join(fixture.root, "AGENTS.md"), "# Existing\n");
     await writeFile(
-      path.join(fixture.root, ".papilab/project.json"),
+      path.join(fixture.root, ".scient/project.json"),
       `${JSON.stringify({
         projectId: "11111111-1111-4111-8111-111111111111",
         formatVersion: 1,
@@ -59,10 +59,64 @@ describe("inspectProjectFolder", () => {
     expect(JSON.stringify(inspection.identity)).not.toContain(fixture.root);
   });
 
-  it("classifies an empty metadata directory as repairable partial state", async () => {
+  it("recognizes a valid PapiLab identity as an explicit migration candidate", async () => {
     const fixture = await makeTemporaryProject();
     cleanups.push(fixture.cleanup);
     await mkdir(path.join(fixture.root, ".papilab"));
+    await writeFile(path.join(fixture.root, "PROJECT.md"), "# Existing\n");
+    await writeFile(path.join(fixture.root, "AGENTS.md"), "# Existing\n");
+    await writeFile(
+      path.join(fixture.root, ".papilab/project.json"),
+      `${JSON.stringify({
+        projectId: "11111111-1111-4111-8111-111111111111",
+        formatVersion: 1,
+        createdAt: "2026-07-16T12:00:00.000Z",
+      })}\n`,
+    );
+
+    const inspection = await inspectProjectFolder(fixture.root);
+
+    expect(inspection.state).toBe("legacy-papilab-compatible");
+    expect(inspection.identity?.projectId).toBe("11111111-1111-4111-8111-111111111111");
+    expect(inspection.legacyPapiLabIdentity?.projectId).toBe(
+      "11111111-1111-4111-8111-111111111111",
+    );
+  });
+
+  it("blocks conflicting Scient and PapiLab identities", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    await mkdir(path.join(fixture.root, ".scient"));
+    await mkdir(path.join(fixture.root, ".papilab"));
+    await writeFile(
+      path.join(fixture.root, ".scient/project.json"),
+      `${JSON.stringify({
+        projectId: "11111111-1111-4111-8111-111111111111",
+        formatVersion: 1,
+        createdAt: "2026-07-16T12:00:00.000Z",
+      })}\n`,
+    );
+    await writeFile(
+      path.join(fixture.root, ".papilab/project.json"),
+      `${JSON.stringify({
+        projectId: "22222222-2222-4222-8222-222222222222",
+        formatVersion: 1,
+        createdAt: "2026-07-16T12:00:00.000Z",
+      })}\n`,
+    );
+
+    const inspection = await inspectProjectFolder(fixture.root);
+
+    expect(inspection.state).toBe("invalid-or-conflicting");
+    expect(inspection.issues.map((issue) => issue.message)).toContain(
+      "The .scient and .papilab project identities disagree; migration requires review.",
+    );
+  });
+
+  it("classifies an empty metadata directory as repairable partial state", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    await mkdir(path.join(fixture.root, ".scient"));
 
     const inspection = await inspectProjectFolder(fixture.root);
 
@@ -75,7 +129,7 @@ describe("inspectProjectFolder", () => {
     const outside = await makeTemporaryProject();
     cleanups.push(fixture.cleanup, outside.cleanup);
     await writeFile(path.join(outside.root, "project.json"), "{bad outside metadata\n");
-    await symlink(outside.root, path.join(fixture.root, ".papilab"));
+    await symlink(outside.root, path.join(fixture.root, ".scient"));
 
     const inspection = await inspectProjectFolder(fixture.root);
 
@@ -88,8 +142,8 @@ describe("inspectProjectFolder", () => {
   it("reports malformed identity as invalid rather than guessing", async () => {
     const fixture = await makeTemporaryProject();
     cleanups.push(fixture.cleanup);
-    await mkdir(path.join(fixture.root, ".papilab"));
-    await writeFile(path.join(fixture.root, ".papilab/project.json"), "{bad json\n");
+    await mkdir(path.join(fixture.root, ".scient"));
+    await writeFile(path.join(fixture.root, ".scient/project.json"), "{bad json\n");
 
     const inspection = await inspectProjectFolder(fixture.root);
 
@@ -100,9 +154,9 @@ describe("inspectProjectFolder", () => {
   it("reports a structurally invalid transaction as invalid", async () => {
     const fixture = await makeTemporaryProject();
     cleanups.push(fixture.cleanup);
-    await mkdir(path.join(fixture.root, ".papilab"));
+    await mkdir(path.join(fixture.root, ".scient"));
     await writeFile(
-      path.join(fixture.root, ".papilab/init-transaction.json"),
+      path.join(fixture.root, ".scient/init-transaction.json"),
       `${JSON.stringify({ transactionVersion: 1, transactionId: "missing-project-fields" })}\n`,
     );
 

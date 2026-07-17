@@ -1,12 +1,12 @@
 # Remote Access Setup
 
-Use this when you want to open PapiLab from another device (phone, tablet, another laptop).
+Use this when you want to open Scient from another device (phone, tablet, another laptop).
 
 ## CLI ↔ Env option map
 
-The PapiLab CLI accepts the following configuration options, available either as CLI flags or environment variables:
+The Scient CLI accepts the following configuration options, available either as CLI flags or environment variables:
 
-`PAPILAB_HOME` is the canonical PapiLab home variable. The other `SYNARA_*`
+`SCIENT_HOME` is the canonical Scient home variable. The other `SYNARA_*`
 names remain inherited runtime compatibility variables and are intentionally
 not renamed in this fork's server contract yet.
 
@@ -15,7 +15,7 @@ not renamed in this fork's server contract yet.
 | `--mode <web\|desktop>` | `SYNARA_MODE`         | Runtime mode.                      |
 | `--port <number>`       | `SYNARA_PORT`         | HTTP/WebSocket port.               |
 | `--host <address>`      | `SYNARA_HOST`         | Bind interface/address.            |
-| `--home-dir <path>`     | `PAPILAB_HOME`        | Base directory.                    |
+| `--home-dir <path>`     | `SCIENT_HOME`         | Base directory.                    |
 | `--dev-url <url>`       | `VITE_DEV_SERVER_URL` | Dev web URL redirect/proxy target. |
 | `--no-browser`          | `SYNARA_NO_BROWSER`   | Disable auto-open browser.         |
 | `--auth-token <token>`  | `SYNARA_AUTH_TOKEN`   | WebSocket auth token.              |

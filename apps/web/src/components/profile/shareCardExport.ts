@@ -10,9 +10,9 @@ import { readNativeApi } from "~/nativeApi";
 
 export { downloadBlob } from "~/lib/browserDownload";
 
-const SHARE_BRAND_NAME = "PapiLab";
+const SHARE_BRAND_NAME = "Scient";
 export const SHARE_TWEET_TEXT = `Just checking my ${SHARE_BRAND_NAME} activity.`;
-const SHARE_URL = "https://github.com/yaacovcorcos/PapiLab";
+const SHARE_URL = "https://github.com/ScientFactory/Scient";
 
 export type ShareTarget = "x" | "linkedin" | "reddit";
 
@@ -70,6 +70,6 @@ export function shareIntentUrl(target: ShareTarget): string {
     case "reddit":
       return `https://www.reddit.com/submit?url=${encodeURIComponent(
         SHARE_URL,
-      )}&title=${encodeURIComponent("My PapiLab dev stats")}`;
+      )}&title=${encodeURIComponent("My Scient dev stats")}`;
   }
 }

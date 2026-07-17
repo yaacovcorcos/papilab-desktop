@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { PassThrough } from "node:stream";
 
 import { PROVIDER_SEND_TURN_MAX_ATTACHMENTS } from "@synara/contracts";
-import { PAPILAB_DEVELOPMENT_BUNDLE_ID } from "@synara/shared/desktopIdentity";
+import { SCIENT_DEVELOPMENT_BUNDLE_ID } from "@synara/shared/desktopIdentity";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -43,9 +43,9 @@ describe("desktop AppSnap platform state", () => {
     const onState = vi.fn();
     const manager = new DesktopAppSnapManager({
       platform: "win32",
-      helperPath: "C:\\missing\\synara-appsnap-helper.exe",
+      helperPath: "C:\\missing\\scient-appsnap-helper.exe",
       captureDirectory: "C:\\tmp\\appsnap",
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       onState,
       onCaptured: vi.fn(),
       onError: vi.fn(),
@@ -66,9 +66,9 @@ describe("desktop AppSnap platform state", () => {
   it("preserves a missing-helper error instead of reporting a permission problem", async () => {
     const manager = new DesktopAppSnapManager({
       platform: "darwin",
-      helperPath: "/tmp/synara-appsnap-helper-that-does-not-exist",
+      helperPath: "/tmp/scient-appsnap-helper-that-does-not-exist",
       captureDirectory: "/tmp/synara-appsnap-test",
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       onState: vi.fn(),
       onCaptured: vi.fn(),
       onError: vi.fn(),
@@ -138,7 +138,7 @@ describe("AppSnap helper protocol", () => {
       platform: "darwin",
       helperPath: process.execPath,
       captureDirectory: "/tmp/synara-appsnap-test",
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       spawn,
       onState: vi.fn(),
       onCaptured: vi.fn(),
@@ -209,7 +209,7 @@ describe("AppSnap helper protocol", () => {
       platform: "darwin",
       helperPath: process.execPath,
       captureDirectory: "/tmp/synara-appsnap-test",
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       spawn,
       onState: vi.fn(),
       onCaptured: vi.fn(),
@@ -274,7 +274,7 @@ describe("AppSnap helper protocol", () => {
       platform: "darwin",
       helperPath: process.execPath,
       captureDirectory: "/tmp/synara-appsnap-test",
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       spawn,
       onState: vi.fn(),
       onCaptured: vi.fn(),
@@ -316,7 +316,7 @@ describe("AppSnap helper protocol", () => {
       platform: "darwin",
       helperPath: process.execPath,
       captureDirectory: "/tmp/synara-appsnap-test",
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       spawn,
       onState: vi.fn(),
       onCaptured: vi.fn(),
@@ -376,7 +376,7 @@ describe("AppSnap helper protocol", () => {
       platform: "darwin",
       helperPath: process.execPath,
       captureDirectory,
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       spawn,
       onState: vi.fn(),
       onCaptured: vi.fn(),
@@ -421,7 +421,7 @@ describe("AppSnap helper protocol", () => {
           "--output-dir",
           captureDirectory,
           "--excluded-bundle-id",
-          PAPILAB_DEVELOPMENT_BUNDLE_ID,
+          SCIENT_DEVELOPMENT_BUNDLE_ID,
         ],
         expect.any(Object),
       );
@@ -447,7 +447,7 @@ describe("AppSnap helper protocol", () => {
       platform: "darwin",
       helperPath: process.execPath,
       captureDirectory,
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       spawn,
       onState: vi.fn(),
       onCaptured,
@@ -513,7 +513,7 @@ describe("AppSnap helper protocol", () => {
       platform: "darwin",
       helperPath: process.execPath,
       captureDirectory: "/tmp/synara-appsnap-test",
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       spawn,
       onState: vi.fn(),
       onCaptured: vi.fn(),
@@ -580,7 +580,7 @@ describe("AppSnap helper protocol", () => {
       platform: "darwin",
       helperPath: process.execPath,
       captureDirectory,
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       spawn,
       onState: vi.fn(),
       onCaptured,
@@ -647,7 +647,7 @@ describe("AppSnap helper protocol", () => {
       platform: "darwin",
       helperPath: process.execPath,
       captureDirectory,
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       spawn,
       onState: vi.fn(),
       onCaptured,
@@ -690,7 +690,7 @@ describe("AppSnap helper protocol", () => {
         platform: "darwin",
         helperPath: process.execPath,
         captureDirectory,
-        excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+        excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
         onState: vi.fn(),
         onCaptured: vi.fn(),
         onError: vi.fn(),
@@ -714,7 +714,7 @@ describe("AppSnap helper protocol", () => {
         platform: "darwin",
         helperPath: process.execPath,
         captureDirectory,
-        excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+        excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
         onState: vi.fn(),
         onCaptured: vi.fn(),
         onError: vi.fn(),
@@ -728,7 +728,7 @@ describe("AppSnap helper protocol", () => {
   });
 
   it("recovers a helper PNG left behind before pending metadata was persisted", async () => {
-    const captureDirectory = mkdtempSync(join(tmpdir(), "synara-appsnap-helper-recovery-"));
+    const captureDirectory = mkdtempSync(join(tmpdir(), "scient-appsnap-helper-recovery-"));
     const captureId = "6b981032-c848-4d0b-94f1-6de335391aa2";
     const helperPath = join(captureDirectory, `appsnap-${captureId}.png`);
     const captureBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x01]);
@@ -738,7 +738,7 @@ describe("AppSnap helper protocol", () => {
       platform: "darwin",
       helperPath: process.execPath,
       captureDirectory,
-      excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+      excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
       onState: vi.fn(),
       onCaptured: vi.fn(),
       onError: vi.fn(),
@@ -762,7 +762,7 @@ describe("AppSnap helper protocol", () => {
         platform: "darwin",
         helperPath: process.execPath,
         captureDirectory,
-        excludedBundleId: PAPILAB_DEVELOPMENT_BUNDLE_ID,
+        excludedBundleId: SCIENT_DEVELOPMENT_BUNDLE_ID,
         onState: vi.fn(),
         onCaptured: vi.fn(),
         onError: vi.fn(),

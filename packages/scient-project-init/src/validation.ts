@@ -1,12 +1,13 @@
 import path from "node:path";
 
 import {
-  PAPILAB_AGENTS_FILE,
-  PAPILAB_METADATA_DIRECTORY,
-  PAPILAB_PROJECT_FILE,
+  LEGACY_PAPILAB_METADATA_DIRECTORY,
+  SCIENT_AGENTS_FILE,
+  SCIENT_METADATA_DIRECTORY,
+  SCIENT_PROJECT_FILE,
   ProjectInitializationError,
   type InitializationRequest,
-  type PapiLabProjectIdentity,
+  type ScientProjectIdentity,
   type NormalizedInitializationRequest,
   type ProjectProfileDescriptor,
 } from "./types.ts";
@@ -108,13 +109,14 @@ export function validatePortableRelativePath(input: string): string {
   }
   const portableInput = input.normalize("NFC").toLowerCase();
   if (
-    segments[0]?.normalize("NFC").toLowerCase() === PAPILAB_METADATA_DIRECTORY ||
-    portableInput === PAPILAB_PROJECT_FILE.toLowerCase() ||
-    portableInput === PAPILAB_AGENTS_FILE.toLowerCase()
+    segments[0]?.normalize("NFC").toLowerCase() === SCIENT_METADATA_DIRECTORY ||
+    segments[0]?.normalize("NFC").toLowerCase() === LEGACY_PAPILAB_METADATA_DIRECTORY ||
+    portableInput === SCIENT_PROJECT_FILE.toLowerCase() ||
+    portableInput === SCIENT_AGENTS_FILE.toLowerCase()
   ) {
     throw new ProjectInitializationError(
       "INVALID_PROFILE",
-      `Profiles may not replace the universal PapiLab foundation: ${input}`,
+      `Profiles may not replace the universal Scient foundation: ${input}`,
     );
   }
   return input;
@@ -244,7 +246,7 @@ export function resolveSelectedProfiles(input: {
   return selected;
 }
 
-export function validateProjectIdentity(value: unknown): PapiLabProjectIdentity {
+export function validateProjectIdentity(value: unknown): ScientProjectIdentity {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new ProjectInitializationError("INVALID_IDENTITY", "Project identity must be an object.");
   }
@@ -255,7 +257,7 @@ export function validateProjectIdentity(value: unknown): PapiLabProjectIdentity 
   if (candidate.formatVersion !== 1) {
     throw new ProjectInitializationError(
       "INVALID_IDENTITY",
-      `Unsupported PapiLab project format version: ${String(candidate.formatVersion)}`,
+      `Unsupported Scient project format version: ${String(candidate.formatVersion)}`,
     );
   }
   if (

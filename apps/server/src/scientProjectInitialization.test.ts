@@ -6,15 +6,15 @@ import {
   applyProjectInitialization,
   inspectProjectFolder,
   planProjectInitialization,
-} from "@papilab/project-init";
+} from "@scientfactory/project-init";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { PapiLabProjectInitializationService } from "./papilabProjectInitialization";
+import { ScientProjectInitializationService } from "./scientProjectInitialization";
 
 const roots: string[] = [];
 
 async function makeProjectFolder(): Promise<string> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "papilab-project-service-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "scient-project-service-"));
   roots.push(root);
   return root;
 }
@@ -23,10 +23,10 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
-describe("PapiLabProjectInitializationService", () => {
+describe("ScientProjectInitializationService", () => {
   it("keeps preview read-only and applies the server-owned plan by one-shot opaque ID", async () => {
     const root = await makeProjectFolder();
-    const service = new PapiLabProjectInitializationService({
+    const service = new ScientProjectInitializationService({
       createPreviewId: () => "preview-1",
     });
 
@@ -50,7 +50,7 @@ describe("PapiLabProjectInitializationService", () => {
     (projectOperation as { contents?: string }).contents = "tampered browser contents\n";
 
     const result = await service.apply("preview-1");
-    expect(result.created).toEqual(["AGENTS.md", "PROJECT.md", ".papilab/project.json"]);
+    expect(result.created).toEqual(["AGENTS.md", "PROJECT.md", ".scient/project.json"]);
     expect(await readFile(path.join(root, "PROJECT.md"), "utf8")).toContain("Safety study");
     expect(await readFile(path.join(root, "PROJECT.md"), "utf8")).not.toContain(
       "tampered browser contents",
@@ -61,7 +61,7 @@ describe("PapiLabProjectInitializationService", () => {
   it("fails safely when preview ID generation keeps colliding", async () => {
     const firstRoot = await makeProjectFolder();
     const secondRoot = await makeProjectFolder();
-    const service = new PapiLabProjectInitializationService({
+    const service = new ScientProjectInitializationService({
       createPreviewId: () => "repeated-preview-id",
     });
 
@@ -75,7 +75,7 @@ describe("PapiLabProjectInitializationService", () => {
   it("expires previews before they can write", async () => {
     const root = await makeProjectFolder();
     let now = 1_000;
-    const service = new PapiLabProjectInitializationService({
+    const service = new ScientProjectInitializationService({
       now: () => now,
       createPreviewId: () => "preview-expiring",
       previewTtlMs: 50,
@@ -90,7 +90,7 @@ describe("PapiLabProjectInitializationService", () => {
 
   it("allows exactly one concurrent consumer of a preview", async () => {
     const root = await makeProjectFolder();
-    const service = new PapiLabProjectInitializationService({
+    const service = new ScientProjectInitializationService({
       createPreviewId: () => "preview-once",
     });
     await service.preview({ root });
@@ -107,8 +107,8 @@ describe("PapiLabProjectInitializationService", () => {
 
   it("returns no actionable handle for an invalid folder", async () => {
     const root = await makeProjectFolder();
-    await writeFile(path.join(root, ".papilab"), "not a directory\n");
-    const service = new PapiLabProjectInitializationService();
+    await writeFile(path.join(root, ".scient"), "not a directory\n");
+    const service = new ScientProjectInitializationService();
 
     const preview = await service.preview({ root });
 
@@ -125,7 +125,7 @@ describe("PapiLabProjectInitializationService", () => {
   it("keeps the existing create-missing-folder flow available without writing during preview", async () => {
     const parent = await makeProjectFolder();
     const root = path.join(parent, "new-project");
-    const service = new PapiLabProjectInitializationService();
+    const service = new ScientProjectInitializationService();
 
     const preview = await service.preview({ root });
 
@@ -153,7 +153,7 @@ describe("PapiLabProjectInitializationService", () => {
     ).rejects.toThrow("simulated interruption");
 
     const previewIds = ["recovery-preview", "rollback-preview"];
-    const service = new PapiLabProjectInitializationService({
+    const service = new ScientProjectInitializationService({
       createPreviewId: () => previewIds.shift() ?? "unexpected-preview",
     });
     const recoveryPreview = await service.preview({ root });
@@ -170,7 +170,7 @@ describe("PapiLabProjectInitializationService", () => {
     expect((await inspectProjectFolder(root)).state).toBe("initialized-compatible");
 
     const rollbackRoot = await makeProjectFolder();
-    await mkdir(path.join(rollbackRoot, ".papilab"));
+    await mkdir(path.join(rollbackRoot, ".scient"));
     const rollbackPlan = await planProjectInitialization({
       inspection: await inspectProjectFolder(rollbackRoot),
       request: {},

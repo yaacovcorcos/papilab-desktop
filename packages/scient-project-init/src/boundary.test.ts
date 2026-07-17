@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-describe("PapiLab project-initiation dependency boundary", () => {
+describe("Scient project-initiation dependency boundary", () => {
   it("does not import Synara, Electron, React, OpenCode, SQLite, or application modules", async () => {
     const sourceRoot = path.dirname(fileURLToPath(import.meta.url));
     const sourceFiles = (await readdir(sourceRoot)).filter(

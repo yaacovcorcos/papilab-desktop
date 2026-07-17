@@ -130,12 +130,12 @@ import {
   ProjectWriteFileResult,
 } from "./project";
 import {
-  PapiLabProjectInitializationActionInput,
-  PapiLabProjectInitializationApplyResult,
-  PapiLabProjectInitializationPreviewInput,
-  PapiLabProjectInitializationPreviewResult,
-  PapiLabProjectInitializationRollbackResult,
-} from "./papilabProjectInitialization";
+  ScientProjectInitializationActionInput,
+  ScientProjectInitializationApplyResult,
+  ScientProjectInitializationPreviewInput,
+  ScientProjectInitializationPreviewResult,
+  ScientProjectInitializationRollbackResult,
+} from "./scientProjectInitialization";
 import {
   ServerConfig,
   ServerConfigStreamEvent,
@@ -297,38 +297,38 @@ export const WsProjectsListDirectoriesRpc = Rpc.make(WS_METHODS.projectsListDire
   error: WsRpcError,
 });
 
-export const WsPapiLabProjectInitializationPreviewRpc = Rpc.make(
-  WS_METHODS.papilabProjectInitializationPreview,
+export const WsScientProjectInitializationPreviewRpc = Rpc.make(
+  WS_METHODS.scientProjectInitializationPreview,
   {
-    payload: PapiLabProjectInitializationPreviewInput,
-    success: PapiLabProjectInitializationPreviewResult,
+    payload: ScientProjectInitializationPreviewInput,
+    success: ScientProjectInitializationPreviewResult,
     error: WsRpcError,
   },
 );
 
-export const WsPapiLabProjectInitializationApplyRpc = Rpc.make(
-  WS_METHODS.papilabProjectInitializationApply,
+export const WsScientProjectInitializationApplyRpc = Rpc.make(
+  WS_METHODS.scientProjectInitializationApply,
   {
-    payload: PapiLabProjectInitializationActionInput,
-    success: PapiLabProjectInitializationApplyResult,
+    payload: ScientProjectInitializationActionInput,
+    success: ScientProjectInitializationApplyResult,
     error: WsRpcError,
   },
 );
 
-export const WsPapiLabProjectInitializationRecoverRpc = Rpc.make(
-  WS_METHODS.papilabProjectInitializationRecover,
+export const WsScientProjectInitializationRecoverRpc = Rpc.make(
+  WS_METHODS.scientProjectInitializationRecover,
   {
-    payload: PapiLabProjectInitializationActionInput,
-    success: PapiLabProjectInitializationApplyResult,
+    payload: ScientProjectInitializationActionInput,
+    success: ScientProjectInitializationApplyResult,
     error: WsRpcError,
   },
 );
 
-export const WsPapiLabProjectInitializationRollbackRpc = Rpc.make(
-  WS_METHODS.papilabProjectInitializationRollback,
+export const WsScientProjectInitializationRollbackRpc = Rpc.make(
+  WS_METHODS.scientProjectInitializationRollback,
   {
-    payload: PapiLabProjectInitializationActionInput,
-    success: PapiLabProjectInitializationRollbackResult,
+    payload: ScientProjectInitializationActionInput,
+    success: ScientProjectInitializationRollbackResult,
     error: WsRpcError,
   },
 );
@@ -937,10 +937,10 @@ export const WsRpcGroup = RpcGroup.make(
   WsProjectsStopDevServerRpc,
   WsProjectsListDevServersRpc,
   WsSubscribeProjectDevServerEventsRpc,
-  WsPapiLabProjectInitializationPreviewRpc,
-  WsPapiLabProjectInitializationApplyRpc,
-  WsPapiLabProjectInitializationRecoverRpc,
-  WsPapiLabProjectInitializationRollbackRpc,
+  WsScientProjectInitializationPreviewRpc,
+  WsScientProjectInitializationApplyRpc,
+  WsScientProjectInitializationRecoverRpc,
+  WsScientProjectInitializationRollbackRpc,
   WsStudioListThreadOutputsRpc,
   WsFilesystemBrowseRpc,
   WsShellOpenInEditorRpc,

@@ -11,7 +11,7 @@ import { inspectProjectFolder } from "./inspect.ts";
 import { planProjectInitialization } from "./plan.ts";
 import { makeTemporaryProject, TEST_IDENTITY } from "./testUtils.ts";
 import {
-  PAPILAB_TRANSACTION_FILE,
+  SCIENT_TRANSACTION_FILE,
   ProjectInitializationError,
   type InitializationPlan,
   type ProjectProfileDescriptor,
@@ -46,20 +46,20 @@ describe("applyProjectInitialization", () => {
     });
 
     expect(result.projectId).toBe(TEST_IDENTITY.projectId);
-    expect(result.created).toEqual(["AGENTS.md", "PROJECT.md", ".papilab/project.json"]);
+    expect(result.created).toEqual(["AGENTS.md", "PROJECT.md", ".scient/project.json"]);
     expect(steps).toEqual([
-      "marker-written:.papilab/init-transaction.json",
+      "marker-written:.scient/init-transaction.json",
       "file-created:AGENTS.md",
       "file-created:PROJECT.md",
-      "file-created:.papilab/project.json",
-      "completed:.papilab/init-transaction.json",
+      "file-created:.scient/project.json",
+      "completed:.scient/init-transaction.json",
     ]);
     expect(await inspectProjectFolder(fixture.root)).toMatchObject({
       state: "initialized-compatible",
       identity: { projectId: TEST_IDENTITY.projectId },
     });
     expect(
-      await readFile(path.join(fixture.root, PAPILAB_TRANSACTION_FILE)).catch(() => null),
+      await readFile(path.join(fixture.root, SCIENT_TRANSACTION_FILE)).catch(() => null),
     ).toBeNull();
   });
 
@@ -77,6 +77,43 @@ describe("applyProjectInitialization", () => {
     expect(secondResult.preserved).toEqual(["PROJECT.md", "AGENTS.md"]);
   });
 
+  it("migrates a PapiLab identity additively and preserves rollback metadata", async () => {
+    const fixture = await makeTemporaryProject();
+    cleanups.push(fixture.cleanup);
+    await mkdir(path.join(fixture.root, ".papilab"));
+    await writeFile(path.join(fixture.root, "PROJECT.md"), "# Existing\n");
+    await writeFile(path.join(fixture.root, "AGENTS.md"), "# Existing\n");
+    await writeFile(
+      path.join(fixture.root, ".papilab/project.json"),
+      `${JSON.stringify({
+        projectId: "33333333-3333-4333-8333-333333333333",
+        formatVersion: 1,
+        createdAt: "2026-07-16T12:00:00.000Z",
+      })}\n`,
+    );
+
+    const plan = await makePlan(fixture.root);
+    expect(plan.projectId).toBe("33333333-3333-4333-8333-333333333333");
+    expect(plan.operations).toContainEqual(
+      expect.objectContaining({
+        kind: "create",
+        path: ".scient/project.json",
+        reason:
+          "Migrate the verified PapiLab project identity into .scient without deleting rollback metadata.",
+      }),
+    );
+
+    await applyProjectInitialization(plan);
+
+    expect((await inspectProjectFolder(fixture.root)).state).toBe("initialized-compatible");
+    expect(
+      JSON.parse(await readFile(path.join(fixture.root, ".scient/project.json"), "utf8")),
+    ).toMatchObject({ projectId: "33333333-3333-4333-8333-333333333333" });
+    expect(
+      JSON.parse(await readFile(path.join(fixture.root, ".papilab/project.json"), "utf8")),
+    ).toMatchObject({ projectId: "33333333-3333-4333-8333-333333333333" });
+  });
+
   it("keeps identity portable when the initialized folder moves", async () => {
     const fixture = await makeTemporaryProject();
     const destinationParent = await makeTemporaryProject();
@@ -89,7 +126,7 @@ describe("applyProjectInitialization", () => {
 
     expect(inspection.state).toBe("initialized-compatible");
     expect(inspection.identity?.projectId).toBe(TEST_IDENTITY.projectId);
-    expect(await readFile(path.join(movedRoot, ".papilab/project.json"), "utf8")).not.toContain(
+    expect(await readFile(path.join(movedRoot, ".scient/project.json"), "utf8")).not.toContain(
       fixture.root,
     );
   });
@@ -107,7 +144,7 @@ describe("applyProjectInitialization", () => {
       "# Human race winner\n",
     );
     expect(
-      await readFile(path.join(fixture.root, ".papilab/project.json")).catch(() => null),
+      await readFile(path.join(fixture.root, ".scient/project.json")).catch(() => null),
     ).toBeNull();
   });
 
@@ -126,7 +163,7 @@ describe("applyProjectInitialization", () => {
 
       const partial = await inspectProjectFolder(fixture.root);
       expect(partial.state).toBe("partially-initialized");
-      const transaction = await readFile(path.join(fixture.root, PAPILAB_TRANSACTION_FILE), "utf8");
+      const transaction = await readFile(path.join(fixture.root, SCIENT_TRANSACTION_FILE), "utf8");
       expect(transaction).not.toContain(fixture.root);
 
       const recovered = await recoverProjectInitialization(fixture.root);
@@ -151,7 +188,7 @@ describe("applyProjectInitialization", () => {
     const agentsPath = path.join(fixture.root, "AGENTS.md");
     const staleTemporaryPath = path.join(
       fixture.root,
-      `.AGENTS.md.papilab-init-${TEST_IDENTITY.transactionId}.tmp`,
+      `.AGENTS.md.scient-init-${TEST_IDENTITY.transactionId}.tmp`,
     );
     await link(agentsPath, staleTemporaryPath);
 
@@ -228,7 +265,7 @@ describe("applyProjectInitialization", () => {
     expect(await readFile(path.join(fixture.root, "PROJECT.md"), "utf8")).toBe(
       "# User recovered this file\n",
     );
-    expect(await readFile(path.join(fixture.root, PAPILAB_TRANSACTION_FILE), "utf8")).toContain(
+    expect(await readFile(path.join(fixture.root, SCIENT_TRANSACTION_FILE), "utf8")).toContain(
       TEST_IDENTITY.transactionId,
     );
   });
@@ -309,12 +346,12 @@ describe("applyProjectInitialization", () => {
     await expect(
       applyProjectInitialization(await makePlan(fixture.root), {
         onStep: async (step) => {
-          if (step.kind !== "file-created" || step.path !== ".papilab/project.json") return;
+          if (step.kind !== "file-created" || step.path !== ".scient/project.json") return;
           await rename(
-            path.join(fixture.root, ".papilab"),
-            path.join(fixture.root, ".papilab-original"),
+            path.join(fixture.root, ".scient"),
+            path.join(fixture.root, ".scient-original"),
           );
-          await symlink(outside.root, path.join(fixture.root, ".papilab"));
+          await symlink(outside.root, path.join(fixture.root, ".scient"));
         },
       }),
     ).rejects.toMatchObject({ code: "PATH_ESCAPE" });
@@ -339,7 +376,7 @@ describe("applyProjectInitialization", () => {
   it("repairs an empty metadata directory left before a marker could be written", async () => {
     const fixture = await makeTemporaryProject();
     cleanups.push(fixture.cleanup);
-    await mkdir(path.join(fixture.root, ".papilab"));
+    await mkdir(path.join(fixture.root, ".scient"));
 
     await applyProjectInitialization(await makePlan(fixture.root));
 
@@ -402,7 +439,7 @@ describe("applyProjectInitialization", () => {
         },
       }),
     ).rejects.toThrow("simulated crash");
-    const transactionPath = path.join(fixture.root, PAPILAB_TRANSACTION_FILE);
+    const transactionPath = path.join(fixture.root, SCIENT_TRANSACTION_FILE);
     const outsideTransactionPath = path.join(outside.root, "transaction.json");
     await rename(transactionPath, outsideTransactionPath);
     await symlink(outsideTransactionPath, transactionPath);

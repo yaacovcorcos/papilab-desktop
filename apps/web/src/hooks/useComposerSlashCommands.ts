@@ -589,7 +589,7 @@ export function useComposerSlashCommands(input: {
     const params = new URLSearchParams({ threadId: threadId });
     void downloadUrlAsBlob({
       url: resolveWsHttpUrl(`/api/thread-export?${params.toString()}`),
-      filename: `papilab-thread-${threadId}.zip`,
+      filename: `scient-thread-${threadId}.zip`,
     }).catch((error: unknown) => {
       toastManager.add({
         type: "error",

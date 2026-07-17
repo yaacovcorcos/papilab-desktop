@@ -126,7 +126,7 @@ export const THEME_SEED_CATALOG: Record<string, Partial<Record<ThemeVariant, Chr
       surface: "#ffffff",
     },
   },
-  papilab: {
+  scient: {
     dark: {
       accent: "#6073cc",
       contrast: 0,

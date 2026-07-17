@@ -44,8 +44,8 @@ import {
 import { localSubagentThreadId } from "./ChatView.selectors";
 import type { ProviderModelOption } from "../providerModelOptions";
 
-export const LAST_INVOKED_SCRIPT_BY_PROJECT_KEY = "papilab:last-invoked-script-by-project";
-export const DISMISSED_PROVIDER_HEALTH_BANNERS_KEY = "papilab:dismissed-provider-health-banners";
+export const LAST_INVOKED_SCRIPT_BY_PROJECT_KEY = "scient:last-invoked-script-by-project";
+export const DISMISSED_PROVIDER_HEALTH_BANNERS_KEY = "scient:dismissed-provider-health-banners";
 export const PROMPT_HISTORY_MAX_ENTRIES = 100;
 
 export const LastInvokedScriptByProjectSchema = Schema.Record(ProjectId, Schema.String);
@@ -644,7 +644,7 @@ export function describeVoiceRecordingStartError(error: unknown): string {
   const errorName = typeof error.name === "string" ? error.name : "";
 
   if (errorName === "NotAllowedError" || errorName === "PermissionDeniedError") {
-    return "Microphone access was denied. Enable it in macOS Privacy & Security > Microphone for PapiLab, then try again.";
+    return "Microphone access was denied. Enable it in macOS Privacy & Security > Microphone for Scient, then try again.";
   }
   if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
     return "No microphone was found. Connect one and try again.";

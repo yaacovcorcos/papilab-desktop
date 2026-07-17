@@ -1,11 +1,11 @@
-import type { PapiLabProjectInitializationPreviewResult } from "@synara/contracts";
+import type { ScientProjectInitializationPreviewResult } from "@synara/contracts";
 import { IconFolder, IconInfoCircle, IconSparkles } from "@tabler/icons-react";
 import { useState } from "react";
 
 import {
-  papiLabProjectFolderName,
-  type PapiLabProjectInitializationDecision,
-} from "../lib/papilabProjectInitialization";
+  scientProjectFolderName,
+  type ScientProjectInitializationDecision,
+} from "../lib/scientProjectInitialization";
 
 import { Button } from "./ui/button";
 import {
@@ -35,8 +35,8 @@ const SCIENT_PROJECT_FILES = [
     description: "Shared guidance for agents working in the project.",
   },
   {
-    path: ".papilab/project.json",
-    description: "A portable PapiLab project identity.",
+    path: ".scient/project.json",
+    description: "A portable Scient project identity.",
   },
 ] as const;
 
@@ -54,12 +54,13 @@ function InitializationError({ error }: { readonly error: string | null }) {
 }
 
 function ReadyProjectChoice(props: {
-  readonly preview: PapiLabProjectInitializationPreviewResult;
+  readonly preview: ScientProjectInitializationPreviewResult;
   readonly error: string | null;
-  readonly onDecision: (decision: PapiLabProjectInitializationDecision) => void;
+  readonly onDecision: (decision: ScientProjectInitializationDecision) => void;
 }) {
   const [showInformation, setShowInformation] = useState(false);
-  const name = papiLabProjectFolderName(props.preview.root);
+  const name = scientProjectFolderName(props.preview.root);
+  const migratingPapiLabProject = props.preview.folderState === "legacy-papilab-compatible";
 
   if (showInformation) {
     return (
@@ -93,7 +94,9 @@ function ReadyProjectChoice(props: {
           <Button variant="outline" onClick={() => setShowInformation(false)}>
             Back
           </Button>
-          <Button onClick={() => props.onDecision("apply")}>Set up a Scient project</Button>
+          <Button onClick={() => props.onDecision("apply")}>
+            {migratingPapiLabProject ? "Migrate to Scient" : "Set up a Scient project"}
+          </Button>
         </DialogFooter>
       </>
     );
@@ -103,7 +106,7 @@ function ReadyProjectChoice(props: {
     <>
       <DialogHeader className="pr-10">
         <DialogTitle className="text-xl sm:text-2xl">Open “{name}”</DialogTitle>
-        <DialogDescription>Choose how you want to use this folder in PapiLab.</DialogDescription>
+        <DialogDescription>Choose how you want to use this folder in Scient.</DialogDescription>
       </DialogHeader>
 
       <DialogPanel className="space-y-3 pt-1">
@@ -126,10 +129,12 @@ function ReadyProjectChoice(props: {
             </span>
             <span className="min-w-0">
               <span className="block text-sm font-semibold text-foreground">
-                Set up a Scient project
+                {migratingPapiLabProject ? "Migrate to Scient" : "Set up a Scient project"}
               </span>
               <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground">
-                Add a small portable foundation for your agents.
+                {migratingPapiLabProject
+                  ? "Keep the same project identity and add the new .scient metadata."
+                  : "Add a small portable foundation for your agents."}
               </span>
             </span>
           </button>
@@ -161,15 +166,21 @@ function ReadyProjectChoice(props: {
           <IconInfoCircle aria-hidden className="size-4" stroke={1.7} />
           What is a Scient project?
         </button>
+        {migratingPapiLabProject ? (
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Existing legacy <code>.papilab/</code> metadata remains untouched during the supported
+            rollback window.
+          </p>
+        ) : null}
       </DialogPanel>
     </>
   );
 }
 
 function ExceptionalProjectInitialization(props: {
-  readonly preview: PapiLabProjectInitializationPreviewResult;
+  readonly preview: ScientProjectInitializationPreviewResult;
   readonly error: string | null;
-  readonly onDecision: (decision: PapiLabProjectInitializationDecision) => void;
+  readonly onDecision: (decision: ScientProjectInitializationDecision) => void;
 }) {
   const recoveryRequired = props.preview.status === "recovery-required";
   const unavailable = props.preview.folderState === "unavailable";
@@ -184,13 +195,13 @@ function ExceptionalProjectInitialization(props: {
         </DialogTitle>
         <DialogDescription>
           <span className="font-medium text-foreground">
-            {papiLabProjectFolderName(props.preview.root)}
+            {scientProjectFolderName(props.preview.root)}
           </span>
           {recoveryRequired
             ? " contains an interrupted Scient project setup. You can safely resume it or roll back only unchanged files from that attempt."
             : unavailable
               ? " is not currently available for inspection. You can still try opening or creating it without Scient project setup."
-              : " can still be opened without modification, but PapiLab cannot set it up safely yet."}
+              : " can still be opened without modification, but Scient cannot set it up safely yet."}
         </DialogDescription>
       </DialogHeader>
 
@@ -246,10 +257,10 @@ function ExceptionalProjectInitialization(props: {
   );
 }
 
-export function PapiLabProjectInitializationDialog(props: {
-  readonly preview: PapiLabProjectInitializationPreviewResult | null;
+export function ScientProjectInitializationDialog(props: {
+  readonly preview: ScientProjectInitializationPreviewResult | null;
   readonly error: string | null;
-  readonly onDecision: (decision: PapiLabProjectInitializationDecision) => void;
+  readonly onDecision: (decision: ScientProjectInitializationDecision) => void;
 }) {
   const preview = props.preview;
   const ready = preview?.status === "ready";

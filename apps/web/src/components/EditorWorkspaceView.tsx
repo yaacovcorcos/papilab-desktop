@@ -65,9 +65,9 @@ import { WorkspaceFilePreview } from "./WorkspaceFilePreview";
 type EditorCenterMode = "file" | "diff";
 type EditorActivityBarItem = EditorCenterMode | "search";
 
-const EDITOR_CHAT_PANE_STORAGE_KEY = "papilab.editor.chatPaneWidth";
-const EDITOR_SIDEBAR_VISIBLE_STORAGE_KEY = "papilab.editor.sidebarVisible";
-const EDITOR_CHAT_PANE_VISIBLE_STORAGE_KEY = "papilab.editor.chatPaneVisible";
+const EDITOR_CHAT_PANE_STORAGE_KEY = "scient.editor.chatPaneWidth";
+const EDITOR_SIDEBAR_VISIBLE_STORAGE_KEY = "scient.editor.sidebarVisible";
+const EDITOR_CHAT_PANE_VISIBLE_STORAGE_KEY = "scient.editor.chatPaneVisible";
 const EDITOR_CHAT_PANE_DEFAULT_WIDTH = 384;
 const EDITOR_CHAT_PANE_MIN_WIDTH = 320;
 const EDITOR_CHAT_PANE_MAX_WIDTH = 600;

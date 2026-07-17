@@ -182,7 +182,7 @@ const COMPOSER_SLASH_COMMAND_DEFINITIONS: Record<
   feedback: {
     command: "feedback",
     label: "/feedback",
-    description: "Send feedback to the PapiLab team",
+    description: "Send feedback to the Scient team",
     source: "app",
   },
   automation: {

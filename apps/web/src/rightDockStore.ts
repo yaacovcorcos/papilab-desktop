@@ -22,7 +22,7 @@ import {
   updatePaneInState,
 } from "./rightDockStore.logic";
 
-const RIGHT_DOCK_STORAGE_KEY = "papilab:right-dock-state:v1";
+const RIGHT_DOCK_STORAGE_KEY = "scient:right-dock-state:v1";
 
 interface RightDockStore {
   dockStateByThreadId: Record<string, RightDockThreadState | undefined>;

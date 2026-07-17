@@ -15,8 +15,8 @@ const BASE_WEB_PORT = 5733;
 const MAX_HASH_OFFSET = 3000;
 const MAX_PORT = 65535;
 
-export const DEFAULT_SYNARA_HOME = Effect.map(Effect.service(Path.Path), (path) =>
-  path.join(homedir(), ".papilab"),
+export const DEFAULT_SCIENT_HOME = Effect.map(Effect.service(Path.Path), (path) =>
+  path.join(homedir(), ".scient"),
 );
 
 const MODE_ARGS = {
@@ -26,10 +26,10 @@ const MODE_ARGS = {
     "--ui=tui",
     "--filter=@synara/contracts",
     "--filter=@synara/web",
-    "--filter=@synara/cli",
+    "--filter=@scientfactory/cli",
     "--parallel",
   ],
-  "dev:server": ["run", "dev", "--filter=@synara/cli"],
+  "dev:server": ["run", "dev", "--filter=@scientfactory/cli"],
   "dev:web": ["run", "dev", "--filter=@synara/web"],
   "dev:desktop": ["run", "dev", "--filter=@synara/desktop", "--filter=@synara/web", "--parallel"],
 } as const satisfies Record<string, ReadonlyArray<string>>;
@@ -74,7 +74,7 @@ const OffsetConfig = Config.all({
   portOffset: optionalIntegerConfig("SYNARA_PORT_OFFSET"),
   devInstance: optionalStringConfig("SYNARA_DEV_INSTANCE"),
 });
-const HomeConfig = optionalStringConfig("PAPILAB_HOME");
+const HomeConfig = optionalStringConfig("SCIENT_HOME");
 
 export function resolveOffset(config: {
   readonly portOffset: number | undefined;
@@ -112,7 +112,7 @@ function resolveBaseDir(baseDir: string | undefined): Effect.Effect<string, neve
       return path.resolve(configured);
     }
 
-    return yield* DEFAULT_SYNARA_HOME;
+    return yield* DEFAULT_SCIENT_HOME;
   });
 }
 
@@ -121,7 +121,7 @@ interface CreateDevRunnerEnvInput {
   readonly baseEnv: NodeJS.ProcessEnv;
   readonly serverOffset: number;
   readonly webOffset: number;
-  readonly synaraHome: string | undefined;
+  readonly scientHome: string | undefined;
   readonly authToken: string | undefined;
   readonly noBrowser: boolean | undefined;
   readonly autoBootstrapProjectFromCwd: boolean | undefined;
@@ -136,7 +136,7 @@ export function createDevRunnerEnv({
   baseEnv,
   serverOffset,
   webOffset,
-  synaraHome,
+  scientHome,
   authToken,
   noBrowser,
   autoBootstrapProjectFromCwd,
@@ -148,7 +148,7 @@ export function createDevRunnerEnv({
   return Effect.gen(function* () {
     const serverPort = port ?? BASE_SERVER_PORT + serverOffset;
     const webPort = BASE_WEB_PORT + webOffset;
-    const resolvedBaseDir = yield* resolveBaseDir(synaraHome);
+    const resolvedBaseDir = yield* resolveBaseDir(scientHome);
 
     const output: NodeJS.ProcessEnv = {
       ...baseEnv,
@@ -157,7 +157,7 @@ export function createDevRunnerEnv({
       ELECTRON_RENDERER_PORT: String(webPort),
       VITE_WS_URL: `ws://[::1]:${serverPort}`,
       VITE_DEV_SERVER_URL: devUrl?.toString() ?? `http://localhost:${webPort}`,
-      PAPILAB_HOME: resolvedBaseDir,
+      SCIENT_HOME: resolvedBaseDir,
       // Inherited server packages still consume this compatibility variable.
       SYNARA_HOME: resolvedBaseDir,
     };
@@ -350,7 +350,7 @@ export function resolveModePortOffsets<R = NetService>({
 
 interface DevRunnerCliInput {
   readonly mode: DevMode;
-  readonly synaraHome: string | undefined;
+  readonly scientHome: string | undefined;
   readonly authToken: string | undefined;
   readonly noBrowser: boolean | undefined;
   readonly autoBootstrapProjectFromCwd: boolean | undefined;
@@ -430,7 +430,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
       baseEnv: process.env,
       serverOffset,
       webOffset,
-      synaraHome: input.synaraHome,
+      scientHome: input.scientHome,
       authToken: input.authToken,
       noBrowser: resolveOptionalBooleanOverride(input.noBrowser, envOverrides.noBrowser),
       autoBootstrapProjectFromCwd: resolveOptionalBooleanOverride(
@@ -452,7 +452,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
         : "";
 
     yield* Effect.logInfo(
-      `[dev-runner] mode=${input.mode} source=${source}${selectionSuffix} serverPort=${String(env.SYNARA_PORT)} webPort=${String(env.PORT)} baseDir=${String(env.PAPILAB_HOME)}`,
+      `[dev-runner] mode=${input.mode} source=${source}${selectionSuffix} serverPort=${String(env.SYNARA_PORT)} webPort=${String(env.PORT)} baseDir=${String(env.SCIENT_HOME)}`,
     );
 
     if (input.dryRun) {
@@ -500,8 +500,8 @@ const devRunnerCli = Command.make("dev-runner", {
   mode: Argument.choice("mode", DEV_RUNNER_MODES).pipe(
     Argument.withDescription("Development mode to run."),
   ),
-  synaraHome: Flag.string("home-dir").pipe(
-    Flag.withDescription("Base directory for all PapiLab data (equivalent to PAPILAB_HOME)."),
+  scientHome: Flag.string("home-dir").pipe(
+    Flag.withDescription("Base directory for all Scient data (equivalent to SCIENT_HOME)."),
     Flag.withFallbackConfig(HomeConfig),
   ),
   authToken: Flag.string("auth-token").pipe(

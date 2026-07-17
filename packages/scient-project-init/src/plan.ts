@@ -12,10 +12,10 @@ import {
   proposeManagedAgentsContents,
 } from "./templates.ts";
 import {
-  PAPILAB_AGENTS_FILE,
-  PAPILAB_FORMAT_VERSION,
-  PAPILAB_IDENTITY_FILE,
-  PAPILAB_PROJECT_FILE,
+  SCIENT_AGENTS_FILE,
+  SCIENT_FORMAT_VERSION,
+  SCIENT_IDENTITY_FILE,
+  SCIENT_PROJECT_FILE,
   ProjectInitializationError,
   type ConflictOperation,
   type CreateOperation,
@@ -79,20 +79,20 @@ async function planProjectFile(
 ): Promise<InitializationPlanOperation> {
   if (snapshot.kind === "missing") {
     return createOperation(
-      PAPILAB_PROJECT_FILE,
+      SCIENT_PROJECT_FILE,
       contents,
       "Create the human-readable project orientation.",
     );
   }
   if (snapshot.kind === "file") {
     return preserveOperation(
-      PAPILAB_PROJECT_FILE,
+      SCIENT_PROJECT_FILE,
       snapshot,
       "Preserve the existing PROJECT.md without modification.",
     );
   }
   return conflictOperation(
-    PAPILAB_PROJECT_FILE,
+    SCIENT_PROJECT_FILE,
     snapshot,
     "PROJECT.md exists but is not a regular file and cannot be initialized safely.",
   );
@@ -106,42 +106,42 @@ async function planAgentsFile(
 ): Promise<InitializationPlanOperation> {
   if (snapshot.kind === "missing") {
     return createOperation(
-      PAPILAB_AGENTS_FILE,
+      SCIENT_AGENTS_FILE,
       contents,
       "Create the portable root agent guidance.",
     );
   }
   if (snapshot.kind !== "file") {
     return conflictOperation(
-      PAPILAB_AGENTS_FILE,
+      SCIENT_AGENTS_FILE,
       snapshot,
       "AGENTS.md exists but is not a regular file and cannot be initialized safely.",
     );
   }
   try {
     const existing = await readUtf8FileBounded(
-      path.join(root, PAPILAB_AGENTS_FILE),
+      path.join(root, SCIENT_AGENTS_FILE),
       MAX_MANAGED_TEXT_BYTES,
     );
     const proposedContents = proposeManagedAgentsContents(existing, profiles);
     if (proposedContents === existing) {
       return preserveOperation(
-        PAPILAB_AGENTS_FILE,
+        SCIENT_AGENTS_FILE,
         snapshot,
-        "Preserve the existing compatible PapiLab agent guidance.",
+        "Preserve the existing compatible portable project agent guidance.",
       );
     }
     const proposal: ProposeOperation = {
       kind: "propose",
-      path: PAPILAB_AGENTS_FILE,
+      path: SCIENT_AGENTS_FILE,
       expected: snapshot,
       contents: proposedContents,
-      reason: "Propose the PapiLab-managed baseline without modifying the existing file.",
+      reason: "Propose the Scient-managed baseline without modifying the existing file.",
     };
     return proposal;
   } catch (error) {
     return conflictOperation(
-      PAPILAB_AGENTS_FILE,
+      SCIENT_AGENTS_FILE,
       snapshot,
       error instanceof Error ? error.message : "AGENTS.md cannot be reconciled safely.",
     );
@@ -207,7 +207,7 @@ export async function planProjectInitialization(
     if (input.inspection.projectFile.kind === "file") {
       operations.push(
         preserveOperation(
-          PAPILAB_PROJECT_FILE,
+          SCIENT_PROJECT_FILE,
           input.inspection.projectFile,
           "Preserve the existing PROJECT.md.",
         ),
@@ -215,7 +215,7 @@ export async function planProjectInitialization(
     } else {
       operations.push(
         conflictOperation(
-          PAPILAB_PROJECT_FILE,
+          SCIENT_PROJECT_FILE,
           input.inspection.projectFile,
           "The initialized project requires a regular PROJECT.md before it can be considered complete.",
         ),
@@ -233,7 +233,7 @@ export async function planProjectInitialization(
     } else {
       operations.push(
         conflictOperation(
-          PAPILAB_AGENTS_FILE,
+          SCIENT_AGENTS_FILE,
           input.inspection.agentsFile,
           "The initialized project requires a regular AGENTS.md before it can be considered complete.",
         ),
@@ -275,17 +275,23 @@ export async function planProjectInitialization(
       profileVersions: profileVersionRecord(profiles),
       operations: [
         conflictOperation(
-          issue?.path ?? ".papilab",
+          issue?.path ?? ".scient",
           input.inspection.metadataDirectory,
-          issue?.message ?? "Existing PapiLab metadata must be repaired before initialization.",
+          issue?.message ?? "Existing Scient metadata must be repaired before initialization.",
         ),
       ],
     };
   }
 
-  const projectId = assertProjectId(input.projectId ?? randomUUID());
+  const legacyPapiLabIdentity =
+    input.inspection.state === "legacy-papilab-compatible" ? input.inspection.identity : null;
+  const projectId = legacyPapiLabIdentity
+    ? legacyPapiLabIdentity.projectId
+    : assertProjectId(input.projectId ?? randomUUID());
   const transactionId = assertProjectId(input.transactionId ?? randomUUID());
-  const createdAt = assertIsoTimestamp(input.createdAt ?? new Date().toISOString());
+  const createdAt = legacyPapiLabIdentity
+    ? legacyPapiLabIdentity.createdAt
+    : assertIsoTimestamp(input.createdAt ?? new Date().toISOString());
   const operations: InitializationPlanOperation[] = [];
   operations.push(
     await planProjectFile(input.inspection.projectFile, renderProjectMarkdown(request, profiles)),
@@ -301,9 +307,11 @@ export async function planProjectInitialization(
   operations.push(...(await planProfileFiles(input.inspection.root, profiles)));
   operations.push(
     createOperation(
-      PAPILAB_IDENTITY_FILE,
-      `${JSON.stringify({ projectId, formatVersion: PAPILAB_FORMAT_VERSION, createdAt }, null, 2)}\n`,
-      "Create the portable PapiLab project identity after all other planned files.",
+      SCIENT_IDENTITY_FILE,
+      `${JSON.stringify({ projectId, formatVersion: SCIENT_FORMAT_VERSION, createdAt }, null, 2)}\n`,
+      legacyPapiLabIdentity
+        ? "Migrate the verified PapiLab project identity into .scient without deleting rollback metadata."
+        : "Create the portable Scient project identity after all other planned files.",
     ),
   );
 

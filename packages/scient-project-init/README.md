@@ -1,6 +1,6 @@
-# `@papilab/project-init`
+# `@scientfactory/project-init`
 
-This package is the UI-independent, PapiLab-owned kernel for recognizing and
+This package is the UI-independent, Scient-owned kernel for recognizing and
 initializing local scientific project folders. It is permanent product code,
 not a prototype fixture.
 
@@ -16,7 +16,7 @@ Initialization creates the smallest universal foundation:
 - `PROJECT.md` for human-readable project orientation;
 - `AGENTS.md` for portable baseline agent rules, while preserving existing
   user-owned content through proposals;
-- `.papilab/project.json` for path-independent project identity, written last.
+- `.scient/project.json` for path-independent project identity, written last.
 
 Discipline-specific additions are data-only `ProjectProfileDescriptor` values.
 The package does not contain a default medicine, biology, chemistry, physics,
@@ -25,7 +25,7 @@ or mathematics profile.
 ## Boundary
 
 The kernel depends on Node filesystem and cryptography primitives, but not on
-Electron, React, the PapiLab desktop shell, Synara application modules,
+Electron, React, the Scient desktop shell, Synara application modules,
 OpenCode, or SQLite. The desktop server and UI call this package through a
 narrow integration that keeps generated plans server-owned; future agent tools
 should use the same kernel rather than reimplementing its rules.

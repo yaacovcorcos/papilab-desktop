@@ -15,9 +15,9 @@ import {
   validateInitializationTransaction,
 } from "./transaction.ts";
 import {
-  PAPILAB_IDENTITY_FILE,
-  PAPILAB_METADATA_DIRECTORY,
-  PAPILAB_TRANSACTION_FILE,
+  SCIENT_IDENTITY_FILE,
+  SCIENT_METADATA_DIRECTORY,
+  SCIENT_TRANSACTION_FILE,
   ProjectInitializationError,
   type ApplyInitializationOptions,
   type ApplyInitializationResult,
@@ -84,7 +84,7 @@ async function writeExclusiveAtomic(input: {
   const directoryPath = path.dirname(input.targetPath);
   const temporaryPath = path.join(
     directoryPath,
-    `.${path.basename(input.targetPath)}.papilab-init-${input.transactionId}.tmp`,
+    `.${path.basename(input.targetPath)}.scient-init-${input.transactionId}.tmp`,
   );
   await assertSafeExistingParents(input.root, input.relativePath);
   const staleTemporary = await snapshotPath(temporaryPath);
@@ -129,7 +129,7 @@ async function removeMatchingTemporaryFile(input: {
   const targetPath = await assertSafeExistingParents(input.root, input.relativePath);
   const temporaryPath = path.join(
     path.dirname(targetPath),
-    `.${path.basename(targetPath)}.papilab-init-${input.transactionId}.tmp`,
+    `.${path.basename(targetPath)}.scient-init-${input.transactionId}.tmp`,
   );
   const observed = await snapshotPath(temporaryPath);
   if (observed.kind === "missing") return;
@@ -240,7 +240,7 @@ async function assertOperationPrecondition(
 }
 
 async function prepareMetadataDirectory(root: string): Promise<void> {
-  const metadataPath = path.join(root, PAPILAB_METADATA_DIRECTORY);
+  const metadataPath = path.join(root, SCIENT_METADATA_DIRECTORY);
   const observed = await snapshotPath(metadataPath);
   if (observed.kind === "missing") {
     try {
@@ -253,36 +253,36 @@ async function prepareMetadataDirectory(root: string): Promise<void> {
   if (current.kind !== "directory") {
     throw new ProjectInitializationError(
       "CONCURRENT_CHANGE",
-      ".papilab is no longer an available metadata directory.",
+      ".scient is no longer an available metadata directory.",
     );
   }
   const canonicalMetadata = await realpath(metadataPath);
-  assertCanonicalChild(root, canonicalMetadata, PAPILAB_METADATA_DIRECTORY);
+  assertCanonicalChild(root, canonicalMetadata, SCIENT_METADATA_DIRECTORY);
   const entries = await readdir(metadataPath);
   if (entries.length > 0) {
     throw new ProjectInitializationError(
       "CONCURRENT_CHANGE",
-      ".papilab changed after the initialization preview.",
+      ".scient changed after the initialization preview.",
     );
   }
 }
 
 async function readSafeInitializationTransaction(root: string): Promise<InitializationTransaction> {
-  const metadataPath = path.join(root, PAPILAB_METADATA_DIRECTORY);
+  const metadataPath = path.join(root, SCIENT_METADATA_DIRECTORY);
   const metadataSnapshot = await snapshotPath(metadataPath);
   if (metadataSnapshot.kind !== "directory") {
     throw new ProjectInitializationError(
       "INVALID_TRANSACTION",
-      "PapiLab initialization metadata is not stored in a real project directory.",
+      "Scient initialization metadata is not stored in a real project directory.",
     );
   }
-  assertCanonicalChild(root, await realpath(metadataPath), PAPILAB_METADATA_DIRECTORY);
-  const transactionPath = path.join(root, PAPILAB_TRANSACTION_FILE);
+  assertCanonicalChild(root, await realpath(metadataPath), SCIENT_METADATA_DIRECTORY);
+  const transactionPath = path.join(root, SCIENT_TRANSACTION_FILE);
   const transactionSnapshot = await snapshotPath(transactionPath);
   if (transactionSnapshot.kind !== "file") {
     throw new ProjectInitializationError(
       "INVALID_TRANSACTION",
-      "PapiLab initialization transaction is not a regular project file.",
+      "Scient initialization transaction is not a regular project file.",
     );
   }
   return readInitializationTransaction(transactionPath);
@@ -302,8 +302,8 @@ async function runTransaction(input: {
     (operation): operation is CreateOperation => operation.kind === "create",
   );
   const orderedCreates = creates.toSorted((left, right) => {
-    if (left.path === PAPILAB_IDENTITY_FILE) return 1;
-    if (right.path === PAPILAB_IDENTITY_FILE) return -1;
+    if (left.path === SCIENT_IDENTITY_FILE) return 1;
+    if (right.path === SCIENT_IDENTITY_FILE) return -1;
     return left.path.localeCompare(right.path);
   });
   const preserved = input.transaction.operations
@@ -351,7 +351,7 @@ async function runTransaction(input: {
       targetPath,
       contents: operation.contents,
       transactionId: input.transaction.transactionId,
-      mode: operation.path.startsWith(`${PAPILAB_METADATA_DIRECTORY}/`) ? 0o600 : 0o644,
+      mode: operation.path.startsWith(`${SCIENT_METADATA_DIRECTORY}/`) ? 0o600 : 0o644,
     });
     await emitStep(input.options, {
       index: stepIndex,
@@ -361,12 +361,12 @@ async function runTransaction(input: {
     stepIndex += 1;
   }
 
-  await unlink(await assertSafeExistingParents(input.root, PAPILAB_TRANSACTION_FILE));
-  await syncDirectory(path.join(input.root, PAPILAB_METADATA_DIRECTORY));
+  await unlink(await assertSafeExistingParents(input.root, SCIENT_TRANSACTION_FILE));
+  await syncDirectory(path.join(input.root, SCIENT_METADATA_DIRECTORY));
   await emitStep(input.options, {
     index: stepIndex,
     kind: "completed",
-    path: PAPILAB_TRANSACTION_FILE,
+    path: SCIENT_TRANSACTION_FILE,
   });
   return {
     projectId: input.transaction.projectId,
@@ -419,16 +419,16 @@ export async function applyProjectInitialization(
     await assertOperationPrecondition(root, operation);
   }
   await prepareMetadataDirectory(root);
-  const transactionPath = await ensureSafeParentDirectories(root, PAPILAB_TRANSACTION_FILE);
+  const transactionPath = await ensureSafeParentDirectories(root, SCIENT_TRANSACTION_FILE);
   await writeExclusiveAtomic({
     root,
-    relativePath: PAPILAB_TRANSACTION_FILE,
+    relativePath: SCIENT_TRANSACTION_FILE,
     targetPath: transactionPath,
     contents: transactionContents,
     transactionId: transaction.transactionId,
     mode: 0o600,
   });
-  await emitStep(options, { index: 0, kind: "marker-written", path: PAPILAB_TRANSACTION_FILE });
+  await emitStep(options, { index: 0, kind: "marker-written", path: SCIENT_TRANSACTION_FILE });
   const result = await runTransaction({ root, transaction, recovered: false, options });
   return {
     ...result,
@@ -456,7 +456,7 @@ async function removeEmptyCreatedParents(
     const segments = relativePath.split("/").slice(0, -1);
     while (segments.length > 0) {
       const candidate = segments.join("/");
-      if (candidate !== PAPILAB_METADATA_DIRECTORY) candidates.add(candidate);
+      if (candidate !== SCIENT_METADATA_DIRECTORY) candidates.add(candidate);
       segments.pop();
     }
   }
@@ -508,9 +508,9 @@ export async function rollbackProjectInitialization(
   if (preserved.length > 0) {
     return { complete: false, removed, preserved };
   }
-  await unlink(await assertSafeExistingParents(root, PAPILAB_TRANSACTION_FILE));
+  await unlink(await assertSafeExistingParents(root, SCIENT_TRANSACTION_FILE));
   try {
-    await rmdir(path.join(root, PAPILAB_METADATA_DIRECTORY));
+    await rmdir(path.join(root, SCIENT_METADATA_DIRECTORY));
   } catch (error) {
     if (!isNodeError(error, "ENOTEMPTY") && !isNodeError(error, "ENOENT")) throw error;
   }

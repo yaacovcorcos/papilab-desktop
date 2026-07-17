@@ -27,7 +27,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 
-const APP_SNAP_WELCOME_STORAGE_KEY = "papilab:appsnap-welcome:v1";
+const APP_SNAP_WELCOME_STORAGE_KEY = "scient:appsnap-welcome:v1";
 
 const AppSnapWelcomeStorageSchema = Schema.Struct({
   acknowledged: Schema.Boolean,
@@ -116,7 +116,7 @@ export function AppSnapWelcomeDialog() {
 
           <DialogHeader className="gap-2 p-0">
             <DialogTitle className="text-[19px] leading-tight">
-              PapiLab AppSnaps are live!
+              Scient AppSnaps are live!
             </DialogTitle>
             {/* Two lines at 378px wide is the reference sheet's proportion; longer copy
                 wraps to three and throws the whole vertical rhythm off. */}

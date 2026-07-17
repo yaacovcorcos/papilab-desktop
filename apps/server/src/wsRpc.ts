@@ -59,7 +59,7 @@ import { ProviderService } from "./provider/Services/ProviderService";
 import { listProviderUsage } from "./providerUsage";
 import { getProviderUsageSnapshot } from "./providerUsageSnapshot";
 import { ProfileStatsQuery } from "./profileStats";
-import { PapiLabProjectInitializationService } from "./papilabProjectInitialization";
+import { ScientProjectInitializationService } from "./scientProjectInitialization";
 import { ServerEnvironment } from "./environment/Services/ServerEnvironment";
 import { ServerLifecycleEvents } from "./serverLifecycleEvents";
 import { ServerRuntimeStartup } from "./serverRuntimeStartup";
@@ -268,7 +268,7 @@ export const makeWsRpcLayer = () =>
       const textGeneration = yield* TextGeneration;
       const workspaceEntries = yield* WorkspaceEntries;
       const workspaceFileSystem = yield* WorkspaceFileSystem;
-      const papilabProjectInitialization = new PapiLabProjectInitializationService();
+      const scientProjectInitialization = new ScientProjectInitializationService();
 
       const isGlobalGitHubCliError = (error: unknown): error is GitHubCliError =>
         error instanceof GitHubCliError &&
@@ -674,25 +674,25 @@ export const makeWsRpcLayer = () =>
           ),
         [WS_METHODS.projectsWriteFile]: (input) =>
           rpcEffect(workspaceFileSystem.writeFile(input), "Failed to write workspace file"),
-        [WS_METHODS.papilabProjectInitializationPreview]: (input) =>
+        [WS_METHODS.scientProjectInitializationPreview]: (input) =>
           rpcEffect(
-            Effect.promise(() => papilabProjectInitialization.preview(input)),
-            "Failed to preview PapiLab project initialization",
+            Effect.promise(() => scientProjectInitialization.preview(input)),
+            "Failed to preview Scient project initialization",
           ),
-        [WS_METHODS.papilabProjectInitializationApply]: (input) =>
+        [WS_METHODS.scientProjectInitializationApply]: (input) =>
           rpcEffect(
-            Effect.promise(() => papilabProjectInitialization.apply(input.previewId)),
-            "Failed to initialize PapiLab project",
+            Effect.promise(() => scientProjectInitialization.apply(input.previewId)),
+            "Failed to initialize Scient project",
           ),
-        [WS_METHODS.papilabProjectInitializationRecover]: (input) =>
+        [WS_METHODS.scientProjectInitializationRecover]: (input) =>
           rpcEffect(
-            Effect.promise(() => papilabProjectInitialization.recover(input.previewId)),
-            "Failed to recover PapiLab project initialization",
+            Effect.promise(() => scientProjectInitialization.recover(input.previewId)),
+            "Failed to recover Scient project initialization",
           ),
-        [WS_METHODS.papilabProjectInitializationRollback]: (input) =>
+        [WS_METHODS.scientProjectInitializationRollback]: (input) =>
           rpcEffect(
-            Effect.promise(() => papilabProjectInitialization.rollback(input.previewId)),
-            "Failed to roll back PapiLab project initialization",
+            Effect.promise(() => scientProjectInitialization.rollback(input.previewId)),
+            "Failed to roll back Scient project initialization",
           ),
         [WS_METHODS.projectsRunDevServer]: (input) =>
           rpcEffect(devServerManager.run(input), "Failed to start dev server"),

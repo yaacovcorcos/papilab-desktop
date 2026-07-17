@@ -603,8 +603,8 @@ export function normalizeCodexModelSlug(
 export function buildCodexInitializeParams() {
   return {
     clientInfo: {
-      name: "papilab_desktop",
-      title: "PapiLab Desktop",
+      name: "scient_desktop",
+      title: "Scient Desktop",
       version: "0.1.0",
     },
     capabilities: {

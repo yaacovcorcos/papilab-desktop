@@ -1,7 +1,7 @@
 // FILE: feedback.ts
 // Purpose: Owns feedback categories, privacy-safe diagnostics, and delivery.
 // Layer: Web feature logic
-// Depends on: An explicitly configured PapiLab-owned feedback endpoint.
+// Depends on: An explicitly configured Scient-owned feedback endpoint.
 
 import { APP_VERSION } from "./branding";
 
@@ -13,7 +13,7 @@ export const FEEDBACK_CATEGORIES = [
   { value: "bug", label: "Bug", lead: "I ran into a bug" },
   { value: "session", label: "Session", lead: "I hit a session problem" },
   { value: "ui", label: "UI", lead: "Something looked wrong" },
-  { value: "performance", label: "Performance", lead: "PapiLab felt slow" },
+  { value: "performance", label: "Performance", lead: "Scient felt slow" },
   { value: "idea", label: "Idea", lead: "I have an idea" },
   { value: "other", label: "Other", lead: "I have some feedback" },
 ] as const;
@@ -108,7 +108,7 @@ export function formatFeedbackSummary(input: {
     .filter((row): row is [string, string] => row[1] !== null && row[1] !== "")
     .map(([label, value]) => `${label}: ${value}`);
 
-  return [`${lead} in PapiLab ${diagnostics.appVersion}${usageContext}.`, "", ...detailLines].join(
+  return [`${lead} in Scient ${diagnostics.appVersion}${usageContext}.`, "", ...detailLines].join(
     "\n",
   );
 }
@@ -148,7 +148,7 @@ export function buildFeedbackSubmission(input: {
 export function resolveFeedbackEndpoint(configuredEndpoint: string | undefined): string {
   const endpoint = configuredEndpoint?.trim();
   if (!endpoint) {
-    throw new Error("Feedback delivery is not configured for this PapiLab build.");
+    throw new Error("Feedback delivery is not configured for this Scient build.");
   }
   return endpoint;
 }
@@ -168,7 +168,7 @@ export async function submitFeedback(
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-papilab-feedback": "1",
+        "x-scient-feedback": "1",
       },
       body: JSON.stringify(submission),
       signal: controller.signal,

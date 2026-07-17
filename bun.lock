@@ -42,10 +42,10 @@
       },
     },
     "apps/server": {
-      "name": "@synara/cli",
+      "name": "@scientfactory/cli",
       "version": "0.5.5",
       "bin": {
-        "synara": "./dist/index.mjs",
+        "scient": "./dist/index.mjs",
       },
       "dependencies": {
         "@anthropic-ai/claude-agent-sdk": "0.3.207",
@@ -56,7 +56,6 @@
         "@effect/platform-node": "catalog:",
         "@effect/sql-sqlite-bun": "catalog:",
         "@opencode-ai/sdk": "^1.15.13",
-        "@papilab/project-init": "workspace:*",
         "@pierre/diffs": "^1.2.12",
         "@xterm/headless": "^6.0.0",
         "effect": "catalog:",
@@ -68,6 +67,7 @@
       "devDependencies": {
         "@effect/language-service": "catalog:",
         "@effect/vitest": "catalog:",
+        "@scientfactory/project-init": "workspace:*",
         "@synara/contracts": "workspace:*",
         "@synara/shared": "workspace:*",
         "@synara/web": "workspace:*",
@@ -181,8 +181,8 @@
         "vitest": "catalog:",
       },
     },
-    "packages/papilab-project-init": {
-      "name": "@papilab/project-init",
+    "packages/scient-project-init": {
+      "name": "@scientfactory/project-init",
       "version": "0.0.0-alpha.1",
       "devDependencies": {
         "@types/node": "catalog:",
@@ -827,8 +827,6 @@
 
     "@oxlint/binding-win32-x64-msvc": ["@oxlint/binding-win32-x64-msvc@1.56.0", "", { "os": "win32", "cpu": "x64" }, "sha512-ZHa0clocjLmIDr+1LwoWtxRcoYniAvERotvwKUYKhH41NVfl0Y4LNbyQkwMZzwDvKklKGvGZ5+DAG58/Ik47tQ=="],
 
-    "@papilab/project-init": ["@papilab/project-init@workspace:packages/papilab-project-init"],
-
     "@pierre/diffs": ["@pierre/diffs@1.2.12", "", { "dependencies": { "@pierre/theme": "1.1.0", "@pierre/theming": "0.0.2", "@shikijs/transformers": "^3.0.0 || ^4.0.0", "diff": "9.0.0", "hast-util-to-html": "9.0.5", "lru_map": "0.4.1", "shiki": "^3.0.0 || ^4.0.0" }, "peerDependencies": { "react": "^18.3.1 || ^19.0.0", "react-dom": "^18.3.1 || ^19.0.0" } }, "sha512-pY/gmgWL03WnagqCyCnBi3QtRXUv4hCIY6FYqd5b1ZGaoI6a4Bsji8j+yRl2RfzPh/8Hf19rCl1GE80G6a1cLQ=="],
 
     "@pierre/theme": ["@pierre/theme@1.1.0", "", {}, "sha512-GC2OWTAfTIIWWYhPCygwG8t2EtePQkRfON4MI2rwIkJylmiyqIttJID2dCL8sUD8cNdEvYkEyfEHHKMeCiDLoQ=="],
@@ -931,6 +929,10 @@
 
     "@rollup/pluginutils": ["@rollup/pluginutils@5.3.0", "", { "dependencies": { "@types/estree": "^1.0.0", "estree-walker": "^2.0.2", "picomatch": "^4.0.2" }, "peerDependencies": { "rollup": "^1.20.0||^2.0.0||^3.0.0||^4.0.0" }, "optionalPeers": ["rollup"] }, "sha512-5EdhGZtnu3V88ces7s53hhfK5KSASnJZv8Lulpc04cWO3REESroJXg73DFsOmgbU2BhwV0E20bu2IDZb3VKW4Q=="],
 
+    "@scientfactory/cli": ["@scientfactory/cli@workspace:apps/server"],
+
+    "@scientfactory/project-init": ["@scientfactory/project-init@workspace:packages/scient-project-init"],
+
     "@sec-ant/readable-stream": ["@sec-ant/readable-stream@0.4.1", "", {}, "sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg=="],
 
     "@shikijs/core": ["@shikijs/core@3.23.0", "", { "dependencies": { "@shikijs/types": "3.23.0", "@shikijs/vscode-textmate": "^10.0.2", "@types/hast": "^3.0.4", "hast-util-to-html": "^9.0.5" } }, "sha512-NSWQz0riNb67xthdm5br6lAkvpDJRTgB36fxlo37ZzM2yq0PQFFzbd8psqC2XMPgCzo1fW6cVi18+ArJ44wqgA=="],
@@ -978,8 +980,6 @@
     "@stablelib/base64": ["@stablelib/base64@1.0.1", "", {}, "sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ=="],
 
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
-
-    "@synara/cli": ["@synara/cli@workspace:apps/server"],
 
     "@synara/contracts": ["@synara/contracts@workspace:packages/contracts"],
 

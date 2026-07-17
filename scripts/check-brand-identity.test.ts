@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   findBrandIdentityViolations,
-  findPapiLabIdentityViolations,
-  findPapiLabSurfaceIdentityViolations,
+  findScientIdentityViolations,
+  findScientSurfaceIdentityViolations,
   findVisualBrandAssetViolations,
 } from "./check-brand-identity";
 
@@ -19,6 +19,29 @@ describe("brand identity guard", () => {
       { path: "source.ts", contents: `const value = "${secondName}:state";` },
     ]);
     expect(violations).toHaveLength(2);
+  });
+
+  it("rejects PapiLab outside the reviewed compatibility boundary", () => {
+    expect(
+      findBrandIdentityViolations([
+        { path: "apps/web/src/components/Sidebar.tsx", contents: "Open PapiLab" },
+      ]),
+    ).toHaveLength(1);
+  });
+
+  it("allows PapiLab only in the reviewed migration boundary", () => {
+    expect(
+      findBrandIdentityViolations([
+        {
+          path: "apps/web/src/storageOriginMigration.ts",
+          contents: 'if (key.startsWith("papilab:")) return key;',
+        },
+        {
+          path: "apps/desktop/src/main.ts",
+          contents: "const configuredLegacyPapiLabHome = process.env.PAPILAB_HOME;",
+        },
+      ]),
+    ).toEqual([]);
   });
 
   it("does not match ordinary numeric type names or canonical Synara text", () => {
@@ -63,22 +86,22 @@ describe("brand identity guard", () => {
     expect(findVisualBrandAssetViolations([], approvedDigests)).toHaveLength(1);
   });
 
-  it("requires PapiLab identity in distributable package metadata", () => {
+  it("requires Scient identity in distributable package metadata", () => {
     const requirements = new Map([
-      ["package.json", ['name: "papilab-desktop"', 'description: "PapiLab desktop build"']],
+      ["package.json", ['name: "scient-desktop"', 'description: "Scient desktop build"']],
     ]);
     expect(
-      findPapiLabIdentityViolations(
-        [{ path: "package.json", contents: 'name: "papilab-desktop"' }],
+      findScientIdentityViolations(
+        [{ path: "package.json", contents: 'name: "scient-desktop"' }],
         requirements,
       ),
     ).toHaveLength(1);
     expect(
-      findPapiLabIdentityViolations(
+      findScientIdentityViolations(
         [
           {
             path: "package.json",
-            contents: 'name: "papilab-desktop"\ndescription: "PapiLab desktop build"',
+            contents: 'name: "scient-desktop"\ndescription: "Scient desktop build"',
           },
         ],
         requirements,
@@ -86,26 +109,26 @@ describe("brand identity guard", () => {
     ).toEqual([]);
   });
 
-  it("keeps upstream release marketing out of the PapiLab UI", () => {
+  it("keeps upstream release marketing out of the Scient UI", () => {
     const requirements = new Map([["entries.ts", ["WHATS_NEW_ENTRIES = []"]]]);
     expect(
-      findPapiLabIdentityViolations(
+      findScientIdentityViolations(
         [{ path: "entries.ts", contents: "WHATS_NEW_ENTRIES = upstreamEntries" }],
         requirements,
       ),
     ).toHaveLength(1);
     expect(
-      findPapiLabIdentityViolations(
+      findScientIdentityViolations(
         [{ path: "entries.ts", contents: "WHATS_NEW_ENTRIES = []" }],
         requirements,
       ),
     ).toEqual([]);
   });
 
-  it("rejects Synara copy from PapiLab-owned user and developer surfaces", () => {
+  it("rejects Synara copy from Scient-owned user and developer surfaces", () => {
     const surfacePaths = new Set(["Sidebar.tsx", "desktopUpdate.logic.ts", "dev-electron.mjs"]);
     expect(
-      findPapiLabSurfaceIdentityViolations(
+      findScientSurfaceIdentityViolations(
         [
           { path: "desktopUpdate.logic.ts", contents: "Synara restarted." },
           { path: "dev-electron.mjs", contents: "SYNARA (Dev) is running." },
@@ -115,9 +138,9 @@ describe("brand identity guard", () => {
       ),
     ).toHaveLength(3);
     expect(
-      findPapiLabSurfaceIdentityViolations(
+      findScientSurfaceIdentityViolations(
         [
-          { path: "desktopUpdate.logic.ts", contents: "PapiLab restarted." },
+          { path: "desktopUpdate.logic.ts", contents: "Scient restarted." },
           {
             path: "dev-electron.mjs",
             contents: "--synara-dev-root=/tmp/project\nimport '@synara/contracts';",
